@@ -595,6 +595,44 @@
   cursor: not-allowed;
 }
 
+.thread-reply-compose {
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+.thread-compose-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+.thread-compose-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+.btn-send {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: var(--accent);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+.btn-send:hover {
+  background: var(--accent-hover);
+}
+.btn-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* Comment pulse */
 @keyframes comment-pulse {
   0% {

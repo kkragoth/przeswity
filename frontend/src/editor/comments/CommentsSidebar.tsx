@@ -62,7 +62,6 @@ export function CommentsSidebar({
     const map = getThreadMap(doc);
     const [draft, setDraft] = useState('');
     const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
-    const [openReply, setOpenReply] = useState<Record<string, boolean>>({});
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('open');
     const [authorFilter, setAuthorFilter] = useState<string>('');
     const [roleFilter, setRoleFilter] = useState<Role | ''>('');
@@ -308,7 +307,6 @@ export function CommentsSidebar({
             const isActive = activeCommentId === thread.id;
             const isExpanded = isActive;
             const draftEmpty = thread.body === '';
-            const showReplyBox = openReply[thread.id] || isActive;
             return (
                 <div
                     key={thread.id}
@@ -388,7 +386,7 @@ export function CommentsSidebar({
                                     }}
                                     disabled={!draft.trim()}
                                 >
-                      {t('comments.post')}
+                                    {t('comments.post')}
                                 </button>
                                 <button
                                     type="button"
@@ -408,7 +406,7 @@ export function CommentsSidebar({
                             )}
                             <div className="thread-expandable">
                                 <div className="thread-expandable-inner">
-                                {thread.body &&
+                                    {thread.body &&
                       (editingThread === thread.id ? (
                           <div className="thread-draft">
                               <MentionTextarea
@@ -428,7 +426,7 @@ export function CommentsSidebar({
                                           saveEdit();
                                       }}
                                   >
-                              {t('comments.post')}
+                                      {t('comments.post')}
                                   </button>
                                   <button
                                       type="button"
@@ -465,136 +463,130 @@ export function CommentsSidebar({
                               )}
                           </div>
                       ))}
-                                {isExpanded && thread.body && (
-                                    <Reactions
-                                        reactions={thread.reactions}
-                                        myUserId={user.id}
-                                        onToggle={(e) => toggleReactionOnThread(thread.id, e)}
-                                    />
-                                )}
-                                {thread.replies.map((r) => {
-                                    const isEditingThis =
-                        editingReply?.threadId === thread.id && editingReply.replyId === r.id;
-                                    return (
-                                        <div key={r.id} className="thread-reply">
-                                            <Avatar name={r.authorName} color={r.authorColor} size="sm" />
-                                            <div className="thread-reply-text">
-                                                <div className="thread-head-row">
-                                                    <span className="thread-author">{r.authorName}</span>
-                                                    <span className="thread-role-chip">{r.authorRole}</span>
-                                                    <span className="thread-head-time">{formatTime(r.createdAt)}</span>
-                                                </div>
-                                                {isEditingThis ? (
-                                                    <div className="thread-draft">
-                                                        <MentionTextarea
-                                                            value={editBuffer}
-                                                            onChange={setEditBuffer}
-                                                            placeholder={t('comments.editReply')}
-                                                            autoFocus
-                                                            candidates={candidates}
-                                                            onClick={(e) => e.stopPropagation()}
-                                                        />
-                                                        <div className="thread-actions">
-                                                            <button
-                                                                type="button"
-                                                                className="btn-primary"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    saveEdit();
-                                                                }}
-                                                            >
-                                    {t('comments.post')}
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    cancelEdit();
-                                                                }}
-                                                            >
-                                    Cancel
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="thread-body">
-                                                        {renderBodyWithMentions(r.body)}
-                                                        {r.edited && (
-                                                            <span className="thread-edited">
-                                                                {' '}
-                                    · edited
-                                                            </span>
-                                                        )}
-                                                        {r.authorId === user.id && (
-                                                            <button
-                                                                type="button"
-                                                                className="thread-edit-btn"
-                                                                title="Edit"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    startEditReply(thread.id, r.id, r.body);
-                                                                }}
-                                                            >
-                                    ✎
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                )}
-                                                <Reactions
-                                                    reactions={r.reactions}
-                                                    myUserId={user.id}
-                                                    onToggle={(e) => toggleReactionOnReply(thread.id, r.id, e)}
-                                                />
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                                {perms.canComment && thread.body && showReplyBox && (
-                                    <div className="thread-draft">
-                                        <MentionTextarea
-                                            value={replyDrafts[thread.id] ?? ''}
-                                            onChange={(v) => setReplyDrafts((m) => ({ ...m, [thread.id]: v }))}
-                                            placeholder={t('comments.writeReply')}
-                                            candidates={candidates}
-                                            onClick={(e) => e.stopPropagation()}
+                                    {isExpanded && thread.body && (
+                                        <Reactions
+                                            reactions={thread.reactions}
+                                            myUserId={user.id}
+                                            onToggle={(e) => toggleReactionOnThread(thread.id, e)}
                                         />
-                                        <div className="thread-actions">
-                                            <button
-                                                type="button"
-                                                className="btn-primary"
-                                                disabled={!(replyDrafts[thread.id] ?? '').trim()}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    submitReply(thread.id);
-                                                }}
-                                            >
-                            Reply
-                                            </button>
-                                            {perms.canResolveComment && (
+                                    )}
+                                    {thread.replies.map((r) => {
+                                        const isEditingThis =
+                        editingReply?.threadId === thread.id && editingReply.replyId === r.id;
+                                        return (
+                                            <div key={r.id} className="thread-reply">
+                                                <Avatar name={r.authorName} color={r.authorColor} size="sm" />
+                                                <div className="thread-reply-text">
+                                                    <div className="thread-head-row">
+                                                        <span className="thread-author">{r.authorName}</span>
+                                                        <span className="thread-role-chip">{r.authorRole}</span>
+                                                        <span className="thread-head-time">{formatTime(r.createdAt)}</span>
+                                                    </div>
+                                                    {isEditingThis ? (
+                                                        <div className="thread-draft">
+                                                            <MentionTextarea
+                                                                value={editBuffer}
+                                                                onChange={setEditBuffer}
+                                                                placeholder={t('comments.editReply')}
+                                                                autoFocus
+                                                                candidates={candidates}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            />
+                                                            <div className="thread-actions">
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn-primary"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        saveEdit();
+                                                                    }}
+                                                                >
+                                                                    {t('comments.post')}
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        cancelEdit();
+                                                                    }}
+                                                                >
+                                    Cancel
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="thread-body">
+                                                            {renderBodyWithMentions(r.body)}
+                                                            {r.edited && (
+                                                                <span className="thread-edited">
+                                                                    {' '}
+                                    · edited
+                                                                </span>
+                                                            )}
+                                                            {r.authorId === user.id && (
+                                                                <button
+                                                                    type="button"
+                                                                    className="thread-edit-btn"
+                                                                    title="Edit"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        startEditReply(thread.id, r.id, r.body);
+                                                                    }}
+                                                                >
+                                    ✎
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                    <Reactions
+                                                        reactions={r.reactions}
+                                                        myUserId={user.id}
+                                                        onToggle={(e) => toggleReactionOnReply(thread.id, r.id, e)}
+                                                    />
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    {perms.canComment && thread.body && isActive && (
+                                        <div className="thread-reply-compose">
+                                            <div className="thread-compose-row">
+                                                <MentionTextarea
+                                                    value={replyDrafts[thread.id] ?? ''}
+                                                    onChange={(v) => setReplyDrafts((m) => ({ ...m, [thread.id]: v }))}
+                                                    placeholder={t('comments.writeReply')}
+                                                    candidates={candidates}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
                                                 <button
                                                     type="button"
+                                                    className="btn-send"
+                                                    disabled={!(replyDrafts[thread.id] ?? '').trim()}
+                                                    title={t('comments.reply')}
+                                                    aria-label={t('comments.reply')}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        resolve(thread.id);
+                                                        submitReply(thread.id);
                                                     }}
                                                 >
-                              Resolve
+                                                ↑
                                                 </button>
-                                            )}
-                                            <button
-                                                type="button"
-                                                className="thread-icon-btn thread-remove"
-                                                title={t('comments.deleteThread')}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    if (window.confirm(t('comments.deleteConfirm'))) remove(thread.id);
-                                                }}
-                                            >
-                            🗑
-                                            </button>
+                                            </div>
+                                            <div className="thread-compose-footer">
+                                                <button
+                                                    type="button"
+                                                    className="thread-icon-btn thread-remove"
+                                                    title={t('comments.deleteThread')}
+                                                    aria-label={t('comments.deleteThread')}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (window.confirm(t('comments.deleteConfirm'))) remove(thread.id);
+                                                    }}
+                                                >
+                                                🗑
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
                                 </div>
                             </div>
                         </>
@@ -626,7 +618,7 @@ export function CommentsSidebar({
                             {thread.body && <div className="thread-body">{renderBodyWithMentions(thread.body)}</div>}
                             <div className="thread-actions">
                                 <button type="button" onClick={() => reopen(thread.id)}>
-                  {t('comments.reopen')}
+                                    {t('comments.reopen')}
                                 </button>
                                 <button
                                     type="button"
