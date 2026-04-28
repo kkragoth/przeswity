@@ -369,7 +369,30 @@ Tiptap's `Comment` is a `Mark` (range mark) and Yjs's `Y.XmlFragment` ProseMirro
 
 **Files:** Modify `frontend/src/editor/comments/useThreads.ts`, `frontend/src/editor/comments/CommentsSidebar.tsx`. Add: `frontend/src/editor/comments/Detached.tsx`. Backend: `PATCH /api/comments/:threadId/detach` endpoint and `comment_thread.detachedAt` column.
 
-- [ ] **Step 1:** On every Y.Doc transaction (debounced 1s), build a Set of `commentId` values present as marks in the doc. Diff against the REST thread list (`useGetBookCommentsQuery`). Threads in REST but not in marks → `PATCH /api/comments/:id/detach` to set `detachedAt`. Threads in marks but not in REST → log a warning (ghost mark; nightly job will clean up — see F5.17).
+- [ ] **Step 1:** Detection runs **only after the provider's initial sync completes** — gate via `provider.on('synced', ...)` inside `useThreads`. Without this, marks haven't replayed yet at mount and every thread flashes detached (Codex pass-5 blocker #2 — A1 race). Pseudo:
+
+```ts
+const [synced, setSynced] = useState(false);
+useEffect(() => {
+    const handler = () => setSynced(true);
+    provider.on('synced', handler);
+    return () => provider.off('synced', handler);
+}, [provider]);
+
+useEffect(() => {
+    if (!synced) return;
+    const tick = debounce(() => {
+        const inDoc = collectCommentIds(editor);
+        const inRest = restThreads.map((t) => t.anchorId);
+        const detached = inRest.filter((id) => !inDoc.has(id));
+        for (const id of detached) detachThread.mutate(id);
+    }, 1000);
+    editor.on('transaction', tick);
+    return () => editor.off('transaction', tick);
+}, [editor, synced, restThreads]);
+```
+
+- [ ] **Step 1a:** `PATCH /api/comments/:threadId/detach` is **idempotent**: server uses `UPDATE comment_thread SET detached_at = COALESCE(detached_at, NOW()) WHERE id = $1 AND book_id = $2 RETURNING *`. Concurrent calls from N editors collapse — first one wins, rest are no-ops returning the same row. Same idempotency applies to `/reattach` (sets `detached_at = NULL`). Vitest: fire 5 concurrent detach requests, assert exactly one timestamp persisted and equal across all responses.
 - [ ] **Step 2:** Right pane gets three sub-tabs: **Aktywne** (status='active'), **Rozwiązane** (status='resolved'), **Odłączone** (`detachedAt IS NOT NULL AND status='active'`). Counts in tab labels.
 - [ ] **Step 3:** Each detached thread renders the original `quote` (already stored), the conversation, and a "Ponownie zakotwicz" button. When clicked: prompts the user to select text in the editor; on selection, the client adds a `comment` mark with the same `commentId` and `PATCH /api/comments/:id/reattach` clears `detachedAt`.
 - [ ] **Step 4:** Vitest:
@@ -479,7 +502,7 @@ Add `FontFamily` to `buildSchemaExtensions()` (so backend round-trip works) **an
 - Toolbar / bubble toolbar: **no font picker.**
 - Slash menu: **no font picker.**
 - Marks already in the doc render correctly.
-- A coordinator-only "Zaawansowane" panel (right-pane tab, gated by `user.isAdmin || user.isCoordinator || merged.canEdit`) shows the list of distinct font marks present in the current selection. This is informational — it lets a coordinator audit a problematic import without being able to *apply* a font themselves.
+- A coordinator/admin-only "Zaawansowane" panel (right-pane tab, gated strictly by `user.isAdmin || user.isCoordinator` — **not** `canEdit`, fixing pass-5 finding B-F3) shows the list of distinct font marks present in the current selection. Informational only — a coordinator audits a problematic import without being able to *apply* a font themselves.
 - Stage 2 may add a tightly-scoped font picker for the typesetter role (after F4h's PeoplePicker assigns someone the `typesetter` role on a book, that role's bubble toolbar reveals the font picker — schema-level enforcement, not just UI).
 
 ### Why this is the right call
@@ -957,8 +980,8 @@ const ALLOWED_URI_REGEXP = /^(?:(?:https?|mailto|tel):|data:image\/(?:png|jpeg|w
 
 export function sanitizeHtml(raw: string): string {
     return DOMPurify.sanitize(raw, {
-        ALLOWED_TAGS: ['p','h1','h2','h3','strong','em','u','s','blockquote','ul','ol','li','a','img','table','thead','tbody','tr','td','th','code','pre','br'],
-        ALLOWED_ATTR: ['href','title','alt','src'],
+        ALLOWED_TAGS: ['p','h1','h2','h3','strong','em','u','s','blockquote','ul','ol','li','a','img','table','thead','tbody','tr','td','th','code','pre','br','span'],
+        ALLOWED_ATTR: ['href','title','alt','src','data-font','data-comment-id','data-suggestion-id'],   // data-font + data-* survive sanitize so font marks and comment/suggestion anchors round-trip (Codex pass-5 blocker #3)
         FORBID_ATTR: ['style','class','id','color','bgcolor','face','size','onload','onerror','onclick'],
         ALLOWED_URI_REGEXP,
         ADD_URI_SAFE_ATTR: ['src','href'],
@@ -1662,7 +1685,7 @@ if (devAuthEnabled) {
     devAuthRouter.post('/api/auth/dev/sign-in', async (req, res) => {
         const { email } = Body.parse(req.body);
         const [u] = await db.select().from(user).where(eq(user.email, email));
-        if (!u) return res.status(404).json({ error: { code: 'errors.auth.unknownEmail' } });
+        if (!u || u.isSystem) return res.status(404).json({ error: { code: 'errors.auth.unknownEmail' } });   // pass-5 blocker #4: system accounts cannot be impersonated even by direct email POST
         const result = await auth.api.signInEmail({
             body: { email, password: DEV_PASSWORD },
             asResponse: true,
@@ -1674,12 +1697,14 @@ if (devAuthEnabled) {
         res.json({ user: u });
     });
     devAuthRouter.get('/api/auth/dev/users', async (_req, res) => {
+        // System/service accounts are excluded so the auto-snapshot user can't be impersonated (pass-5 blocker #4).
         const list = await db.select({
             id: user.id, email: user.email, name: user.name,
             isAdmin: user.isAdmin, isCoordinator: user.isCoordinator,
-        }).from(user);
+        }).from(user).where(eq(user.isSystem, false));
         res.json(list);
     });
+    // Same filter is inlined in the sign-in handler above (`if (!u || u.isSystem) return 404`).
 }
 ```
 
@@ -1884,7 +1909,7 @@ Endpoints:
 2. Build a `Schema` from the shared schema-only extension list (see new package below).
 3. `prosemirrorJSONToYDoc(schema, json)` from `y-prosemirror` writes a fresh `Y.Doc`, which is `Y.encodeStateAsUpdate`-encoded and stored in `book_yjs_state`.
 
-The shared schema-only extension list lives in **`shared/editor-schema/`** — a small npm workspace package consumed by both backend and frontend. It exports `buildSchemaExtensions()` returning a Tiptap extension array containing **only** schema-bearing nodes/marks (StarterKit minus history, Underline, Link, TextAlign, TaskList/TaskItem, Image, Table family, Highlight, Footnote, Comment, Insertion, Deletion). It does **not** include browser-only extensions (Collaboration, CollaborationCursor, GlossaryHighlight, SmartPaste, FindReplace, SlashCommand, SuggestionMode logic, Toolbar, BubbleToolbar). The frontend's `frontend/src/editor/editor/extensions.ts` imports `buildSchemaExtensions()` and adds the browser-only extensions on top — guaranteeing the schema is byte-identical on both sides.
+The shared schema-only extension list lives in **`shared/editor-schema/`** — a small npm workspace package consumed by both backend and frontend. It exports `buildSchemaExtensions()` returning a Tiptap extension array containing **only** schema-bearing nodes/marks (StarterKit minus history, Underline, Link, TextAlign, TaskList/TaskItem, Image, Table family, Highlight, Footnote, Comment, Insertion, Deletion, **FontFamily** — see "Per-character font marks" section). It does **not** include browser-only extensions (Collaboration, CollaborationCursor, GlossaryHighlight, SmartPaste, FindReplace, SlashCommand, SuggestionMode logic, Toolbar, BubbleToolbar). The frontend's `frontend/src/editor/editor/extensions.ts` imports `buildSchemaExtensions()` and adds the browser-only extensions on top — guaranteeing the schema is byte-identical on both sides.
 
 Repo layout addendum:
 
@@ -2142,9 +2167,15 @@ export async function authenticate(data: {
 import { Hocuspocus } from '@hocuspocus/server';
 import { authenticate } from './auth.js';
 import { persistence } from './persistence.js';
+import { presenceExtension, presenceHeartbeat } from './presence.js';
+import { attributionExtension } from './lastEditor.js';
+
+// ALL extensions defined elsewhere in this plan must be registered here.
+// Codex pass-5 blocker #1: dropping any of these silently regresses M6/M7.
+const extensions = [persistence, attributionExtension, presenceExtension, presenceHeartbeat];
 
 export const hocuspocus = new Hocuspocus({
-    extensions: [persistence],
+    extensions,
     async onAuthenticate(data) {
         const ctx = await authenticate({
             documentName: data.documentName,
@@ -2154,6 +2185,9 @@ export const hocuspocus = new Hocuspocus({
         return ctx;
     },
 });
+
+// Boot-time assertion — log registered extensions so a missing one is loud.
+console.log('[collab] extensions:', extensions.map((e) => e.constructor?.name ?? typeof e).join(', '));
 ```
 
 - [ ] **Step 4: Mount on `/collaboration`** by owning the HTTP `upgrade` event with explicit path filtering (Codex blocker #16). The exact code is in the "Hocuspocus + BetterAuth integration" section — copy it into `src/index.ts` after the Express app is built. Verify:
@@ -2883,22 +2917,64 @@ CMD ["crond","-f","-l","2"]
 15 2 * * * /usr/local/bin/dump.sh >> /var/log/dump.log 2>&1
 ```
 
-`deploy/backup/dump.sh` (Codex pass-4 BLOCKER #3 — was referenced but not specified):
+`deploy/backup/dump.sh` (Codex pass-4 BLOCKER #3 spec; pass-5 blocker #5 fix — retention is a real two-pass POSIX algorithm now):
+
 ```sh
 #!/bin/sh
 set -eu
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
 DEST="/backups"
 mkdir -p "$DEST"
+
 PGPASSWORD="$POSTGRES_PASSWORD" pg_dump \
     -h "$POSTGRES_HOST" -U "$POSTGRES_USER" \
     --format=custom --compress=6 --no-owner --no-privileges \
     "$POSTGRES_DB" > "$DEST/przeswity-$TS.dump"
-# Retention: keep last 14 nightlies + the most-recent of each ISO week (4 weeks) + each month (3 months).
-find "$DEST" -name 'przeswity-*.dump' -mtime +14 -print -delete \
-    | grep -v "$(date -u -d 'monday' +%Y-W%V 2>/dev/null || true)" || true
+
+# Retention policy: keep
+#   (a) every dump from the last 14 days,
+#   (b) the most recent dump of each of the last 4 ISO weeks,
+#   (c) the most recent dump of each of the last 3 months.
+# Build a "keep set" first, then delete anything not in it.
+KEEP="$(mktemp)"
+
+# (a) last 14 days
+find "$DEST" -name 'przeswity-*.dump' -type f -mtime -14 -print >> "$KEEP"
+
+# (b) most recent per ISO week, last 4 weeks
+for w in $(seq 0 3); do
+    week_start="$(date -u -d "monday-${w} weeks" +%Y%m%d 2>/dev/null || \
+                  date -u -v-mondayw${w} +%Y%m%d)"
+    week_end="$(date -u -d "$week_start +7 days" +%Y%m%d 2>/dev/null || \
+                date -u -j -v+7d -f %Y%m%d "$week_start" +%Y%m%d)"
+    find "$DEST" -name "przeswity-${week_start:0:4}*-*.dump" -type f \
+        | awk -v s="$week_start" -v e="$week_end" -F- '{
+              ts = substr($2, 1, 8); if (ts >= s && ts < e) print
+          }' \
+        | sort | tail -n 1 >> "$KEEP"
+done
+
+# (c) most recent per month, last 3 months
+for m in $(seq 0 2); do
+    month="$(date -u -d "$(date -u +%Y-%m-01) -${m} months" +%Y%m 2>/dev/null || \
+             date -u -v1d -v-${m}m +%Y%m)"
+    find "$DEST" -name "przeswity-${month}*-*.dump" -type f \
+        | sort | tail -n 1 >> "$KEEP"
+done
+
+# Delete everything not in the keep set.
+sort -u "$KEEP" -o "$KEEP"
+find "$DEST" -name 'przeswity-*.dump' -type f -print \
+    | sort > "$DEST/.all"
+comm -23 "$DEST/.all" "$KEEP" | while IFS= read -r f; do
+    [ -n "$f" ] && rm -f -- "$f"
+done
+rm -f "$DEST/.all" "$KEEP"
+
 echo "[dump] $TS bytes=$(stat -c%s "$DEST/przeswity-$TS.dump")"
 ```
+
+Smoke test (in CI): seed `$DEST` with synthetic dumps spanning 90 days, run the script, assert the keep set contains exactly: ≤14 daily entries, the latest per of the last 4 ISO weeks, the latest per of the last 3 months.
 
 `deploy/backup/restore.sh`:
 ```sh
