@@ -260,13 +260,13 @@ export function CommentsSidebar({
             </div>
             <div className="comment-filters">
                 <div className="filter-chips">
-                    {(() => {
+                    {(['open', 'resolved', 'all'] as StatusFilter[]).map((s) => {
                         const chipLabels: Record<StatusFilter, string> = {
                             open: `${t('comments.filter.open')} · ${totalOpen}`,
                             resolved: t('comments.filter.resolved'),
                             all: t('comments.filter.all'),
                         };
-                        return (['open', 'resolved', 'all'] as StatusFilter[]).map((s) => (
+                        return (
                             <button
                                 key={s}
                                 type="button"
@@ -276,8 +276,8 @@ export function CommentsSidebar({
                             >
                                 {chipLabels[s]}
                             </button>
-                        ));
-                    })()}
+                        );
+                    })}
                 </div>
                 <select value={authorFilter} onChange={(e) => setAuthorFilter(e.target.value)}>
                     <option value="">{t('comments.filter.allAuthors')}</option>
@@ -620,15 +620,17 @@ export function CommentsSidebar({
                                 <button type="button" onClick={() => reopen(thread.id)}>
                                     {t('comments.reopen')}
                                 </button>
-                                <button
-                                    type="button"
-                                    className="thread-icon-btn thread-remove"
-                                    onClick={() => {
-                                        if (window.confirm(t('comments.deleteResolvedConfirm'))) remove(thread.id);
-                                    }}
-                                >
-                  🗑
-                                </button>
+                                {perms.canResolveComment && (
+                                    <button
+                                        type="button"
+                                        className="thread-icon-btn thread-remove"
+                                        onClick={() => {
+                                            if (window.confirm(t('comments.deleteResolvedConfirm'))) remove(thread.id);
+                                        }}
+                                    >
+                                        🗑
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ))}

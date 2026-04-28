@@ -391,7 +391,7 @@
     0 4px 12px rgba(15, 23, 42, 0.08);
 }
 .thread.is-active .avatar-ring {
-  box-shadow: 0 0 0 2px white, 0 0 0 3.5px var(--accent);
+  box-shadow: 0 0 0 2px var(--bg-paper), 0 0 0 3.5px var(--accent);
 }
 .thread.is-resolved {
   background: var(--bg);
@@ -413,7 +413,7 @@
   height: 20px;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background: white;
+  background: var(--bg-paper);
   display: flex;
   align-items: center;
   justify-content: center;
