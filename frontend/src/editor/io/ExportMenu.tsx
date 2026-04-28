@@ -10,6 +10,7 @@ interface ExportMenuProps {
     editor: Editor | null;
 }
 
+// PaginationPlus does not export its storage types — inline shape mirrors the extension's storage object.
 function readPaginationOpts(editor: Editor): Pick<ExportOptions, 'headerLeft' | 'headerRight' | 'footerLeft' | 'footerRight'> {
     const s = (editor.storage as unknown as Record<string, unknown>)['PaginationPlus'] as {
         headerLeft?: string; headerRight?: string;
@@ -37,15 +38,23 @@ export function ExportMenu({ editor }: ExportMenuProps) {
     };
 
     const downloadDocxClean = async () => {
-        const blob = await editorToDocxBlob(editor, { acceptSuggestions: true, ...readPaginationOpts(editor) });
-        saveAs(blob, 'document-clean.docx');
-        setOpen(false);
+        try {
+            const blob = await editorToDocxBlob(editor, { acceptSuggestions: true, ...readPaginationOpts(editor) });
+            saveAs(blob, 'document-clean.docx');
+            setOpen(false);
+        } catch (err) {
+            console.error('DOCX export failed:', err);
+        }
     };
 
     const downloadDocxWithTracks = async () => {
-        const blob = await editorToDocxBlob(editor, { acceptSuggestions: false, ...readPaginationOpts(editor) });
-        saveAs(blob, 'document-with-tracks.docx');
-        setOpen(false);
+        try {
+            const blob = await editorToDocxBlob(editor, { acceptSuggestions: false, ...readPaginationOpts(editor) });
+            saveAs(blob, 'document-with-tracks.docx');
+            setOpen(false);
+        } catch (err) {
+            console.error('DOCX export failed:', err);
+        }
     };
 
     return (

@@ -13,11 +13,11 @@ import {
 } from 'docx';
 import type { Editor } from '@tiptap/react';
 
-// A4 dimensions in twips (1 inch = 1440 twips; 96px = 1 inch at 96dpi)
+// A4 dimensions in twips (1 inch = 1440 twips)
 const A4_WIDTH_TWIPS = 11906;
 const A4_HEIGHT_TWIPS = 16838;
 const MARGIN_TWIPS = 1440;
-const CONTENT_WIDTH_TWIPS = A4_WIDTH_TWIPS - MARGIN_TWIPS * 2; // 9026 — right tab stop position
+const CONTENT_WIDTH_TWIPS = A4_WIDTH_TWIPS - MARGIN_TWIPS * 2;
 
 interface JSONNode {
     type: string;
@@ -92,7 +92,7 @@ function blockToParagraphs(node: JSONNode, opts: ExportOptions): Paragraph[] {
             );
         case 'orderedList':
             return (node.content ?? []).flatMap((li, i) =>
-                (li.content ?? []).map((c) => new Paragraph({ numbering: { reference: 'numbered', level: 0 }, children: [new TextRun({ text: `${i + 1}. ` }), ...inlinesToRuns(c.content, opts)] })),
+                (li.content ?? []).map((c) => new Paragraph({ children: [new TextRun({ text: `${i + 1}. ` }), ...inlinesToRuns(c.content, opts)] })),
             );
         case 'taskList':
             return (node.content ?? []).flatMap((li) => {
