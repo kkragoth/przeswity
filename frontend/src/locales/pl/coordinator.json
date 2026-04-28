@@ -31,5 +31,39 @@
         "title": "Nie masz jeszcze książek",
         "body": "Utwórz pierwszą książkę, aby rozpocząć współpracę.",
         "cta": "Nowa książka"
+    },
+    "dashboard": {
+        "activeProjects": "{{count}} aktywnych projektów",
+        "kpi": {
+            "attention": "Wymaga uwagi",
+            "recent": "Aktywne dziś / wczoraj",
+            "activeWeek": "Aktywne w tygodniu",
+            "unassigned": "Bez przypisań"
+        },
+        "view": {
+            "list": "Lista",
+            "timeline": "Harmonogram aktywności"
+        },
+        "quick": {
+            "all": "Wszystkie",
+            "attention": "Uwaga",
+            "recent": "Ostatnie zmiany",
+            "unassigned": "Bez przypisań"
+        },
+        "role": "Rola",
+        "showing": "Pokazano {{visible}} z {{total}}",
+        "noTimeline": "Brak książek dla tego widoku.",
+        "status": {
+            "unassigned": "Brak przypisań",
+            "attention": "Wymaga uwagi",
+            "recent": "Świeża aktywność",
+            "stable": "Stabilnie"
+        },
+        "activity": {
+            "none": "Brak aktywności",
+            "today": "Dzisiaj",
+            "yesterday": "Wczoraj",
+            "daysAgo": "{{count}} dni temu"
+        }
     }
 }

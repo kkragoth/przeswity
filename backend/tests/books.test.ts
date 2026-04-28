@@ -96,4 +96,57 @@ describe('books API', () => {
         }).expect(422);
         expect(r.body.error.code).toBe('errors.assignment.unknownUsers');
     });
+
+    it('coordinator can patch stage and reads stage history', async () => {
+        await createUser('coord-stage@test.com', { isCoordinator: true });
+        const { cookie } = await signIn('coord-stage@test.com');
+        const created = await request(app).post('/api/books').set('Cookie', cookie)
+            .send({ title: 'workflow', description: '', initialMarkdown: '', initialAssignments: [] }).expect(200);
+        const bookId = created.body.id;
+
+        const patched = await request(app).patch(`/api/books/${bookId}/stage`).set('Cookie', cookie).send({
+            stage: 'authorization',
+            note: 'Ready for author review',
+        }).expect(200);
+        expect(patched.body.stage).toBe('authorization');
+        expect(patched.body.stageNote).toBe('Ready for author review');
+
+        const history = await request(app).get(`/api/books/${bookId}/stage-history`).set('Cookie', cookie).expect(200);
+        expect(history.body.length).toBe(2);
+        expect(history.body[0].fromStage).toBe(null);
+        expect(history.body[0].toStage).toBe('editing');
+        expect(history.body[1].fromStage).toBe('editing');
+        expect(history.body[1].toStage).toBe('authorization');
+    });
+
+    it('rejects illegal stage transitions', async () => {
+        await createUser('coord-illegal@test.com', { isCoordinator: true });
+        const { cookie } = await signIn('coord-illegal@test.com');
+        const created = await request(app).post('/api/books').set('Cookie', cookie)
+            .send({ title: 'workflow', description: '', initialMarkdown: '', initialAssignments: [] }).expect(200);
+        const bookId = created.body.id;
+        await request(app).patch(`/api/books/${bookId}/stage`).set('Cookie', cookie).send({
+            stage: 'finalization',
+        }).expect(422);
+    });
+
+    it('coordinator can patch progress; invalid progress rejected', async () => {
+        await createUser('coord-progress@test.com', { isCoordinator: true });
+        const { cookie } = await signIn('coord-progress@test.com');
+        const created = await request(app).post('/api/books').set('Cookie', cookie)
+            .send({ title: 'workflow', description: '', initialMarkdown: '', initialAssignments: [] }).expect(200);
+        const bookId = created.body.id;
+
+        const patched = await request(app).patch(`/api/books/${bookId}/progress`).set('Cookie', cookie).send({
+            progress: 55,
+            mode: 'manual',
+        }).expect(200);
+        expect(patched.body.progress).toBe(55);
+        expect(patched.body.progressMode).toBe('manual');
+
+        await request(app).patch(`/api/books/${bookId}/progress`).set('Cookie', cookie).send({
+            progress: 101,
+            mode: 'manual',
+        }).expect(400);
+    });
 });

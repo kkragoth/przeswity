@@ -85,7 +85,27 @@
         "card": {
             "noDescription": "Brak opisu",
             "assignees": "{{count}} osób",
-            "open": "Otwórz"
+            "open": "Otwórz",
+            "stageProgress": "Etap {{current}}/{{total}}",
+            "noActivity": "Brak aktywności",
+            "activityToday": "Aktywność dzisiaj",
+            "activityYesterday": "Aktywność wczoraj",
+            "activityDaysAgo": "{{count}} dni temu"
+        },
+        "status": {
+            "needsAttention": "Wymaga uwagi",
+            "active": "Aktywna",
+            "inProgress": "W toku"
+        },
+        "stages": {
+            "translation": "Tłumaczenie",
+            "editing": "Redakcja",
+            "authorization": "Autoryzacja",
+            "proofreading": "Korekta",
+            "applying_changes": "Nanoszenie poprawek",
+            "typesetting": "Skład",
+            "post_typeset_proof": "Korekta po składzie",
+            "finalization": "Finalizacja"
         }
     }
 }

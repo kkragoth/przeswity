@@ -13,10 +13,15 @@ export function usePeers(provider: HocuspocusProvider): Peer[] {
         if (!awareness) return;
         const update = () => {
             const out: Peer[] = [];
-            for (const s of awareness.getStates().values() as Iterable<{
-        user?: Peer
-      }>) {
-                if (s.user?.name) out.push({ name: s.user.name, color: s.user.color });
+            const seen = new Set<string>();
+            const localClientId = awareness.clientID;
+            for (const [clientId, state] of awareness.getStates() as Map<number, { user?: Peer }>) {
+                if (clientId === localClientId) continue;
+                if (!state.user?.name) continue;
+                const dedupeKey = `${state.user.name}::${state.user.color}`;
+                if (seen.has(dedupeKey)) continue;
+                seen.add(dedupeKey);
+                out.push({ name: state.user.name, color: state.user.color });
             }
             setPeers(out);
         };

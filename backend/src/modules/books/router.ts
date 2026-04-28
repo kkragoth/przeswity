@@ -1,15 +1,16 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, inArray, asc } from 'drizzle-orm';
 import { db } from '../../db/client.js';
-import { book, assignment, bookYjsState, bookSnapshot, user } from '../../db/schema.js';
+import { book, assignment, bookYjsState, bookSnapshot, user, bookStageHistory } from '../../db/schema.js';
 import { requireSession, requireCoordinator, requireAdmin } from '../../auth/session.js';
 import { asyncHandler, AppError } from '../../lib/errors.js';
 import { registry } from '../../openapi/registry.js';
-import { BookDto, BookSummaryDto, CreateBookBody, UpdateBookBody } from './schemas.js';
+import { BookDto, BookSummaryDto, CreateBookBody, UpdateBookBody, PatchBookStageBody, PatchBookProgressBody, BookStageHistoryDto } from './schemas.js';
 import { markdownToYDocState, yDocStateToMarkdown } from '@przeswity/editor-schema/markdown';
 import { listVisibleBooks, getBookIfVisible, projectBook } from './service.js';
 import { getPresence } from '../../collab/presence.js';
+import { requireStageTransitionAllowed, validateProgress } from './workflow.js';
 
 export const booksRouter = Router();
 
@@ -41,6 +42,24 @@ registry.registerPath({
     operationId: 'bookDelete',
     request: { params: z.object({ id: z.string() }) },
     responses: { 204: { description: 'deleted' } },
+});
+registry.registerPath({
+    method: 'patch', path: '/api/books/{id}/stage',
+    operationId: 'bookPatchStage',
+    request: { params: z.object({ id: z.string() }), body: { content: { 'application/json': { schema: PatchBookStageBody } } } },
+    responses: { 200: { description: 'updated', content: { 'application/json': { schema: BookDto } } } },
+});
+registry.registerPath({
+    method: 'patch', path: '/api/books/{id}/progress',
+    operationId: 'bookPatchProgress',
+    request: { params: z.object({ id: z.string() }), body: { content: { 'application/json': { schema: PatchBookProgressBody } } } },
+    responses: { 200: { description: 'updated', content: { 'application/json': { schema: BookDto } } } },
+});
+registry.registerPath({
+    method: 'get', path: '/api/books/{id}/stage-history',
+    operationId: 'bookStageHistory',
+    request: { params: z.object({ id: z.string() }) },
+    responses: { 200: { description: 'history', content: { 'application/json': { schema: z.array(BookStageHistoryDto) } } } },
 });
 registry.registerPath({
     method: 'get', path: '/api/books/{id}/markdown',
@@ -121,6 +140,13 @@ booksRouter.post('/api/books', requireSession, requireCoordinator, asyncHandler(
             createdById: me.id,
             initialMarkdown: body.initialMarkdown,
         }).returning();
+        await tx.insert(bookStageHistory).values({
+            bookId: b.id,
+            fromStage: null,
+            toStage: b.stage,
+            note: 'initial',
+            createdById: me.id,
+        });
         if (yState) {
             await tx.insert(bookYjsState).values({ bookId: b.id, state: Buffer.from(yState) as unknown as Uint8Array });
         }
@@ -152,6 +178,74 @@ booksRouter.patch('/api/books/:id', requireSession, asyncHandler(async (req: any
     if (body.description !== undefined) update.description = body.description;
     const [updated] = await db.update(book).set(update).where(eq(book.id, req.params.id)).returning();
     res.json(projectBook(updated));
+}));
+
+booksRouter.patch('/api/books/:id/stage', requireSession, asyncHandler(async (req: any, res: any) => {
+    const me = req.user;
+    if (!me.isAdmin && !me.isCoordinator) {
+        throw new AppError('errors.book.forbidden', 403, 'forbidden');
+    }
+    const body = PatchBookStageBody.parse(req.body);
+    const [existing] = await db.select().from(book).where(eq(book.id, req.params.id));
+    if (!existing) throw new AppError('errors.book.notFound', 404, 'book not found');
+    requireStageTransitionAllowed(existing.stage, body.stage);
+    const now = new Date();
+    const [updated] = await db.update(book).set({
+        stage: body.stage,
+        stageChangedAt: now,
+        stageDueAt: body.dueAt === undefined ? existing.stageDueAt : (body.dueAt ? new Date(body.dueAt) : null),
+        stageNote: body.note ?? '',
+        updatedAt: now,
+        updatedById: me.id,
+    }).where(eq(book.id, req.params.id)).returning();
+    await db.insert(bookStageHistory).values({
+        bookId: updated.id,
+        fromStage: existing.stage,
+        toStage: body.stage,
+        note: body.note ?? '',
+        createdById: me.id,
+    });
+    res.json(projectBook(updated));
+}));
+
+booksRouter.patch('/api/books/:id/progress', requireSession, asyncHandler(async (req: any, res: any) => {
+    const me = req.user;
+    if (!me.isAdmin && !me.isCoordinator) {
+        throw new AppError('errors.book.forbidden', 403, 'forbidden');
+    }
+    const body = PatchBookProgressBody.parse(req.body);
+    validateProgress(body.progress);
+    const [existing] = await db.select().from(book).where(eq(book.id, req.params.id));
+    if (!existing) throw new AppError('errors.book.notFound', 404, 'book not found');
+    const [updated] = await db.update(book).set({
+        progress: body.progress,
+        progressMode: body.mode,
+        updatedAt: new Date(),
+        updatedById: me.id,
+    }).where(eq(book.id, req.params.id)).returning();
+    res.json(projectBook(updated));
+}));
+
+booksRouter.get('/api/books/:id/stage-history', requireSession, asyncHandler(async (req: any, res: any) => {
+    const me = req.user;
+    const b = await getBookIfVisible(req.params.id, me.id, !!me.isAdmin);
+    if (!b) {
+        const [exists] = await db.select({ id: book.id }).from(book).where(eq(book.id, req.params.id));
+        if (!exists) throw new AppError('errors.book.notFound', 404, 'book not found');
+        throw new AppError('errors.book.forbidden', 403, 'no access');
+    }
+    const rows = await db.select().from(bookStageHistory)
+        .where(eq(bookStageHistory.bookId, req.params.id))
+        .orderBy(asc(bookStageHistory.createdAt));
+    res.json(rows.map((r) => ({
+        id: r.id,
+        bookId: r.bookId,
+        fromStage: r.fromStage,
+        toStage: r.toStage,
+        note: r.note,
+        createdById: r.createdById,
+        createdAt: new Date(r.createdAt).toISOString(),
+    })));
 }));
 
 booksRouter.delete('/api/books/:id', requireSession, requireAdmin, asyncHandler(async (req: any, res: any) => {

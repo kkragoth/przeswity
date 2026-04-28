@@ -37,7 +37,7 @@ interface SessionProps {
 }
 
 function paneClass(side: 'left' | 'right', state: 'expanded' | 'rail' | 'hidden'): string {
-    if (state === 'expanded') return '';
+    if (state === 'expanded') return `pane-${side}-open`;
     return `pane-${side}-${state}`;
 }
 

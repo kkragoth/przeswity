@@ -21,7 +21,7 @@ export const Route = createFileRoute('/_app')({
  * (today: the editor at /books/$bookId — owns its own header).
  */
 function isImmersiveRoute(pathname: string): boolean {
-    return /^\/books\/[^/]+$/.test(pathname);
+    return pathname === '/books' || /^\/books\/[^/]+$/.test(pathname);
 }
 
 function AppLayout() {

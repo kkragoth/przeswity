@@ -85,7 +85,27 @@
         "card": {
             "noDescription": "Без опису",
             "assignees": "{{count}} осіб",
-            "open": "Відкрити"
+            "open": "Відкрити",
+            "stageProgress": "Етап {{current}}/{{total}}",
+            "noActivity": "Немає активності",
+            "activityToday": "Активність сьогодні",
+            "activityYesterday": "Активність вчора",
+            "activityDaysAgo": "{{count}} днів тому"
+        },
+        "status": {
+            "needsAttention": "Потребує уваги",
+            "active": "Активна",
+            "inProgress": "В процесі"
+        },
+        "stages": {
+            "translation": "Переклад",
+            "editing": "Редактура",
+            "authorization": "Авторизація",
+            "proofreading": "Коректура",
+            "applying_changes": "Внесення правок",
+            "typesetting": "Верстка",
+            "post_typeset_proof": "Коректура після верстки",
+            "finalization": "Фіналізація"
         }
     }
 }

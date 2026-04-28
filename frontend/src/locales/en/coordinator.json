@@ -31,5 +31,39 @@
         "title": "You have no books yet",
         "body": "Create your first book to start collaborating.",
         "cta": "New book"
+    },
+    "dashboard": {
+        "activeProjects": "{{count}} active projects",
+        "kpi": {
+            "attention": "Needs attention",
+            "recent": "Active today / yesterday",
+            "activeWeek": "Active this week",
+            "unassigned": "Unassigned"
+        },
+        "view": {
+            "list": "List",
+            "timeline": "Activity timeline"
+        },
+        "quick": {
+            "all": "All",
+            "attention": "Attention",
+            "recent": "Recent changes",
+            "unassigned": "Unassigned"
+        },
+        "role": "Role",
+        "showing": "Showing {{visible}} of {{total}}",
+        "noTimeline": "No books for this view.",
+        "status": {
+            "unassigned": "Unassigned",
+            "attention": "Needs attention",
+            "recent": "Recent activity",
+            "stable": "Stable"
+        },
+        "activity": {
+            "none": "No activity",
+            "today": "Today",
+            "yesterday": "Yesterday",
+            "daysAgo": "{{count}} days ago"
+        }
     }
 }

@@ -123,12 +123,12 @@
 .vrail-btn-label { flex: 1 1 auto; }
 
 /* When pane is in rail mode, hide labels and tighten width. */
-.editor-host.pane-left-rail  .vrail-btn-label,
-.editor-host.pane-right-rail .vrail-btn-label,
-.editor-host.pane-left-rail  .pane-body,
-.editor-host.pane-right-rail .pane-body { display: none; }
-.editor-host.pane-left-rail  .vrail-btn,
-.editor-host.pane-right-rail .vrail-btn { justify-content: center; padding: var(--sp-3) 0; }
+.editor-host.pane-left-rail .left-pane .vrail-btn-label,
+.editor-host.pane-left-rail .left-pane .pane-body,
+.editor-host.pane-right-rail .right-pane .vrail-btn-label,
+.editor-host.pane-right-rail .right-pane .pane-body { display: none; }
+.editor-host.pane-left-rail .left-pane .vrail-btn,
+.editor-host.pane-right-rail .right-pane .vrail-btn { justify-content: center; padding: var(--sp-3) 0; }
 
 /* Pane body (scrollable region under the tab strip).
    overscroll-behavior: contain — pane scroll never leaks to the document. */
@@ -170,8 +170,8 @@
   justify-content: center;
 }
 .pane-collapse:hover { background: var(--bg-tint); color: var(--text); }
-.editor-host.pane-left-rail  .pane-header,
-.editor-host.pane-right-rail .pane-header { display: none; }
+.editor-host.pane-left-rail .left-pane .pane-header,
+.editor-host.pane-right-rail .right-pane .pane-header { display: none; }
 
 /* ---------- Pane empty state ---------- */
 .pane-empty {

@@ -1,4 +1,4 @@
-import { pgTable, text, boolean, timestamp, uuid, primaryKey, index, customType, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, text, boolean, timestamp, uuid, primaryKey, index, customType, jsonb, integer } from 'drizzle-orm/pg-core';
 export { user, session, account, verification } from './auth-schema.js';
 import { user } from './auth-schema.js';
 
@@ -10,11 +10,27 @@ export const book = pgTable('book', {
     description: text('description').notNull().default(''),
     createdById: text('created_by_id').notNull().references(() => user.id),
     initialMarkdown: text('initial_markdown').notNull().default(''),
+    stage: text('stage').notNull().default('editing'),
+    progress: integer('progress').notNull().default(0),
+    progressMode: text('progress_mode').notNull().default('manual'),
+    stageChangedAt: timestamp('stage_changed_at').notNull().defaultNow(),
+    stageDueAt: timestamp('stage_due_at'),
+    stageNote: text('stage_note').notNull().default(''),
     updatedById: text('updated_by_id').references(() => user.id),
     lastEditAt: timestamp('last_edit_at'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
+
+export const bookStageHistory = pgTable('book_stage_history', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    bookId: uuid('book_id').notNull().references(() => book.id, { onDelete: 'cascade' }),
+    fromStage: text('from_stage'),
+    toStage: text('to_stage').notNull(),
+    note: text('note').notNull().default(''),
+    createdById: text('created_by_id').notNull().references(() => user.id),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (t) => ({ byBook: index('book_stage_history_book_idx').on(t.bookId, t.createdAt) }));
 
 export const assignment = pgTable('assignment', {
     bookId: uuid('book_id').notNull().references(() => book.id, { onDelete: 'cascade' }),

@@ -11,6 +11,12 @@ export const projectBook = (b: BookRow) => ({
     createdById: b.createdById,
     updatedById: b.updatedById ?? null,
     lastEditAt: b.lastEditAt ? new Date(b.lastEditAt).toISOString() : null,
+    stage: b.stage,
+    progress: b.progress,
+    progressMode: b.progressMode,
+    stageChangedAt: new Date(b.stageChangedAt).toISOString(),
+    stageDueAt: b.stageDueAt ? new Date(b.stageDueAt).toISOString() : null,
+    stageNote: b.stageNote,
     createdAt: new Date(b.createdAt).toISOString(),
     updatedAt: new Date(b.updatedAt).toISOString(),
 });

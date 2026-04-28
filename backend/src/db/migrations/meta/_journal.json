@@ -8,6 +8,13 @@
       "when": 1777369206602,
       "tag": "0000_common_ikaris",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777389600000,
+      "tag": "0001_stage_progress",
+      "breakpoints": true
     }
   ]
 }

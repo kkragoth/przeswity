@@ -85,7 +85,27 @@
         "card": {
             "noDescription": "No description",
             "assignees": "{{count}} people",
-            "open": "Open"
+            "open": "Open",
+            "stageProgress": "Stage {{current}}/{{total}}",
+            "noActivity": "No activity",
+            "activityToday": "Active today",
+            "activityYesterday": "Active yesterday",
+            "activityDaysAgo": "{{count}} days ago"
+        },
+        "status": {
+            "needsAttention": "Needs attention",
+            "active": "Active",
+            "inProgress": "In progress"
+        },
+        "stages": {
+            "translation": "Translation",
+            "editing": "Editing",
+            "authorization": "Authorization",
+            "proofreading": "Proofreading",
+            "applying_changes": "Applying changes",
+            "typesetting": "Typesetting",
+            "post_typeset_proof": "Post-typeset proof",
+            "finalization": "Finalization"
         }
     }
 }
