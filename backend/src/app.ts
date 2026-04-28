@@ -5,6 +5,8 @@ import { toNodeHandler } from 'better-auth/node';
 import { auth } from './auth/betterAuth.js';
 import { devAuthRouter, devAuthEnabled } from './auth/devSignIn.js';
 import { docsRouter } from './openapi/docs.js';
+import { usersRouter } from './modules/users/router.js';
+import { errorMiddleware } from './lib/errors.js';
 import { env } from './env.js';
 
 export async function buildApp() {
@@ -20,8 +22,11 @@ export async function buildApp() {
 
     app.use(express.json());
     app.use(docsRouter);
+    app.use(usersRouter);
 
     app.get('/healthz', (_req, res) => res.json({ ok: true }));
+
+    app.use(errorMiddleware);
 
     return app;
 }

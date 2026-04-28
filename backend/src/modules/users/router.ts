@@ -1,0 +1,134 @@
+import { Router } from 'express';
+import { z } from 'zod';
+import { eq } from 'drizzle-orm';
+import { db } from '../../db/client.js';
+import { user, assignment } from '../../db/schema.js';
+import { auth } from '../../auth/betterAuth.js';
+import { requireSession, requireAdmin } from '../../auth/session.js';
+import { asyncHandler, AppError } from '../../lib/errors.js';
+import { registry } from '../../openapi/registry.js';
+import { UserDto, MeDto, CreateUserBody, UpdateUserBody, PatchMeBody } from './schemas.js';
+
+export const usersRouter = Router();
+
+registry.registerPath({
+    method: 'get', path: '/api/users',
+    operationId: 'usersList',
+    responses: { 200: { description: 'list', content: { 'application/json': { schema: z.array(UserDto) } } } },
+});
+registry.registerPath({
+    method: 'post', path: '/api/users',
+    operationId: 'userCreate',
+    request: { body: { content: { 'application/json': { schema: CreateUserBody } } } },
+    responses: { 200: { description: 'created', content: { 'application/json': { schema: UserDto } } } },
+});
+registry.registerPath({
+    method: 'patch', path: '/api/users/{id}',
+    operationId: 'userPatch',
+    request: { params: z.object({ id: z.string() }), body: { content: { 'application/json': { schema: UpdateUserBody } } } },
+    responses: { 200: { description: 'updated', content: { 'application/json': { schema: UserDto } } } },
+});
+registry.registerPath({
+    method: 'delete', path: '/api/users/{id}',
+    operationId: 'userDelete',
+    request: { params: z.object({ id: z.string() }) },
+    responses: { 204: { description: 'deleted' } },
+});
+registry.registerPath({
+    method: 'get', path: '/api/me',
+    operationId: 'meGet',
+    responses: { 200: { description: 'me', content: { 'application/json': { schema: MeDto } } } },
+});
+registry.registerPath({
+    method: 'patch', path: '/api/me',
+    operationId: 'mePatch',
+    request: { body: { content: { 'application/json': { schema: PatchMeBody } } } },
+    responses: { 200: { description: 'me updated', content: { 'application/json': { schema: MeDto } } } },
+});
+
+const projectUser = (u: typeof user.$inferSelect) => ({
+    id: u.id,
+    email: u.email,
+    name: u.name,
+    isAdmin: u.isAdmin ?? false,
+    isCoordinator: u.isCoordinator ?? false,
+    competencyTags: u.competencyTags ?? [],
+    color: u.color ?? '#7c3aed',
+    image: u.image ?? null,
+    preferredLocale: (u.preferredLocale ?? 'pl') as 'pl' | 'en' | 'ua',
+});
+
+async function buildMeResponse(userId: string) {
+    const [full] = await db.select().from(user).where(eq(user.id, userId));
+    if (!full) throw new AppError('errors.user.notFound', 404, 'user not found');
+    const rows = await db.select({ bookId: assignment.bookId, role: assignment.role })
+        .from(assignment).where(eq(assignment.userId, userId));
+    const visibleBookCount = new Set(rows.map((r) => r.bookId)).size;
+    const assignmentRoleCounts: Record<string, number> = {};
+    for (const r of rows) assignmentRoleCounts[r.role] = (assignmentRoleCounts[r.role] ?? 0) + 1;
+    return { ...projectUser(full), visibleBookCount, assignmentRoleCounts, onboardingDismissedAt: full.onboardingDismissedAt ?? '' };
+}
+
+usersRouter.get('/api/users', requireSession, requireAdmin, asyncHandler(async (_req: any, res: any) => {
+    const rows = await db.select().from(user);
+    res.json(rows.map(projectUser));
+}));
+
+usersRouter.post('/api/users', requireSession, requireAdmin, asyncHandler(async (req: any, res: any) => {
+    const body = CreateUserBody.parse(req.body);
+    try {
+        await auth.api.signUpEmail({ body: { email: body.email, password: body.password, name: body.name }, asResponse: true });
+    } catch (e: any) {
+        if (String(e?.message ?? '').toLowerCase().includes('exists')) {
+            throw new AppError('errors.user.duplicate', 409, 'user already exists');
+        }
+        throw e;
+    }
+    await db.update(user)
+        .set({ isAdmin: body.isAdmin, isCoordinator: body.isCoordinator, competencyTags: body.competencyTags })
+        .where(eq(user.email, body.email));
+    const [u] = await db.select().from(user).where(eq(user.email, body.email));
+    res.json(projectUser(u));
+}));
+
+usersRouter.patch('/api/users/:id', requireSession, requireAdmin, asyncHandler(async (req: any, res: any) => {
+    const body = UpdateUserBody.parse(req.body);
+    const update: Partial<typeof user.$inferInsert> = {};
+    if (body.name !== undefined) update.name = body.name;
+    if (body.isAdmin !== undefined) update.isAdmin = body.isAdmin;
+    if (body.isCoordinator !== undefined) update.isCoordinator = body.isCoordinator;
+    if (body.competencyTags !== undefined) update.competencyTags = body.competencyTags;
+    if (body.color !== undefined) update.color = body.color;
+    if (Object.keys(update).length === 0) throw new AppError('errors.validation.empty', 400, 'no changes');
+    update.updatedAt = new Date();
+    const updated = await db.update(user).set(update).where(eq(user.id, req.params.id)).returning();
+    if (updated.length === 0) throw new AppError('errors.user.notFound', 404, 'user not found');
+    res.json(projectUser(updated[0]));
+}));
+
+usersRouter.delete('/api/users/:id', requireSession, requireAdmin, asyncHandler(async (req: any, res: any) => {
+    const deleted = await db.delete(user).where(eq(user.id, req.params.id)).returning({ id: user.id });
+    if (deleted.length === 0) throw new AppError('errors.user.notFound', 404, 'user not found');
+    res.status(204).end();
+}));
+
+usersRouter.get('/api/me', requireSession, asyncHandler(async (req: any, res: any) => {
+    res.json(await buildMeResponse(req.user.id));
+}));
+
+usersRouter.patch('/api/me', requireSession, asyncHandler(async (req: any, res: any) => {
+    const body = PatchMeBody.parse(req.body);
+    const userId: string = req.user.id;
+    const update: Partial<typeof user.$inferInsert> = {};
+    if (body.name !== undefined) update.name = body.name;
+    if (body.color !== undefined) update.color = body.color;
+    if (body.image !== undefined) update.image = body.image ?? null;
+    if (body.preferredLocale !== undefined) update.preferredLocale = body.preferredLocale;
+    if (body.onboardingDismissedAt !== undefined) {
+        update.onboardingDismissedAt = body.onboardingDismissedAt === 'now' ? new Date().toISOString() : '';
+    }
+    if (Object.keys(update).length === 0) throw new AppError('errors.validation.empty', 400, 'no changes');
+    update.updatedAt = new Date();
+    await db.update(user).set(update).where(eq(user.id, userId));
+    res.json(await buildMeResponse(userId));
+}));

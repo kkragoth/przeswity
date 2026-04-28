@@ -53,3 +53,19 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
     }
     next();
 }
+
+export function requireCoordinator(req: Request, res: Response, next: NextFunction) {
+    if (!req.user?.isAdmin && !req.user?.isCoordinator) {
+        res.status(403).json({ error: { code: 'errors.auth.forbidden', message: 'coordinator only' } });
+        return;
+    }
+    next();
+}
+
+// requireSession = attachSession + requireAuth in one step (convenience middleware chain)
+export async function requireSession(req: Request, res: Response, next: NextFunction) {
+    await attachSession(req, res, async (err?: any) => {
+        if (err) return next(err);
+        requireAuth(req, res, next);
+    });
+}
