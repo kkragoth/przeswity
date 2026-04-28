@@ -7,6 +7,8 @@
         "offline": "Офлайн",
         "reconnecting": "Повторне підключення...",
         "shortcuts": "Показати скорочення",
+        "peers": "Підключені користувачі",
+        "reconnect": "Натисніть, щоб перепідключитися",
         "exportDocx": "Експорт DOCX",
         "exportMarkdown": "Експорт Markdown",
         "snapshot": "Створити знімок версії",
@@ -40,7 +42,8 @@
         "undo": "Скасувати",
         "redo": "Повторити",
         "clearFormat": "Очистити форматування",
-        "suggestingMode": "Режим пропозицій"
+        "suggestingMode": "Режим пропозицій",
+        "suggestingForced": "Режим пропозицій примусово увімкнено для вашої ролі"
     },
     "comments": {
         "tabs": {

@@ -7,6 +7,8 @@
         "offline": "Offline",
         "reconnecting": "Łączenie ponownie...",
         "shortcuts": "Pokaż skróty",
+        "peers": "Połączeni użytkownicy",
+        "reconnect": "Kliknij, aby połączyć ponownie",
         "exportDocx": "Eksport DOCX",
         "exportMarkdown": "Eksport Markdown",
         "snapshot": "Zrób migawkę wersji",
@@ -40,7 +42,8 @@
         "undo": "Cofnij",
         "redo": "Ponów",
         "clearFormat": "Wyczyść formatowanie",
-        "suggestingMode": "Tryb sugerowania"
+        "suggestingMode": "Tryb sugerowania",
+        "suggestingForced": "Tryb sugerowania wymuszony przez Twoją rolę"
     },
     "comments": {
         "tabs": {

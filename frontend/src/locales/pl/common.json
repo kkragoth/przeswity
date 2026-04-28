@@ -63,6 +63,7 @@
         "submit": "Zapisz przypisania"
     },
     "bookDetail": {
+        "notFound": "Nie znaleziono książki.",
         "exportDocx": "Eksport DOCX",
         "exportMarkdown": "Eksport MD",
         "snapshot": "Migawka",

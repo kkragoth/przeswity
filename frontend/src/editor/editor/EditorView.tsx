@@ -270,11 +270,20 @@ export function EditorView({
       ]
     : []
 
+  const focusOnEmptyClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!editor || !canEditOrSuggest) return
+    const target = e.target as HTMLElement
+    // Let clicks inside the editable content, comments, drag handles, or any interactive child handle themselves.
+    if (target.closest('.prose-editor, [data-comment-id], .drag-handle, button, a, input, textarea')) return
+    e.preventDefault()
+    editor.commands.focus('end')
+  }
+
   return (
     <div className="editor-shell">
       {editor && <Toolbar editor={editor} suggestingMode={suggestingMode} />}
       <div className="editor-scroll">
-        <div className="editor-page">
+        <div className="editor-page" onMouseDown={focusOnEmptyClick}>
           <EditorContent editor={editor} />
           <CommentAnchors
             editor={editor}

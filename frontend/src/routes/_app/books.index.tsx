@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { RoleBadge } from '@/components/RoleBadge';
 import { EmptyState } from '@/components/EmptyState';
 
-export const Route = createFileRoute('/_app/books')({
+export const Route = createFileRoute('/_app/books/')({
     component: BooksPage,
 });
 

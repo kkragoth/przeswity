@@ -34,10 +34,15 @@ button {
   color: inherit;
 }
 
-.app {
+.editor-host {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: hidden;
+  background: var(--bg);
+}
+.editor-host-loading {
+  background: var(--bg);
 }
 

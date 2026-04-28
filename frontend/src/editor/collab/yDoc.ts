@@ -3,11 +3,14 @@ import { HocuspocusProvider } from '@hocuspocus/provider';
 import { IndexeddbPersistence } from 'y-indexeddb';
 
 export interface CollabBundle {
+    id: string;
     doc: Y.Doc;
     provider: HocuspocusProvider;
     persistence: IndexeddbPersistence;
     ready: Promise<void>;
 }
+
+let nextId = 0;
 
 export function createCollab(bookId: string): CollabBundle {
     const doc = new Y.Doc();
@@ -20,5 +23,5 @@ export function createCollab(bookId: string): CollabBundle {
         provider.on('synced', () => resolve());
     });
 
-    return { doc, provider, persistence, ready };
+    return { id: `${bookId}#${++nextId}`, doc, provider, persistence, ready };
 }

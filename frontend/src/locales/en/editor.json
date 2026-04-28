@@ -7,6 +7,8 @@
         "offline": "Offline",
         "reconnecting": "Reconnecting...",
         "shortcuts": "Show shortcuts",
+        "peers": "Connected users",
+        "reconnect": "Click to reconnect",
         "exportDocx": "Export DOCX",
         "exportMarkdown": "Export Markdown",
         "snapshot": "Create version snapshot",
@@ -40,7 +42,8 @@
         "undo": "Undo",
         "redo": "Redo",
         "clearFormat": "Clear formatting",
-        "suggestingMode": "Suggesting mode"
+        "suggestingMode": "Suggesting mode",
+        "suggestingForced": "Locked to suggesting for your role"
     },
     "comments": {
         "tabs": {

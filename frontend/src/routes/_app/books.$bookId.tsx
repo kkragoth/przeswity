@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { bookGet, bookAssignmentsList } from '@/api/generated/services.gen';
 import { authClient } from '@/auth/client';
 import { EditorHost } from '@/editor/EditorHost';
@@ -9,6 +10,7 @@ export const Route = createFileRoute('/_app/books/$bookId')({
 });
 
 function BookDetail() {
+    const { t } = useTranslation('common');
     const { bookId } = Route.useParams();
     const session = authClient.useSession();
     const u = session.data?.user as any;
@@ -24,8 +26,12 @@ function BookDetail() {
     });
 
     if (!u) return null;
-    if (bookQ.isLoading) return <div className="p-8">Ładowanie…</div>;
-    if (!bookQ.data) return <div className="p-8">Nie znaleziono książki.</div>;
+    if (bookQ.isLoading || assignmentsQ.isLoading) {
+        return <div className="p-8 text-sm text-stone-500">{t('states.loading')}</div>;
+    }
+    if (!bookQ.data) {
+        return <div className="p-8 text-sm text-stone-500">{t('bookDetail.notFound')}</div>;
+    }
 
     const myRoles = (assignmentsQ.data ?? []).filter((a: any) => a.userId === u.id).map((a: any) => a.role);
     const isOwner = bookQ.data.createdById === u.id;

@@ -63,6 +63,7 @@
         "submit": "Зберегти призначення"
     },
     "bookDetail": {
+        "notFound": "Книгу не знайдено.",
         "exportDocx": "Експорт DOCX",
         "exportMarkdown": "Експорт MD",
         "snapshot": "Знімок",
