@@ -260,20 +260,29 @@ export function CommentsSidebar({
                 </span>
             </div>
             <div className="comment-filters">
-                <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                >
-                    <option value="open">{t('comments.filter.open')}</option>
-                    <option value="resolved">{t('comments.filter.resolved')}</option>
-                    <option value="all">{t('comments.filter.all')}</option>
-                </select>
+                <div className="filter-chips">
+                    {(['open', 'resolved', 'all'] as StatusFilter[]).map((s) => {
+                        const labels: Record<StatusFilter, string> = {
+                            open: `${t('comments.filter.open')} · ${totalOpen}`,
+                            resolved: t('comments.filter.resolved'),
+                            all: t('comments.filter.all'),
+                        };
+                        return (
+                            <button
+                                key={s}
+                                type="button"
+                                className={`filter-chip${statusFilter === s ? ' is-active' : ''}`}
+                                onClick={() => setStatusFilter(s)}
+                            >
+                                {labels[s]}
+                            </button>
+                        );
+                    })}
+                </div>
                 <select value={authorFilter} onChange={(e) => setAuthorFilter(e.target.value)}>
                     <option value="">{t('comments.filter.allAuthors')}</option>
                     {allAuthors.map((a) => (
-                        <option key={a} value={a}>
-                            {a}
-                        </option>
+                        <option key={a} value={a}>{a}</option>
                     ))}
                 </select>
                 <select
@@ -281,13 +290,9 @@ export function CommentsSidebar({
                     onChange={(e) => setRoleFilter(e.target.value as Role | '')}
                 >
                     <option value="">{t('comments.filter.allRoles')}</option>
-                    {(['translator', 'author', 'editor', 'proofreader', 'coordinator'] as Role[]).map(
-                        (r) => (
-                            <option key={r} value={r}>
-                                {r}
-                            </option>
-                        ),
-                    )}
+                    {(['translator', 'author', 'editor', 'proofreader', 'coordinator'] as Role[]).map((r) => (
+                        <option key={r} value={r}>{t(`roles.${r}`, { defaultValue: r })}</option>
+                    ))}
                 </select>
             </div>
             {filtered.length === 0 && (
