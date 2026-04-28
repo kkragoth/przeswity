@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import '@/editor/editor/header-footer-bar.css';
 
+export enum HeaderFooterKind {
+    Header = 'header',
+    Footer = 'footer',
+}
+
 interface HeaderFooterBarProps {
-    kind: 'header' | 'footer';
+    kind: HeaderFooterKind;
     left: string;
     right: string;
     onApply: (left: string, right: string) => void;
@@ -10,6 +16,7 @@ interface HeaderFooterBarProps {
 }
 
 export function HeaderFooterBar({ kind, left, right, onApply, onDismiss }: HeaderFooterBarProps) {
+    const { t } = useTranslation('editor');
     const [leftVal, setLeftVal] = useState(left);
     const [rightVal, setRightVal] = useState(right);
 
@@ -18,42 +25,53 @@ export function HeaderFooterBar({ kind, left, right, onApply, onDismiss }: Heade
         setRightVal(right);
     }, [left, right, kind]);
 
-    const apply = () => onApply(leftVal, rightVal);
+    const handleApply = () => onApply(leftVal, rightVal);
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') apply();
+        if (e.key === 'Enter') handleApply();
         if (e.key === 'Escape') onDismiss();
     };
 
     return (
         <div className="hf-bar">
-            <span className="hf-bar__label">{kind === 'header' ? 'Header' : 'Footer'}</span>
+            <span className="hf-bar__label">
+                {kind === HeaderFooterKind.Header
+                    ? t('headerFooterBar.labelHeader')
+                    : t('headerFooterBar.labelFooter')}
+            </span>
             <div className="hf-bar__inputs">
                 <div className="hf-bar__field">
-                    <span className="hf-bar__field-label">Left</span>
+                    <span className="hf-bar__field-label">{t('headerFooterBar.fieldLeft')}</span>
                     <input
                         className="hf-bar__input"
                         value={leftVal}
                         onChange={(e) => setLeftVal(e.target.value)}
-                        onBlur={apply}
+                        onBlur={handleApply}
                         onKeyDown={handleKeyDown}
-                        placeholder="e.g. Chapter title"
+                        placeholder={t('headerFooterBar.placeholderLeft')}
                     />
                 </div>
                 <div className="hf-bar__field">
-                    <span className="hf-bar__field-label">Right</span>
+                    <span className="hf-bar__field-label">{t('headerFooterBar.fieldRight')}</span>
                     <input
                         className="hf-bar__input"
                         value={rightVal}
                         onChange={(e) => setRightVal(e.target.value)}
-                        onBlur={apply}
+                        onBlur={handleApply}
                         onKeyDown={handleKeyDown}
-                        placeholder="{page} of {total}"
+                        placeholder={t('headerFooterBar.placeholderRight')}
                     />
                 </div>
             </div>
-            <span className="hf-bar__hint">tokens: {'{page}'} {'{total}'}</span>
-            <button type="button" className="hf-bar__close" onClick={onDismiss} aria-label="Close">✕</button>
+            <span className="hf-bar__hint">{t('headerFooterBar.tokensHint')}</span>
+            <button
+                type="button"
+                className="hf-bar__close"
+                onClick={onDismiss}
+                aria-label={t('headerFooterBar.close')}
+            >
+                ✕
+            </button>
         </div>
     );
 }

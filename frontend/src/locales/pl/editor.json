@@ -133,5 +133,15 @@
         "author": "Autor",
         "typesetter": "Skład",
         "coordinator": "Koordynator"
+    },
+    "headerFooterBar": {
+        "labelHeader": "Nagłówek",
+        "labelFooter": "Stopka",
+        "fieldLeft": "Lewo",
+        "fieldRight": "Prawo",
+        "placeholderLeft": "np. Tytuł rozdziału",
+        "placeholderRight": "{page} z {total}",
+        "tokensHint": "tokeny: {page} {total}",
+        "close": "Zamknij"
     }
 }

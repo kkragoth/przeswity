@@ -133,5 +133,15 @@
         "author": "Author",
         "typesetter": "Typesetter",
         "coordinator": "Coordinator"
+    },
+    "headerFooterBar": {
+        "labelHeader": "Header",
+        "labelFooter": "Footer",
+        "fieldLeft": "Left",
+        "fieldRight": "Right",
+        "placeholderLeft": "e.g. Chapter title",
+        "placeholderRight": "{page} of {total}",
+        "tokensHint": "tokens: {page} {total}",
+        "close": "Close"
     }
 }

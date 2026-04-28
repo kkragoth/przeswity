@@ -133,5 +133,15 @@
         "author": "Автор",
         "typesetter": "Верстальник",
         "coordinator": "Координатор"
+    },
+    "headerFooterBar": {
+        "labelHeader": "Верхній колонтитул",
+        "labelFooter": "Нижній колонтитул",
+        "fieldLeft": "Ліворуч",
+        "fieldRight": "Праворуч",
+        "placeholderLeft": "напр. Назва розділу",
+        "placeholderRight": "{page} з {total}",
+        "tokensHint": "токени: {page} {total}",
+        "close": "Закрити"
     }
 }
