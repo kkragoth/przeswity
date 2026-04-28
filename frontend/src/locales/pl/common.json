@@ -30,7 +30,10 @@
         "status": "Status",
         "language": "Język",
         "loading": "Ładowanie...",
-        "search": "Szukaj"
+        "search": "Szukaj",
+        "color": "Kolor",
+        "image": "Obrazek (URL)",
+        "back": "Wróć"
     },
     "states": {
         "loading": "Ładowanie...",
@@ -40,5 +43,18 @@
         "online": "Online",
         "offline": "Offline",
         "reconnecting": "Łączenie ponownie..."
+    },
+    "books": {
+        "title": "Książki",
+        "newBook": "Nowa książka",
+        "empty": {
+            "title": "Brak książek",
+            "body": "Nie masz jeszcze żadnych książek do edycji."
+        },
+        "card": {
+            "noDescription": "Brak opisu",
+            "assignees": "{{count}} osób",
+            "open": "Otwórz"
+        }
     }
 }

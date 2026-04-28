@@ -77,5 +77,13 @@
         "zen": "Focus mode",
         "preview": "Preview mode",
         "review": "Review mode"
+    },
+    "roles": {
+        "editor": "Editor",
+        "proofreader": "Proofreader",
+        "translator": "Translator",
+        "author": "Author",
+        "typesetter": "Typesetter",
+        "coordinator": "Coordinator"
     }
 }

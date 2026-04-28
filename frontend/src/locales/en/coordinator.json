@@ -4,6 +4,8 @@
     "newBook": "New book",
     "books": {
         "title": "My books",
+        "filterMine": "Only mine",
+        "filterAll": "All visible",
         "table": {
             "title": "Title",
             "stage": "Stage",

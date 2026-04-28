@@ -6,17 +6,26 @@
         "system": "System Status"
     },
     "users": {
+        "title": "Users",
         "newUser": "New user",
+        "newUserCta": "+ New",
+        "empty": "No users",
+        "adminBadge": "Admin",
+        "coordinatorBadge": "Coord",
         "table": {
             "name": "Name",
             "email": "Email",
             "badges": "Badges",
+            "competencyTags": "Tags",
             "lastLogin": "Last login",
             "actions": "Actions"
         },
         "form": {
             "title": "User details",
+            "createTitle": "New user",
+            "editTitle": "Edit user",
             "competencyTags": "Competency tags",
+            "competencyTagsHint": "Comma-separated",
             "color": "Color",
             "isAdmin": "Administrator",
             "isCoordinator": "Coordinator"

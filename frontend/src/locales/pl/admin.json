@@ -6,17 +6,26 @@
         "system": "Status systemu"
     },
     "users": {
+        "title": "Użytkownicy",
         "newUser": "Nowy użytkownik",
+        "newUserCta": "+ Nowy",
+        "empty": "Brak użytkowników",
+        "adminBadge": "Admin",
+        "coordinatorBadge": "Koord",
         "table": {
             "name": "Imię",
             "email": "Email",
             "badges": "Znaczniki",
+            "competencyTags": "Tagi",
             "lastLogin": "Ostatnie logowanie",
             "actions": "Akcje"
         },
         "form": {
             "title": "Dane użytkownika",
+            "createTitle": "Nowy użytkownik",
+            "editTitle": "Edytuj użytkownika",
             "competencyTags": "Tagi kompetencji",
+            "competencyTagsHint": "Oddziel przecinkami",
             "color": "Kolor",
             "isAdmin": "Administrator",
             "isCoordinator": "Koordynator"

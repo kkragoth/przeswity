@@ -4,6 +4,8 @@
     "newBook": "Нова книга",
     "books": {
         "title": "Мої книги",
+        "filterMine": "Тільки мої",
+        "filterAll": "Всі видимі",
         "table": {
             "title": "Назва",
             "stage": "Етап",

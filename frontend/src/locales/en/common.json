@@ -30,7 +30,10 @@
         "status": "Status",
         "language": "Language",
         "loading": "Loading...",
-        "search": "Search"
+        "search": "Search",
+        "color": "Color",
+        "image": "Image URL",
+        "back": "Back"
     },
     "states": {
         "loading": "Loading...",
@@ -40,5 +43,18 @@
         "online": "Online",
         "offline": "Offline",
         "reconnecting": "Reconnecting..."
+    },
+    "books": {
+        "title": "Books",
+        "newBook": "New book",
+        "empty": {
+            "title": "No books",
+            "body": "You don't have any books to edit yet."
+        },
+        "card": {
+            "noDescription": "No description",
+            "assignees": "{{count}} people",
+            "open": "Open"
+        }
     }
 }

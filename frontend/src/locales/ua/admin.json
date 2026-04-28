@@ -6,17 +6,26 @@
         "system": "Стан системи"
     },
     "users": {
+        "title": "Користувачі",
         "newUser": "Новий користувач",
+        "newUserCta": "+ Новий",
+        "empty": "Немає користувачів",
+        "adminBadge": "Адмін",
+        "coordinatorBadge": "Коорд",
         "table": {
             "name": "Ім'я",
             "email": "Email",
             "badges": "Значки",
+            "competencyTags": "Теги",
             "lastLogin": "Останній вхід",
             "actions": "Дії"
         },
         "form": {
             "title": "Дані користувача",
+            "createTitle": "Новий користувач",
+            "editTitle": "Редагувати користувача",
             "competencyTags": "Теги компетенцій",
+            "competencyTagsHint": "Через кому",
             "color": "Колір",
             "isAdmin": "Адміністратор",
             "isCoordinator": "Координатор"

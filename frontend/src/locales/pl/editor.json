@@ -77,5 +77,13 @@
         "zen": "Tryb skupienia",
         "preview": "Tryb podglądu",
         "review": "Tryb recenzji"
+    },
+    "roles": {
+        "editor": "Redaktor",
+        "proofreader": "Korekta",
+        "translator": "Tłumacz",
+        "author": "Autor",
+        "typesetter": "Skład",
+        "coordinator": "Koordynator"
     }
 }
