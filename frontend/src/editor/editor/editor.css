@@ -14,80 +14,34 @@
         inset 0 0 24px var(--accent-soft);
 }
 
-/* ---------- Scroll container ----------
-   overscroll-behavior: contain — keeps scroll energy inside the editor;
-   no rubber-band leak to the parent when the document bottoms out.
-   (No CSS `contain` — it broke scroll on long documents in Chromium.)
-*/
+/* ---------- Scroll container ---------- */
 .editor-scroll {
     flex: 1 1 0;
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
+    overscroll-behavior: contain;
     scrollbar-gutter: stable;
     padding: var(--sp-12) var(--sp-6) var(--sp-16);
     background: var(--bg);
 }
 
-/* ---------- Paper page ---------- */
+/* ---------- Page wrapper ----------
+   PaginationPlus owns width, height and margins via [data-rm-pagination].
+   .editor-page just centers the plugin container.
+*/
 .editor-page {
     position: relative;
     margin: 0 auto;
-    width: calc(var(--editor-measure) + var(--page-margin-x) * 2);
     max-width: 100%;
-    min-height: max(calc(100vh - 240px), var(--page-stack-height, 1100px));
 }
 
-.editor-paper-layer {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-}
-
-.editor-paper-sheet {
-    position: absolute;
-    top: var(--page-top);
-    left: 0;
-    right: 0;
-    height: var(--page-height-px, 1100px);
-    background:
-        linear-gradient(90deg, rgba(122, 31, 43, 0.045), transparent 18px),
-        var(--bg-paper);
-    border: 1px solid var(--border-soft);
-    border-radius: var(--r-2);
-    box-shadow: var(--shadow-paper-2);
-}
-
-.editor-paper-sheet::before,
-.editor-paper-sheet::after {
-    content: '';
-    position: absolute;
-    left: var(--page-margin-x);
-    right: var(--page-margin-x);
-    height: 1px;
-    background: var(--border-soft);
-    opacity: 0.72;
-}
-
-.editor-paper-sheet::before {
-    top: var(--page-margin-y);
-}
-
-.editor-paper-sheet::after {
-    bottom: var(--page-margin-y);
-}
-
-/* ---------- Content typography ---------- */
+/* ---------- Content typography ----------
+   PaginationPlus controls .prose-editor sizing — no width/height/margin overrides here.
+*/
 .prose-editor {
     position: relative;
     z-index: 1;
-    width: var(--editor-measure);
-    max-width: calc(100% - var(--page-margin-x) * 2);
-    min-height: var(--page-stack-height, 1100px);
-    margin: 0 var(--page-margin-x);
-    padding-top: var(--page-margin-y);
-    padding-bottom: var(--page-margin-y);
     outline: none;
     font-family: var(--font-body);
     font-size: var(--content-fs);
@@ -98,10 +52,6 @@
 
 .prose-editor > * {
     margin-top: 0;
-}
-
-.prose-editor > .pm-page-break-before {
-    padding-top: var(--pm-page-break-before);
 }
 
 .prose-editor p {
@@ -258,4 +208,26 @@
 
 .bubble-menu button.is-active {
     background: rgba(255, 255, 255, 0.20);
+}
+
+/* ---------- Print ---------- */
+@media print {
+    .editor-toolbar,
+    .toolbar,
+    .left-pane,
+    .right-pane,
+    .statusbar,
+    .bubble-menu,
+    .drag-handle,
+    .hf-bar { display: none !important; }
+
+    .editor-scroll {
+        overflow: visible;
+        padding: 0;
+    }
+
+    .editor-page {
+        margin: 0;
+        width: 100%;
+    }
 }
