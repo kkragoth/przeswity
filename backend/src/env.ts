@@ -10,10 +10,11 @@ const Schema = z.object({
     BETTER_AUTH_URL: z.string().url(),
     CORS_ORIGINS: z.string().transform((s) => s.split(',').map((x) => x.trim())),
     COOKIE_DOMAIN: z.string().default(''),
-    COOKIE_SECURE: z.coerce.boolean(),
+    // z.coerce.boolean() is JS Boolean() coercion — 'false' → true. Use string compare instead.
+    COOKIE_SECURE: z.string().default('false').transform((s) => s.toLowerCase() === 'true'),
     PUBLIC_API_URL: z.string().url(),
     COLLAB_PATH: z.string().default('/collaboration'),
-    ENABLE_DEV_AUTH: z.coerce.boolean().default(false),
+    ENABLE_DEV_AUTH: z.string().default('false').transform((s) => s.toLowerCase() === 'true'),
 });
 
 export const env = Schema.parse(process.env);
