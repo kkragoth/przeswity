@@ -10,3 +10,4 @@ frontend/src/api/generated/
 deploy/certbot/conf/
 deploy/certbot/www/
 .vscode/
+.worktrees/
