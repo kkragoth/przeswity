@@ -342,6 +342,7 @@ export function CommentsSidebar({
                                 <button
                                     type="button"
                                     className="btn-resolve"
+                                    aria-label={t('comments.resolve')}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         resolve(thread.id);
