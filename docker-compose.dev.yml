@@ -1,0 +1,8 @@
+# Filled in by Tasks B1, D1. Skeleton only.
+services:
+    db:
+        image: postgres:16-alpine
+    backend:
+        image: alpine
+    frontend:
+        image: alpine
