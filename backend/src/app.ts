@@ -8,6 +8,7 @@ import { docsRouter } from './openapi/docs.js';
 import { usersRouter } from './modules/users/router.js';
 import { booksRouter } from './modules/books/router.js';
 import { assignmentsRouter } from './modules/assignments/router.js';
+import { commentsRouter } from './modules/comments/router.js';
 import { errorMiddleware } from './lib/errors.js';
 import { env } from './env.js';
 
@@ -27,6 +28,7 @@ export async function buildApp() {
     app.use(usersRouter);
     app.use(booksRouter);
     app.use(assignmentsRouter);
+    app.use(commentsRouter);
 
     app.get('/healthz', (_req, res) => res.json({ ok: true }));
 
