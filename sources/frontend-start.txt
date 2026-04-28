@@ -33,7 +33,7 @@ Auth client: BetterAuth via `better-auth/react`'s `createAuthClient`. All API ca
 - If session is restored, the original request retries exactly once.
 - Otherwise: clear TanStack Query cache, toast "Sesja wygasła", redirect to
   `/login?next=<currentPath>`. No redirect loop on `/login`.
-While the editor is mounted, `useSessionPing()` polls `getSession()` every 4 minutes
+While the editor is mounted, `useSessionPing()` polls `getSession()` every 10 minutes
 when the tab is visible to keep the rolling session alive.
 
 Layout principle: the editor center is a fixed A4 page (~794 px wide). It does NOT

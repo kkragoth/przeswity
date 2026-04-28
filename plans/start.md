@@ -182,7 +182,100 @@ shared/editor-schema/
     └── markdown.ts  # markdownToYDocState(md), yDocStateToMarkdown(state)
 ```
 
-**Build is real, not source-served (Codex blocker #1).** Backend prod runs `node dist/index.js` which cannot import another workspace's raw `.ts`. Package config:
+**Build is real, not source-served (Codex pass-2 blocker #1; pass-3 follow-up).** Backend prod runs `node dist/index.js` which cannot import another workspace's raw `.ts`. Both prod *and* dev wire the shared package end-to-end:
+
+- **Root `package.json` declares the workspace:**
+
+```json
+{
+    "name": "przeswity",
+    "private": true,
+    "workspaces": ["backend", "frontend", "shared/editor-schema"],
+    "scripts": {
+        "build:shared": "npm -w @przeswity/editor-schema run build",
+        "dev:shared": "npm -w @przeswity/editor-schema run dev"
+    }
+}
+```
+
+- **Dev compose: one-shot installer + named `node_modules` volume + watcher sidecar (Codex pass-4 MAJOR #5).** The race fix: a single `installer` service does `npm install` once into a named volume; the runtime services mount that volume read-only at `node_modules` and only run their own command. `npm install` never runs concurrently across services.
+
+```yaml
+volumes:
+    pgdata: {}
+    node_modules: {}                # workspace-rooted node_modules; populated by `installer`
+services:
+    db: { … }                       # postgres healthcheck as before
+    installer:
+        image: node:22-alpine
+        working_dir: /repo
+        volumes:
+            - ".:/repo"
+            - "node_modules:/repo/node_modules"
+        # Idempotent install. Subsequent runs are no-ops if package-lock.json is unchanged.
+        command: sh -c "npm install --no-audit --no-fund && npm -w @przeswity/editor-schema run build"
+        # IMPORTANT: this service exits 0 when done; runtime services depend on it via `service_completed_successfully`
+    shared:
+        image: node:22-alpine
+        working_dir: /repo
+        volumes:
+            - ".:/repo"
+            - "node_modules:/repo/node_modules"
+        depends_on:
+            installer: { condition: service_completed_successfully }
+        command: sh -c "npm run dev:shared"     # tsc --watch — keeps shared/editor-schema/dist warm
+    backend:
+        build: { context: ., dockerfile: backend/Dockerfile.dev }
+        working_dir: /repo/backend
+        volumes:
+            - ".:/repo"
+            - "node_modules:/repo/node_modules"
+        depends_on:
+            db: { condition: service_healthy }
+            installer: { condition: service_completed_successfully }
+            shared: { condition: service_started }
+        command: sh -c "npm run db:migrate && npm run db:seed && npm run dev"
+        ports: ["8080:8080"]
+        env_file: backend/.env
+    frontend:
+        build: { context: ., dockerfile: frontend/Dockerfile.dev }
+        working_dir: /repo/frontend
+        volumes:
+            - ".:/repo"
+            - "node_modules:/repo/node_modules"
+        depends_on:
+            installer: { condition: service_completed_successfully }
+            shared: { condition: service_started }
+            backend: { condition: service_started }
+        command: sh -c "npm run dev"
+        ports: ["3000:3000"]
+        env_file: frontend/.env
+```
+
+The named `node_modules` volume **shadows** the host directory mount inside containers, so the symlinks created by `npm install` in the workspace context are stable and readable by all runtime services. Host-side `node_modules` (if present) is irrelevant inside the containers — eliminates the race and the host-vs-container Linux/macOS binary mismatch problem.
+
+- **`backend/Dockerfile.dev` and `frontend/Dockerfile.dev` use the repo as build context** (not just their own subdir) so workspace symlinks resolve:
+
+```dockerfile
+# backend/Dockerfile.dev
+FROM node:22-alpine
+WORKDIR /repo
+COPY package.json package-lock.json* ./
+COPY backend/package.json ./backend/
+COPY frontend/package.json ./frontend/
+COPY shared/editor-schema/package.json ./shared/editor-schema/
+RUN npm install
+COPY . .
+WORKDIR /repo/backend
+EXPOSE 8080
+CMD ["sh","-c","npm -w @przeswity/editor-schema run build && npm run dev"]
+```
+
+- **Prod Dockerfiles** (`backend/Dockerfile`, `frontend/Dockerfile`) do `npm ci` from the repo root, then `npm run build:shared`, then build the consuming app, then COPY only the runtime artifacts (dist + node_modules) into a slim runner image.
+
+- **Prod `docker-compose.deploy.yml`** sets `context: .` for both build steps so the shared package is included in the build.
+
+Package config (unchanged):
 
 ```json
 {
@@ -222,7 +315,7 @@ The end users (editors, proofreaders, coordinators at Prześwity) work in Polish
 **Frontend**:
 - `react-i18next` + `i18next-browser-languagedetector`. Supported languages: `pl` (Polish, primary/default), `en` (English, developer fallback), `ua` (Ukrainian — relevant pool of editorial freelancers and authors; we use the country code `ua` per project convention rather than the ISO-639-1 code `uk` to avoid confusion with "UK English"). Fallback chain: detected → `pl` → `en`.
 - **Locale code normalization (Codex blocker #7):** browsers report Ukrainian as `uk` or `uk-UA`, never `ua`. Without normalization, every Ukrainian visitor falls back to Polish silently. Fix at three boundaries:
-    1. i18next init: `convertDetectedLanguage: (lng) => lng.toLowerCase().startsWith('uk') ? 'ua' : lng.split('-')[0]`.
+    1. i18next init: `convertDetectedLanguage: (lng) => { const base = lng.toLowerCase().split('-')[0]; return base === 'uk' ? 'ua' : base; }` — lowercase always, so `EN-US` → `en` and `PL` → `pl` match `supportedLngs`.
     2. Backend: `PATCH /api/me` validates `preferredLocale` with `z.enum(['pl','en','ua'])` AND accepts `uk`/`uk-UA` and rewrites them to `ua` server-side via a Zod transform.
     3. Backend Accept-Language fallback (used in transactional emails Stage 2): same mapping.
 - Resources are JSON namespaces under `frontend/src/locales/{pl,en,ua}/<namespace>.json`. Namespaces: `common`, `auth`, `admin`, `coordinator`, `editor`, `errors`.
@@ -241,6 +334,163 @@ The end users (editors, proofreaders, coordinators at Prześwity) work in Polish
 
 ---
 
+## Comments, highlights & track-changes — anchor durability
+
+Word/Google Docs users expect: a comment stays attached to "that paragraph" even after the paragraph is rephrased, moved, or partly deleted. This section spells out exactly how we guarantee that, because anchor breakage is the #1 way these tools feel broken.
+
+### The four-state model for any annotation (comment / highlight / suggestion mark)
+
+Every annotation lives in two places: a **mark in the Y.Doc** (anchor) and a **REST row in Postgres** (durable identity, author, replies, resolution). Their relationship determines the state:
+
+| Mark in Y.Doc | REST row | State          | UI behavior |
+|---------------|----------|----------------|-------------|
+| Yes           | Yes      | `attached`     | Normal — pulse on click, anchor highlight |
+| Yes           | No       | `ghost`        | Should not happen post-Stage-1 cleanup. Nightly job removes the orphan mark. |
+| No            | Yes      | `detached`     | Thread is shown in a "Komentarze odłączone" sub-tab with the original `quote`; user can resolve, archive, or restore-anchor by selecting text and clicking "Ponownie zakotwicz" |
+| No            | No       | `gone`         | Nothing to render |
+
+`thread.detachedAt` (timestamp) is added to `comment_thread` (NOT NULL DEFAULT '0'-equivalent — actually nullable, set when detection fires). When the editor fails to find the mark for an active thread, the client posts `PATCH /api/comments/:threadId/detach` which sets `detachedAt = now`. Re-anchoring clears it.
+
+### Yjs mark behavior under edits — what's free, what we add
+
+Tiptap's `Comment` is a `Mark` (range mark) and Yjs's `Y.XmlFragment` ProseMirror integration handles **edits within a marked range** correctly out-of-the-box:
+
+- **Typing inside** a commented range: mark extends naturally. No work for us.
+- **Deleting part of** a commented range: mark shrinks to the surviving text. Free.
+- **Deleting all** of a commented range: mark vanishes. Thread becomes `detached`.
+- **Splitting** a commented range (paste in the middle): both halves keep the mark. Free.
+- **Block move** (drag handle reorders blocks): the mark moves with the text because Yjs treats the move as delete-then-insert and the mark rides on the text's character identity. Free.
+- **Cross-paragraph copy** within the same doc: mark replicates onto the copy. Cosmetically odd (one thread now has two anchors) — we **deduplicate at render time**: the `CommentAnchors` component groups DOM ranges by `commentId`; clicking any pulses both. Permalink uses the first-found range.
+- **Cross-document copy** (drag/drop or paste from another book): the mark is stripped by `sanitizeHtml` (the Comment mark's `data-comment-id` survives parse but the anchor in the destination doc has no matching REST thread → it becomes a ghost; the nightly cleanup job drops the mark). Stage-2 nicety: detect cross-doc paste and offer to create a new thread.
+
+### Tasks added: anchor durability guarantees
+
+#### Task F5.16 — Detached-comment detection & UI
+
+**Files:** Modify `frontend/src/editor/comments/useThreads.ts`, `frontend/src/editor/comments/CommentsSidebar.tsx`. Add: `frontend/src/editor/comments/Detached.tsx`. Backend: `PATCH /api/comments/:threadId/detach` endpoint and `comment_thread.detachedAt` column.
+
+- [ ] **Step 1:** On every Y.Doc transaction (debounced 1s), build a Set of `commentId` values present as marks in the doc. Diff against the REST thread list (`useGetBookCommentsQuery`). Threads in REST but not in marks → `PATCH /api/comments/:id/detach` to set `detachedAt`. Threads in marks but not in REST → log a warning (ghost mark; nightly job will clean up — see F5.17).
+- [ ] **Step 2:** Right pane gets three sub-tabs: **Aktywne** (status='active'), **Rozwiązane** (status='resolved'), **Odłączone** (`detachedAt IS NOT NULL AND status='active'`). Counts in tab labels.
+- [ ] **Step 3:** Each detached thread renders the original `quote` (already stored), the conversation, and a "Ponownie zakotwicz" button. When clicked: prompts the user to select text in the editor; on selection, the client adds a `comment` mark with the same `commentId` and `PATCH /api/comments/:id/reattach` clears `detachedAt`.
+- [ ] **Step 4:** Vitest:
+    1. Create comment on "lorem ipsum"; delete the entire range; assert thread is detached within 1s.
+    2. Re-anchor the detached thread on a fresh selection; assert `detachedAt` is null and the mark is back.
+    3. Edit in the middle of "lorem ipsum" → "lo[X]rem ipsum"; assert mark spans both sides of the inserted text.
+    4. Block-move a paragraph containing a comment; assert the mark traveled.
+    5. Copy a commented sentence within the same doc; assert one thread, two render anchors, both pulse on click.
+- [ ] **Step 5:** Commit.
+
+#### Task F5.17 — Ghost-mark cleanup job
+
+**Files:** `backend/src/jobs/ghostMarkCleanup.ts`.
+
+- [ ] **Step 1:** Nightly (cron at 03:30 UTC, separate from the backup cron). For each book, open a `directConnection` to its Y.Doc, walk the `XmlFragment`, collect all `commentId` values present as marks. Look up matching `comment_thread` rows. Any mark whose `commentId` has no thread row is a ghost; remove the mark via the same `directConnection.transact` pattern used by `commentThreadDelete`. Log counts.
+- [ ] **Step 2:** Skip cleanup if the count of ghosts > 5% of total marks (likely a real bug; alert instead).
+- [ ] **Step 3:** Vitest: seed a mark with no matching thread; run job; assert the mark is gone.
+- [ ] **Step 4:** Commit.
+
+#### Task F5.18 — Highlight + suggestion (track-change) anchor parity
+
+The same model applies verbatim to `Highlight` marks (no REST persistence — purely Yjs) and `Insertion`/`Deletion` marks (suggestions — REST-mirrored only via `comment` if the suggestion has a comment). Document the policy:
+
+- **Highlight**: pure Yjs, no REST. Ranges shrink/extend with edits like Comment marks. There is no detached state because there is no REST counterpart. Removing all highlighted text removes the mark entirely. Acceptable.
+- **Suggestion (Insertion/Deletion)**: Stage-1 trust model (client wraps marks). Accept/Reject buttons in `SuggestionsSidebar` operate on the marks in place. If the surrounding paragraph is deleted, the suggestion is gone — same as Word, where deleting through tracked changes removes them.
+- **AI suggestions** with `authorId='ai'` use the same machinery; Accept-all / Reject-all per-author works because the sidebar groups by `authorId`.
+
+Add a vitest fixture per mark type asserting edits don't break it.
+
+### Stage-1 acceptance criteria for "comments are bulletproof"
+
+- Two browsers, both as `editor1`, open the same book.
+- Browser A creates a comment on a sentence. Browser B sees it within 200 ms.
+- Browser B deletes the marked sentence. Both browsers' right pane moves the thread to "Odłączone" within 1.2 s.
+- Browser A re-anchors the thread on a different sentence. Both browsers see it back in "Aktywne" within 1.2 s.
+- Browser A drag-moves the marked paragraph to a new position. Comment count in "Aktywne" stays the same; clicking the comment scrolls to the new position.
+- A snapshot taken now and restored later still has the comment attached to the right text.
+
+---
+
+## Per-character font marks — backend support, Stage-1 UI deferred
+
+You raised the question: should each text fragment be able to carry its own font?
+
+**Decision: backend stores font marks; frontend Stage-1 does NOT expose a font picker.**
+
+Why split:
+- The "no formatowanie z palca" rule (Functional-requirements §1) is a process rule for *editors* — they should not be styling typography in Word, they should be writing structure. A toolbar font-picker would invite exactly the formatting drift we're trying to eliminate.
+- But typesetters (Stage 2 actor) sometimes mark *intentional* font choices (small caps for proper nouns, monospace for code excerpts in non-fiction, a different serif for footnotes). Pretending the schema can't represent this paints us into a corner.
+- Importing a `.docx` written in MS Word will surface font marks; we either silently strip them (lossy) or preserve them (round-tripable). Preserve.
+
+### Schema addendum
+
+Add to `shared/editor-schema/src/index.ts`:
+
+```ts
+import { Mark, mergeAttributes } from '@tiptap/core';
+
+// Curated allow-list of typography-friendly fonts. Any other font value is dropped on parse
+// (sanitize layer) so arbitrary "Comic Sans" pastes from Word never enter the doc.
+export const ALLOWED_FONTS = [
+    'serif',        // default body
+    'sans',
+    'mono',
+    'crimson',      // Crimson Pro — book body
+    'lora',         // Lora — alternative serif
+    'sourceSerif',  // Source Serif Pro — footnotes
+    'inter',        // Inter — UI-ish
+    'ibmPlex',      // IBM Plex Sans
+] as const;
+export type AllowedFont = typeof ALLOWED_FONTS[number];
+
+export const FontFamily = Mark.create({
+    name: 'fontFamily',
+    inclusive: true,
+    addAttributes() {
+        return {
+            family: {
+                default: null,
+                parseHTML: (el) => {
+                    const v = el.getAttribute('data-font');
+                    return ALLOWED_FONTS.includes(v as AllowedFont) ? v : null;
+                },
+                renderHTML: (attrs) => attrs.family ? { 'data-font': attrs.family } : {},
+            },
+        };
+    },
+    parseHTML() { return [{ tag: 'span[data-font]' }]; },
+    renderHTML({ HTMLAttributes }) {
+        return ['span', mergeAttributes(HTMLAttributes, { class: 'font-mark' }), 0];
+    },
+});
+```
+
+Add `FontFamily` to `buildSchemaExtensions()` (so backend round-trip works) **and** to the frontend `extensions.ts` list (so the editor renders existing font marks correctly when present in a doc — it just doesn't expose UI to *create* them).
+
+### CSS
+
+`frontend/src/editor/styles/fonts.css` declares `[data-font="crimson"] { font-family: 'Crimson Pro', serif; }` etc. Fonts are loaded via `@font-face` from `frontend/public/fonts/` (Crimson Pro, Lora, Source Serif Pro, IBM Plex Sans, Inter — all Open Font License) so they work offline and in print.
+
+### DOCX round-trip
+
+`io/docx.ts` (already in editor-poc) maps `data-font="crimson"` ↔ Word's `<w:rFonts w:ascii="Crimson Pro" .../>`. Mammoth import maps known font families back to the allow-list; unknown fonts are dropped (no leak). Add a vitest with a docx fixture that has Crimson Pro spans → import → export → diff against original.
+
+### Stage-1 UI policy
+
+- Toolbar / bubble toolbar: **no font picker.**
+- Slash menu: **no font picker.**
+- Marks already in the doc render correctly.
+- A coordinator-only "Zaawansowane" panel (right-pane tab, gated by `user.isAdmin || user.isCoordinator || merged.canEdit`) shows the list of distinct font marks present in the current selection. This is informational — it lets a coordinator audit a problematic import without being able to *apply* a font themselves.
+- Stage 2 may add a tightly-scoped font picker for the typesetter role (after F4h's PeoplePicker assigns someone the `typesetter` role on a book, that role's bubble toolbar reveals the font picker — schema-level enforcement, not just UI).
+
+### Why this is the right call
+
+- Backend stores enough information to round-trip Word.
+- Frontend Stage-1 keeps the "no manual formatting" behavior the publisher actually wants.
+- Stage 2 unlocks font UI behind an explicit role gate, satisfying the typesetter use case without polluting editor UX.
+- The allow-list prevents the schema from becoming an open buffet of arbitrary fonts.
+
+---
+
 ## Session lifecycle & 401 handling
 
 BetterAuth uses rolling cookie sessions: every authenticated request that goes through the server extends the cookie's expiry (`session.updateAge` in BetterAuth options). There is no separate refresh token to swap. The frontend treats a 401 from any API call as "session expired or revoked — re-auth needed." Concretely:
@@ -253,7 +503,7 @@ BetterAuth uses rolling cookie sessions: every authenticated request that goes t
 4. **Mutations**: a 401 on a mutation does not auto-retry — the user is bounced to `/login` and the mutation is dropped. (Auto-retrying mutations after re-auth is a Stage-2 nicety; Stage 1 keeps it simple.)
 5. **TanStack Router auth gate** uses the **non-hook** `authClient.getSession()` inside `beforeLoad` (hooks cannot run there — Codex blocker #5). The session is fetched once, attached to `routerContext.session`, and route components consume it via `useRouteContext()` or via the reactive `authClient.useSession()` hook for live re-renders. On null session, `beforeLoad` throws `redirect({ to: '/login', search: { next } })` so app chrome never paints for unauthenticated users.
 6. **Hocuspocus connection auth failure**: `HocuspocusProvider` emits `authenticationFailed`. The editor host listens, shows a "Twoja sesja wygasła — zapisz pracę i zaloguj się ponownie" banner, and triggers the same `/login?next=` redirect. The local IndexedDB cache (still kept by `IndexeddbPersistence`) preserves any unsynced edits so they re-broadcast after re-auth — no data loss.
-7. **Periodic session keep-alive** in the editor: while the editor is mounted, `authClient.getSession()` is polled every 4 minutes (under typical session updateAge of 5+ minutes). This keeps long-edit sessions alive without user interaction. Polling stops when the tab is hidden (uses `document.visibilityState`).
+7. **Periodic session keep-alive** in the editor: while the editor is mounted, `authClient.getSession()` is polled **every 10 minutes** (insurance against rare server-side revocation; BetterAuth defaults are `updateAge: 1d` and `expiresIn: 7d`, so this is intentionally infrequent). Polling stops when the tab is hidden (uses `document.visibilityState`).
 
 The interceptor lives in `frontend/src/api/interceptors.ts` and is installed once in `frontend/src/api/client.ts` right after `client.setConfig(...)`.
 
@@ -537,7 +787,7 @@ A second focused pass after the first Codex review. These are the remaining plac
 ### Document chrome (Word/Docs feel)
 
 - **Editable document title** in the topbar (click to rename) — currently in editor-poc's TopBar but verify routes `PATCH /api/books/:id` with debounced save.
-- **"Last edited by X · 2 minutes ago"** beside the title (Docs has this). Needs `book.updatedAt` + `book.updatedById` columns and trigger from any Y.Doc save.
+- **"Last edited by X · 2 minutes ago"** beside the title (Docs has this). Backed by `book.updatedById` + `book.lastEditAt` columns added in B1 and written transactionally on every Hocuspocus persistence flush in B10 (the previous "Stage-1 dependency hidden in UX Round 2" — now in B1 schema).
 - **Word count target / progress bar** — already in editor-poc, position it in the status bar.
 - **Selection word count** — when text is selected, status bar shows "342 wyrazów zaznaczone".
 - **Page-break preview**: a faint horizontal line every `--page-h` (1123 px) indicating where A4 pages would break. Doesn't enforce pagination — just reference. CSS-only via `background-image: linear-gradient(transparent calc(var(--page-h) - 1px), var(--page-break-color) 1px)`.
@@ -545,7 +795,7 @@ A second focused pass after the first Codex review. These are the remaining plac
 - **Zen / Focus mode**: `Cmd-Shift-F` hides both panes + toolbar, leaving the page only. Esc exits.
 - **Read-only "preview" mode**: toggle in the topbar that disables editing chrome (no insert UI, no toolbar) — for distraction-free re-reading. Distinct from the role-based readOnly.
 - **Print stylesheet**: `@media print` strips chrome, the page renders at A4 sizes, suggestions/comments are hidden by default with a "Drukuj z poprawkami" alternative menu item that keeps them.
-- **Onboarding tour** for first login (driver.js or shadcn-based dialog sequence). Three-step: "Tu są Twoje książki / Tu komentujesz / Tu zmieniasz tryb sugestii". Dismissible; remembers per user.
+- **Onboarding tour** for first login (shadcn `<Dialog>` sequence). Three-step, role-aware: contributor sees "Tu są Twoje książki / Tu komentujesz / Tu zmieniasz tryb sugestii"; coordinator sees "Tu twórzysz książkę / Tu zarządzasz osobami / Tu monitorujesz status"; admin sees "Tu zarządzasz użytkownikami / Wszystkie projekty są tutaj / Status systemu". Dismissible; persisted per-user via a `user.onboardingDismissedAt timestamp` column (added to B1 schema, exposed via `MeDto.onboardingDismissedAt` and `PATCH /api/me { onboardingDismissedAt: 'now' }`). The tour shows when `onboardingDismissedAt === null` and the user has at least one assignment (or is admin/coord). (Codex pass-3 hidden-dep fix.)
 
 ### Polish-typography niceties (since the audience is a Polish publisher)
 
@@ -602,7 +852,7 @@ A line-by-line check of every requirement in `sources/` vs. this plan. Items bel
 | Functional-requirements §1 | Comments addressable to role OR specific person | 🩹 Task F5.6 below: confirm @mention wiring covers user *and* role tokens (editor-poc `MentionTextarea` already supports both — explicit verification step added) |
 | Functional-requirements §1 | **Style-based formatting; "z palca" not available** | 🩹 Task F5.7 below: lock the toolbar, paste handler, and slash menu to a fixed style vocabulary |
 | Functional-requirements §1 | One file, many users | ✅ Hocuspocus + per-book Y.Doc |
-| Functional-requirements §1 | Edit history (who/when/why) + compare versions | ✅ Tasks B8, F5 (versions panel + diff) |
+| Functional-requirements §1 | Edit history (who/when/why) + compare versions | ✅ Tasks B8, F5 (versions panel + diff). Per-edit attribution comes from `book.updatedById`/`lastEditAt` (B1+B10), per-snapshot attribution from `book_snapshot.createdById` (B1), and the "why" from comment threads anchored to ranges. Auto-snapshots every 30 min (D2.5) provide point-in-time recovery. |
 | Functional-requirements §1 | Glossary / knowledge base, **per book** | 🩹 Task F5.8 below: confirm the editor-poc glossary (Y.Map inside the same Y.Doc) is automatically per-book and add a vitest |
 | Functional-requirements §1 | DOCX export | ✅ editor-poc `io/docx.ts` (ported in F5) |
 | Functional-requirements §2 | AI modules — communicate as same channel as humans (comments + suggestions) | 🩹 Task F5.5 below (Stage-1 stub); deeper AI is Stage 2 |
@@ -695,35 +945,52 @@ The functional requirement is explicit: "Formatowanie 'z palca' nie jest dostęp
 - [ ] **Step 2:** Schema-level enforcement: the shared `@przeswity/editor-schema` defines the allowed nodes/marks; nothing else parses. A vitest pastes "rich" Word HTML with custom colors and asserts the resulting JSON contains only allowed marks.
 - [ ] **Step 3: Unified import sanitation pipeline (Codex blocker #14)** — every external content path goes through one function so style leaks cannot sneak in through paste, drag/drop, .docx import, .md import, or image upload:
 
+**Image-storage policy is single and explicit (Codex pass-3 issue #5):** Stage 1 stores user-inserted images **as base64 PNG/JPEG/WEBP only**, gated through `sanitizeImage(file)` which validates MIME + size. The DOMPurify config and Tiptap config are aligned — no contradictory base64 flag.
+
 ```ts
 // frontend/src/editor/sanitize/sanitize.ts
 import DOMPurify from 'dompurify';
-const ALLOWED_IMAGE_MIME = new Set(['image/png','image/jpeg','image/webp','image/gif']);
+
+const ALLOWED_IMAGE_MIME = new Set(['image/png','image/jpeg','image/webp']);
+// Allow http/https/mailto/tel + only safe base64 image data URIs. Excludes javascript:, vbscript:, file:, data:image/svg+xml (XSS vector), data:text/html, etc.
+const ALLOWED_URI_REGEXP = /^(?:(?:https?|mailto|tel):|data:image\/(?:png|jpeg|webp);base64,)/i;
 
 export function sanitizeHtml(raw: string): string {
     return DOMPurify.sanitize(raw, {
         ALLOWED_TAGS: ['p','h1','h2','h3','strong','em','u','s','blockquote','ul','ol','li','a','img','table','thead','tbody','tr','td','th','code','pre','br'],
-        ALLOWED_ATTR: ['href','title','alt','src'],     // notably no style/class/id/font/color
-        FORBID_ATTR: ['style','class','id','color','bgcolor','face','size'],
+        ALLOWED_ATTR: ['href','title','alt','src'],
+        FORBID_ATTR: ['style','class','id','color','bgcolor','face','size','onload','onerror','onclick'],
+        ALLOWED_URI_REGEXP,
+        ADD_URI_SAFE_ATTR: ['src','href'],
     });
 }
 export function sanitizeImage(file: File): boolean {
     return ALLOWED_IMAGE_MIME.has(file.type) && file.size <= 10 * 1024 * 1024;
 }
 export function sanitizeMarkdown(md: string): string {
-    // markdown is already structural — but strip raw HTML blocks
+    // markdown is already structural — strip raw HTML blocks before schema parsing
     return md.replace(/<[^>]+>/g, '');
 }
 ```
 
+Tiptap Image config: **`Image.configure({ allowBase64: true, inline: false })`** to match the storage policy — but every base64 src must have already passed `ALLOWED_URI_REGEXP` because all import paths route through `sanitizeHtml`. SVG and any non-image MIME data URI is dropped at the regex.
+
 Every pipeline routes through this:
 - `SmartPaste` → `sanitizeHtml(clipboardData.getData('text/html'))` before parsing.
-- Editor `handleDrop` → for HTML drops, `sanitizeHtml`. For image files, `sanitizeImage`; reject SVG/embedded data URIs.
+- Editor `handleDrop` → HTML drops: `sanitizeHtml`. Image files: `sanitizeImage` (rejects SVG and oversized files). Hand-coded data URIs in dropped HTML are filtered by `ALLOWED_URI_REGEXP`.
 - `io/markdown.ts` import → `sanitizeMarkdown(md)` then parse via shared schema.
 - `io/docx.ts` import (Stage 2) → mammoth → `sanitizeHtml`.
-- `Image.configure({ allowBase64: false })` so embedded base64 SVGs cannot ride in. Stage 1 stores images as small base64 PNG/JPEG only via the sanitize pipeline; Stage 2 promotes to file repo.
 
-A vitest fixture per pipeline asserts a hostile input (`<style>body{}</style><img src="javascript:..."><img src="data:image/svg+xml,<svg onload=alert(1)>">`) produces clean output.
+A vitest fixture per pipeline asserts hostile inputs are filtered:
+```
+<style>body{}</style>                                           → dropped
+<img src="javascript:alert(1)">                                 → src removed
+<img src="data:image/svg+xml,<svg onload=alert(1)>">           → src removed
+<img src="data:image/png;base64,iVBORw0KGgo...">                → kept
+<a href="http://x.com" onload="...">                            → onload stripped
+```
+
+Stage 2 promotes inline base64 to a real file-storage backend.
 
 - [ ] **Step 4:** "Wyczyść formatowanie" button in toolbar that strips marks across the selection (already in editor-poc — verify wired and labeled in Polish).
 - [ ] **Step 5:** A linter banner appears in the editor if a parsed document contains nodes outside the allowed set (e.g. legacy import) with a "Napraw formatowanie" CTA that runs the cleanup.
@@ -750,30 +1017,82 @@ While auditing I caught these. Each is patched in-place where it lives in the pl
 6. **Vite resolution of `@przeswity/editor-schema`**: workspaces alone aren't enough — Vite must transpile TS sources from the package. Add to `frontend/vite.config.ts`: `optimizeDeps: { include: ['@przeswity/editor-schema'] }` and ensure the package's `package.json` exports `"main": "./src/index.ts"` + `"types": "./src/index.ts"` (no build step needed in dev). Backend uses `tsx` which already handles TS transparently.
 7. **`useBookPresence` returning 0 in Stage 1** was an empty stub with a UX claim that contradicted itself. Replaced with a real **owned** presence counter (Codex blocker #12): a `Map<bookId, Set<userId>>` maintained by Hocuspocus `onConnect`/`onDisconnect` hooks (public API, version-stable), exposed via `GET /api/books/:id/presence` returning `{ users: Array<{ id, name, color }> }`. Polled every 15s by books-list cards; pushed live into the editor's right-pane via the existing awareness channel. We do NOT touch `hocuspocus.documents` internals.
 
+**Keyed by `(bookId, connectionId)`, not just `userId`** (Codex pass-3 issue #3) so two tabs from the same user don't collapse and one tab's disconnect can't evict the other.
+
 ```ts
 // backend/src/collab/presence.ts
-const presence = new Map<string, Map<string, { name: string; color: string }>>();
+type Conn = { userId: string; name: string; color: string; connectedAt: number };
+const presence = new Map<string, Map<string, Conn>>();   // bookId → connectionId → Conn
+const STALE_MS = 60_000;
+
 export const presenceExtension = {
-    async onConnect({ documentName, context }) {
+    async onConnect({ documentName, context, connection }) {
         const bookId = documentName.replace(/^book:/, '');
-        const set = presence.get(bookId) ?? new Map();
-        set.set(context.user.id, { name: context.user.name, color: context.user.color });
-        presence.set(bookId, set);
+        const inner = presence.get(bookId) ?? new Map<string, Conn>();
+        inner.set(connection.connectionId, {
+            userId: context.user.id,
+            name: context.user.name,
+            color: context.user.color,
+            connectedAt: Date.now(),
+        });
+        presence.set(bookId, inner);
     },
-    async onDisconnect({ documentName, context }) {
+    async onDisconnect({ documentName, connection }) {
         const bookId = documentName.replace(/^book:/, '');
-        const set = presence.get(bookId);
-        if (!set) return;
-        set.delete(context.user.id);
-        if (set.size === 0) presence.delete(bookId);
+        const inner = presence.get(bookId);
+        if (!inner) return;
+        inner.delete(connection.connectionId);
+        if (inner.size === 0) presence.delete(bookId);
     },
 };
-export const getPresence = (bookId: string) =>
-    Array.from((presence.get(bookId) ?? new Map()).entries())
-        .map(([id, info]) => ({ id, ...info }));
+
+// Liveness signal — replaces the previous "missed pings update connectedAt" hand-wave
+// (Codex pass-4 MAJOR #6). Each connection's `lastSeenAt` is bumped by:
+//   - `onConnect` (initial)
+//   - `onChange`    (any Yjs update the user emits, including awareness/cursor)
+//   - `onStateless` (Hocuspocus's broadcast channel — the editor sends a 'ping'
+//     stateless message every 25 s while mounted; see frontend usePresenceHeartbeat)
+// Without any of these for STALE_MS the reaper drops the entry.
+export const presenceHeartbeat = {
+    async onChange({ documentName, connection }) {
+        const bookId = documentName.replace(/^book:/, '');
+        const inner = presence.get(bookId);
+        const conn = inner?.get(connection.connectionId);
+        if (conn) conn.connectedAt = Date.now();
+    },
+    async onStateless({ documentName, connection, payload }) {
+        if (payload !== 'ping') return;
+        const bookId = documentName.replace(/^book:/, '');
+        const inner = presence.get(bookId);
+        const conn = inner?.get(connection.connectionId);
+        if (conn) conn.connectedAt = Date.now();
+    },
+};
+
+// Reaper: every 30 s, drop connections we haven't heard from in STALE_MS.
+// With ping every 25 s + STALE_MS=60s, a healthy connection is never reaped;
+// a dead one is gone within ~2 reaper ticks.
+setInterval(() => {
+    const now = Date.now();
+    for (const [bookId, inner] of presence) {
+        for (const [connId, conn] of inner) {
+            if (now - conn.connectedAt > STALE_MS) inner.delete(connId);
+        }
+        if (inner.size === 0) presence.delete(bookId);
+    }
+}, 30_000).unref();
+
+// Public read: collapse to unique users at broadcast time.
+export const getPresence = (bookId: string) => {
+    const inner = presence.get(bookId);
+    if (!inner) return [];
+    const byUser = new Map<string, { id: string; name: string; color: string }>();
+    for (const c of inner.values()) byUser.set(c.userId, { id: c.userId, name: c.name, color: c.color });
+    return Array.from(byUser.values());
+};
 ```
 
-Registered as a Hocuspocus extension alongside `persistence`. The REST handler in `modules/books/router.ts` calls `getPresence(bookId)`. (Multi-instance Stage 2: this Map moves to Redis.)
+Registered as a Hocuspocus extension alongside `persistence`. The REST handler in `modules/books/router.ts` calls `getPresence(bookId)`. (Multi-instance Stage 2: this Map moves to Redis with the same key shape.)
 8. **No Redis in Stage 1**: `sources/backend-start.txt` says "if necessary add Redis." We do not add it because Stage 1 runs a single backend instance; Hocuspocus does not need a pub/sub fan-out yet. Decision recorded in `backend-start.txt`. If Stage 2 introduces multiple backend replicas, Redis (or NATS) joins via `@hocuspocus/extension-redis`.
 9. **`account` table password rewrite in seed (Codex blocker #13)**: BetterAuth's password hashing helper is not a stable public API across v1.1.x. Removing `rewriteCredential` from B11. Replacement: seed only calls `auth.api.signUpEmail` once per account; on `USER_ALREADY_EXISTS` the password is left as-is. Recovery from password drift is `just db-reset` (truncates `account` + `session` + `user` then re-seeds from scratch). The seed remains idempotent for users/books/assignments/Y.Doc state, and the README documents the password-recovery escape hatch.
 
@@ -1039,19 +1358,9 @@ export const env = Schema.parse(process.env);
 export type Env = typeof env;
 ```
 
-- [ ] **Step 6: `Dockerfile.dev` for hot reload**
+- [ ] **Step 6: `Dockerfile.dev` for hot reload — uses repo root as build context** so the npm workspace can resolve `@przeswity/editor-schema`. See "Shared editor schema package" section above for the full Dockerfile and the `docker-compose.dev.yml` excerpt that mounts `.:/repo` and runs a `shared` sidecar.
 
-```dockerfile
-FROM node:22-alpine
-WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm install
-COPY . .
-EXPOSE 8080
-CMD ["npm", "run", "dev"]
-```
-
-`Dockerfile` (prod) does `npm ci`, `npm run build`, then `node dist/index.js`.
+`Dockerfile` (prod) does `npm ci` at repo root, `npm run build:shared`, `npm run build` for backend, then `node backend/dist/index.js` from a slim runner.
 
 - [ ] **Step 7: `src/index.ts`** — minimal Express boot that listens and 200s on `/healthz`. (It will grow in subsequent tasks.)
 
@@ -1153,6 +1462,11 @@ export const book = pgTable('book', {
     description: text('description').notNull().default(''),
     createdById: text('created_by_id').notNull().references(() => user.id),
     initialMarkdown: text('initial_markdown').notNull().default(''),
+    // updatedById + lastEditAt are written by Hocuspocus persistence on every store
+    // (B10) so the topbar can render "Ostatnio zmieniał: X · 2 min temu" and the
+    // history is auditable in Stage 1 (Codex pass-3 hidden-dep fix for F5.12 + audit log).
+    updatedById: text('updated_by_id').references(() => user.id),
+    lastEditAt: timestamp('last_edit_at'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -1185,6 +1499,10 @@ export const commentThread = pgTable('comment_thread', {
     anchorId: text('anchor_id').notNull(),     // matches the editor mark commentId
     quote: text('quote').notNull().default(''),
     resolved: boolean('resolved').notNull().default(false),
+    // Detached when the editor's anchor mark vanishes (text was deleted). UI moves
+    // the thread to the "Odłączone" tab and offers re-anchor. Null when the mark exists.
+    // (See "Comments, highlights & track-changes — anchor durability" section.)
+    detachedAt: timestamp('detached_at'),
     createdById: text('created_by_id').notNull().references(() => user.id),
     createdAt: timestamp('created_at').notNull().defaultNow(),
 });
@@ -1194,6 +1512,8 @@ export const commentMessage = pgTable('comment_message', {
     threadId: uuid('thread_id').notNull().references(() => commentThread.id, { onDelete: 'cascade' }),
     authorId: text('author_id').notNull().references(() => user.id),
     body: text('body').notNull(),
+    mentions: jsonb('mentions').$type<{ userIds: string[]; roles: string[] }>().notNull().default({ userIds: [], roles: [] }),
+    editedAt: timestamp('edited_at'),  // null until first edit; set by commentMessageEdit
     createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 ```
@@ -1270,6 +1590,11 @@ export const auth = betterAuth({
             color: { type: 'string', defaultValue: '#7c3aed', input: false },
             // input:false — public sign-up cannot set this. PATCH /api/me validates pl|en|ua via Zod enum (Codex blocker #10).
             preferredLocale: { type: 'string', defaultValue: 'pl', input: false },
+            // Onboarding tour — empty string = not yet dismissed, ISO timestamp string = dismissed at that time.
+            // BetterAuth additionalField types are limited to string|number|boolean|string[] (Codex pass-4 BLOCKER #1).
+            onboardingDismissedAt: { type: 'string', defaultValue: '', input: false },
+            // Service accounts (e.g. auto-snapshot system user) are hidden from dev quick-login (pass-4 MAJOR #10).
+            isSystem: { type: 'boolean', defaultValue: false, input: false },
         },
     },
 });
@@ -1498,7 +1823,11 @@ GET    /api/me                 any signed-in      operationId: meGet            
 PATCH  /api/me                 any signed-in      operationId: mePatch           → update name, color, image, preferredLocale
 ```
 
-`MeDto` extends `UserDto` with `{ bookCount: number, roles: Record<Role, number> }` so the home redirect can decide where to send the user without a second roundtrip.
+`MeDto` extends `UserDto` with `{ visibleBookCount: number; assignmentRoleCounts: Record<Role, number> }` (Codex pass-3 issue #6 — naming reconciled, scope explicit). Both fields are scoped to the **calling user's own assignments**:
+- `visibleBookCount`: number of distinct books the caller has any role on (admin sees their *assigned* books only — the admin overview is `/api/books` not `/api/me`).
+- `assignmentRoleCounts`: histogram of the caller's own roles across their books, e.g. `{ editor: 3, proofreader: 2 }`. Never reveals other users' assignments.
+
+A vitest asserts: user A with assignments on Book 1 (editor) and Book 2 (proofreader, editor) gets `{ visibleBookCount: 2, assignmentRoleCounts: { editor: 2, proofreader: 1 } }` regardless of who else is assigned to those books.
 
 `PATCH /api/me` body schema (Codex blockers #9, #10):
 
@@ -1511,7 +1840,19 @@ export const PatchMeBody = z.object({
         (v) => typeof v === 'string' && v.toLowerCase().startsWith('uk') ? 'ua' : v,
         z.enum(['pl', 'en', 'ua']),
     ).optional(),
+    // Onboarding dismissal: client sends `'now'` to dismiss or `null` to reset.
+    // Server transforms `'now'` → ISO timestamp; `null` → empty string.
+    onboardingDismissedAt: z.union([z.literal('now'), z.null()]).optional(),
 }).strict();
+```
+
+Server handler:
+```ts
+if (body.onboardingDismissedAt !== undefined) {
+    update.onboardingDismissedAt = body.onboardingDismissedAt === 'now'
+        ? new Date().toISOString()
+        : '';   // null → reset (Codex pass-4 minor #11: undo path exists)
+}
 ```
 
 Note: `preferredLocale` is *not* writable through BetterAuth signUp (`additionalFields.preferredLocale.input: false` in the BetterAuth config — Codex blocker #10) so an attacker cannot lock themselves into `klingon` at signup. The only path to set it is `PATCH /api/me` with the enum-validated body.
@@ -1576,7 +1917,13 @@ Backend `package.json` adds `"@przeswity/editor-schema": "*"`, plus `@tiptap/cor
 Endpoints (mounted under `/api/books/:bookId/assignments`, all with operationIds; addresses Codex blocker #11):
 - `GET /`                 → `bookAssignmentsList`            visible to book contributors + owner + admin.
 - `POST /`                → `bookAssignmentCreate`           body `{ userId, role }`. Idempotent via upsert. Coordinator-owner / admin only.
-- `POST /bulk`            → `bookAssignmentsBulkCreate`     body `{ assignments: Array<{ userId, role }> }`. Atomic: wrapped in `db.transaction`. Returns the full assignment list afterwards. Coordinator-owner / admin only.
+- `POST /bulk`            → `bookAssignmentsBulkCreate`     body `{ assignments: Array<{ userId, role }> }`. **Atomic transaction with explicit conflict and validation semantics (Codex pass-3 blocker #2):**
+    1. **Pre-validate**: dedup the request payload (treat duplicate `(userId, role)` as one). Look up every distinct `userId` in `user`; if any are missing return **422** with `{ error: { code: 'errors.assignment.unknownUsers', unknownUserIds: [...] } }` *before* opening the transaction.
+    2. **Inside `db.transaction`**: `INSERT … ON CONFLICT (book_id, user_id, role) DO NOTHING` for each assignment. Existing rows are no-ops (the response distinguishes them in `created` vs `existing` arrays).
+    3. **Response 200**: `{ created: Assignment[], existing: Assignment[], assignments: Assignment[] }` where `assignments` is the full list after the operation. Hands the frontend exactly what it needs to update the optimistic UI without a follow-up `GET`.
+    4. **Auth**: coordinator-owner / admin only — checked before validation. Non-owner returns 403.
+    5. **Body limits**: `max(50)` is enforced; oversized payloads return 400 with `errors.validation.tooManyAssignments`.
+    6. Vitest: (a) mix of valid + invalid userIds → 422 + transaction never opened, (b) all-valid mix of new + existing rows → 200 with correct partitioning, (c) duplicate-in-payload collapses to one created row, (d) non-owner → 403.
 - `DELETE /:userId/:role` → `bookAssignmentDelete`           coordinator-owner / admin only.
 
 The composite primary key `(book_id, user_id, role)` lets the same person hold multiple roles on the same book (e.g. `editor1` is both `editor` and `proofreader` on Book X). The bulk endpoint deduplicates within the request payload before insert.
@@ -1597,14 +1944,51 @@ export const BulkCreateAssignmentsBody = z.object({
 **Files:**
 - Create: `backend/src/modules/comments/{schemas.ts,router.ts,service.ts}`, `backend/tests/comments.spec.ts`
 
-Endpoints:
-- `GET    /api/books/:bookId/comments` — list threads + messages, ordered by `createdAt`.
-- `POST   /api/books/:bookId/comments` — body `{ anchorId, quote, body }`. Creates thread + first message in a transaction.
-- `POST   /api/comments/:threadId/messages` — body `{ body }`.
-- `POST   /api/comments/:threadId/resolve` — toggles `resolved`. Permission: editor or admin.
-- `DELETE /api/comments/:threadId/messages/:messageId` — author or admin.
+Endpoints (every one has an operationId; UX Round 2 F5.9 backend support — Codex pass-3 hidden-dep fix):
 
-The `anchorId` matches the `commentId` mark attribute generated by the Tiptap `Comment` extension. The editor still drives anchoring inside the Y.Doc; the REST resource just persists the conversation, identity, and resolution state, which Y.Doc cannot validate authoritatively.
+```
+GET    /api/books/:bookId/comments                                 commentsList
+    query: ?status=active|resolved|all (default active),
+           ?author=<userId>, ?mentionsRole=<role>, ?mentionsMe=true
+POST   /api/books/:bookId/comments                                 commentCreate
+    body: { anchorId, quote, body, mentions?: { userIds: string[]; roles: Role[] } }
+POST   /api/comments/:threadId/messages                            commentReply
+    body: { body, mentions?: ... }
+PATCH  /api/comments/:threadId/messages/:messageId                 commentMessageEdit
+    body: { body, mentions?: ... }   — author only; sets editedAt
+POST   /api/comments/:threadId/resolve                             commentResolve
+    body: { resolved: boolean }      — editor/admin
+DELETE /api/comments/:threadId/messages/:messageId                 commentMessageDelete
+    — author or admin; if it's the only message, deletes the thread
+PATCH  /api/comments/:threadId/detach                              commentThreadDetach
+    — client posts when it detects the anchor mark is gone (anchor durability F5.16)
+PATCH  /api/comments/:threadId/reattach                            commentThreadReattach
+    — clears detachedAt after the user re-anchors via "Ponownie zakotwicz"
+DELETE /api/comments/:threadId                                     commentThreadDelete
+    — editor/admin; cascades to messages. Anchor-mark removal in the live
+      Y.Doc is performed by Hocuspocus's public `openDirectConnection` API
+      (Codex pass-4 MAJOR #9 — the previous "privileged transaction" wording
+      was fictional). Implementation:
+          const conn = await hocuspocus.openDirectConnection(`book:${bookId}`);
+          await conn.transact((doc) => {
+              const xml = doc.getXmlFragment(PROSEMIRROR_FIELD);
+              walkXmlFragment(xml, (node) => {
+                  removeMarkByAttr(node, 'comment', 'commentId', threadId);
+              });
+          });
+          await conn.disconnect();
+      All connected clients receive the update via Yjs's normal channel; the
+      `book_yjs_state` row is updated via the same Hocuspocus persistence
+      pipeline (debounced). If `openDirectConnection` is not yet exported in
+      the pinned Hocuspocus version, fall back to "soft delete" (mark thread
+      `deleted=true` in REST; client filters it from the editor; orphan mark
+      is cleaned up by the next snapshot/restore cycle). The fallback is
+      Stage-1 acceptable because deletion is a low-frequency action.
+```
+
+Schema add to `comment_message`: `editedAt timestamp`, `mentions jsonb` (Codex pass-3 fix: structure already foreshadowed in F5.6, made authoritative here).
+
+The `anchorId` matches the `commentId` mark attribute generated by the Tiptap `Comment` extension. The editor still drives anchoring inside the Y.Doc; the REST resource persists the conversation, identity, edit history, and resolution state, which Y.Doc cannot validate authoritatively.
 
 ---
 
@@ -1653,16 +2037,43 @@ export const persistence = new Database({
         const [row] = await db.select().from(bookYjsState).where(eq(bookYjsState.bookId, bookId));
         return row?.state ?? null;
     },
+    // Database extension's store callback receives `documentName` + `state` only —
+    // no per-connection identity (Codex pass-4 MAJOR #7). Attribution is captured
+    // separately via the `onChange` hook below into a Map, then read here.
     store: async ({ documentName, state }) => {
         const bookId = documentName.replace(/^book:/, '');
-        await db.insert(bookYjsState).values({ bookId, state })
-            .onConflictDoUpdate({
-                target: bookYjsState.bookId,
-                set: { state, updatedAt: new Date() },
-            });
+        const editorId = lastEditorByBook.get(bookId) ?? null;
+        const now = new Date();
+        await db.transaction(async (tx) => {
+            await tx.insert(bookYjsState).values({ bookId, state })
+                .onConflictDoUpdate({
+                    target: bookYjsState.bookId,
+                    set: { state, updatedAt: now },
+                });
+            if (editorId) {
+                await tx.update(book).set({ updatedById: editorId, lastEditAt: now, updatedAt: now })
+                    .where(eq(book.id, bookId));
+            }
+        });
     },
 });
+
+// backend/src/collab/lastEditor.ts — captures attribution from onChange.
+// Last-write-wins semantics (Codex pass-4 MAJOR #8): when N users edit between
+// debounce flushes, the most recently received update's author wins. This matches
+// what users see in the live cursor stream and what Word/Docs displays in their
+// "Last edit" indicator. Documented in code + README under "Concurrent edits".
+export const lastEditorByBook = new Map<string, string>();
+export const attributionExtension = {
+    async onChange({ documentName, context }: { documentName: string; context: { user?: { id: string } } }) {
+        if (!context.user?.id) return;
+        const bookId = documentName.replace(/^book:/, '');
+        lastEditorByBook.set(bookId, context.user.id);
+    },
+};
 ```
+
+Both `attributionExtension` and `presenceExtension` are registered alongside `persistence` in Hocuspocus's `extensions` array. The `onChange` hook receives `context` per its public API; `Database.store` is doc-level and intentionally context-free.
 
 - [ ] **Step 2: `auth.ts`** — `onAuthenticate` hook. Returns `roles: Role[]` (array, not joined string — Codex blocker #6) and a `readOnly` boolean computed from the merged permission matrix.
 
@@ -1922,17 +2333,24 @@ psql … -c 'select count(*) from book_yjs_state;'   # equals book count
 
 - [ ] **Step 5: Add base shadcn primitives** used in upcoming tasks: `button`, `input`, `label`, `card`, `dialog`, `dropdown-menu`, `select`, `table`, `toast`, `tabs`, `badge`, `avatar`, `sonner`. (Run `npx shadcn add …`.)
 
-- [ ] **Step 6: `Dockerfile.dev`**
+- [ ] **Step 6: `Dockerfile.dev` — uses repo root as build context** so the npm workspace can resolve `@przeswity/editor-schema` (Codex pass-4 BLOCKER #4 — single, consistent Dockerfile model across both apps):
 
 ```dockerfile
+# frontend/Dockerfile.dev (build context is the repo root)
 FROM node:22-alpine
-WORKDIR /app
+WORKDIR /repo
 COPY package.json package-lock.json* ./
+COPY backend/package.json ./backend/
+COPY frontend/package.json ./frontend/
+COPY shared/editor-schema/package.json ./shared/editor-schema/
 RUN npm install
 COPY . .
+WORKDIR /repo/frontend
 EXPOSE 3000
-CMD ["npm", "run", "dev"]
+CMD ["sh","-c","npm -w @przeswity/editor-schema run build && npm run dev"]
 ```
+
+The dev compose calls `build: { context: ., dockerfile: frontend/Dockerfile.dev }` so the COPYs above are valid.
 
 - [ ] **Step 7: Commit**
 
@@ -2017,9 +2435,12 @@ void i18n
         detection: {
             order: ['localStorage', 'navigator'],
             lookupLocalStorage: 'przeswity.lang',
-            // Map browser-reported Ukrainian (uk / uk-UA) to our project code 'ua'.
-            convertDetectedLanguage: (lng: string) =>
-                lng.toLowerCase().startsWith('uk') ? 'ua' : lng.split('-')[0],
+            // Always lowercase + base-language so PL/EN-US match supportedLngs;
+            // map Ukrainian (uk / uk-UA) to project code 'ua'.
+            convertDetectedLanguage: (lng: string) => {
+                const base = lng.toLowerCase().split('-')[0];
+                return base === 'uk' ? 'ua' : base;
+            },
         },
         returnNull: false,
     });
@@ -2054,11 +2475,26 @@ declare module 'i18next' {
 `src/i18n/useT.ts`:
 
 ```ts
-import { useTranslation, type Namespace } from 'react-i18next';
+import type { Namespace } from 'i18next';   // Namespace is exported from i18next, not react-i18next (Codex pass-3 issue #8)
+import { useTranslation } from 'react-i18next';
 export const useT = <NS extends Namespace>(ns: NS) => useTranslation(ns).t;
 ```
 
-This actually compile-time-checks key paths (`t('actions.save')` resolves; `t('actions.savee')` errors). `scripts/gen-locale-types.ts` regenerates `i18next.d.ts` from the pl/ namespace files; runs in `gen-api`.
+This actually compile-time-checks key paths (`t('actions.save')` resolves; `t('actions.savee')` errors).
+
+A type-fixture vitest seals it:
+
+```ts
+// frontend/src/i18n/types.spec.ts
+import { useT } from './useT';
+import { expectTypeOf } from 'vitest';
+declare const t: ReturnType<typeof useT<'common'>>;
+expectTypeOf(t('actions.save')).toBeString();
+// @ts-expect-error — invalid key must fail to compile
+t('actions.savee');
+```
+
+`scripts/gen-locale-types.ts` regenerates `i18next.d.ts` from the pl/ namespace files; runs in `gen-api`.
 
 - [ ] **Step 3: `LanguageSwitcher.tsx`** — shadcn `<Select>` of `pl/en/ua`. On change: `i18n.changeLanguage(next)`, persist to `localStorage`, and call `usePatchMeMutation({ preferredLocale: next })`.
 
@@ -2128,7 +2564,9 @@ import './interceptors';   // top-level side-effect, evaluates synchronously aft
 
 `./interceptors.ts` calls `client.interceptors.response.use(...)` at module top level. Verified by a vitest that imports `./client` and immediately fires a 401-mocked request — the retry path runs.
 
-- [ ] **Step 4: `useSessionPing.ts`** — hook that polls `authClient.getSession()` every 4 minutes while `document.visibilityState === 'visible'`. Mounted at the editor host (`books.$bookId.tsx`) via `useSessionPing()`. Stops on unmount and on tab hide.
+- [ ] **Step 4: `useSessionPing.ts`** — hook that polls `authClient.getSession()` every **10 minutes** while `document.visibilityState === 'visible'`. Mounted at the editor host (`books.$bookId.tsx`) via `useSessionPing()`. Stops on unmount and on tab hide. (BetterAuth defaults make this infrequent insurance, not a refresh requirement.)
+
+- [ ] **Step 4b: `usePresenceHeartbeat(provider)`** — fires `provider.sendStateless('ping')` every 25 s while the tab is visible. Drives the backend's `presenceHeartbeat.onStateless` hook so the reaper never kills a live connection (Codex pass-4 MAJOR #6).
 
 - [ ] **Step 5: Verify**
     - With backend session expiry shortened to 1 minute, leave a tab idle 90s, then click "Save" — toast appears, redirect to `/login?next=…`. After login, lands back on the same book.
@@ -2210,7 +2648,7 @@ function AppLayout() {
 
 - [ ] **F4d — Create book form** (`/coordinator/books/new`): two-column layout. Left: title (max 200), description, initial markdown (textarea, monospace, with a "Wklej z Worda" hint + paste-handler). Right: live preview powered by the same Tiptap schema (read-only Tiptap renderer using `markdownToYDocState` + Tiptap `Editor`). Below: `<PeoplePicker>` for initial assignments — same component used in book settings. On submit: `useBookCreateMutation` → invalidate `bookList` → navigate to `/books/:id`.
 
-- [ ] **F4e — Books list** (`/books`): card grid per UX spec. Filter chips by current-user role-on-book. Empty state with copy and CTA. Skeleton loader. Each card uses optimistic `presence` from a tiny `useBookPresence(bookId)` hook (subscribes to a per-book WS heartbeat — Stage 1 stub returns 0; Stage 2 wires it).
+- [ ] **F4e — Books list** (`/books`): card grid per UX spec. Filter chips by current-user role-on-book. Empty state with copy and CTA. Skeleton loader. Each card calls `useBookPresence(bookId)` which polls `GET /api/books/:id/presence` every 15s while the list is mounted — backed by the real owned presence Map in B10/D2.5 (Codex pass-4 MAJOR #12 — not a stub).
 
 - [ ] **F4f — Book editor host route** (`/books/$bookId`): topbar with breadcrumb + saved-state + presence avatars + topbar actions; mounts `<EditorHost>`; mounts the right-pane "Osoby" tab which renders `<AssignmentList>`. Uses `useSessionPing()` from F1.6.
 
@@ -2308,9 +2746,14 @@ export function createCollab(bookId: string): CollabBundle {
 
 ### Task D1: `docker-compose.dev.yml` — full dev stack
 
-- [ ] **Step 1:** Add `backend` service (build `backend/Dockerfile.dev`), depends_on `db` healthy, mounts `./backend:/app` for hot reload, sets `DATABASE_URL=postgres://przeswity:przeswity@db:5432/przeswity`, runs `sh -c "npm run db:migrate && npm run db:seed && npm run dev"` so the dev stack is always ready.
+- [ ] **Step 1: Three services + DB**, exactly as in the "Shared editor schema package" snippet:
+    - `db` (postgres:16-alpine, healthcheck).
+    - `shared` sidecar (`node:22-alpine`, mounts `.:/repo`, runs `npm install && npm run dev:shared` — keeps `shared/editor-schema/dist/` warm).
+    - `backend` (build context = repo root, mounts `.:/repo`, depends on `db` healthy + `shared` started, runs `npm install && npm -w @przeswity/editor-schema run build && npm run db:migrate && npm run db:seed && npm run dev`).
+    - `frontend` (build context = repo root, mounts `.:/repo`, depends on `shared` + `backend`, runs `npm install && npm -w @przeswity/editor-schema run build && npm run dev`).
+    - The `npm install` at container start is the workspace-aware one (root-level), so symlinks for `@przeswity/editor-schema` materialize.
 
-- [ ] **Step 2:** Add `frontend` service (build `frontend/Dockerfile.dev`), exposes `:3000`, mounts `./frontend:/app`, env `VITE_API_URL=http://localhost:8080`, `VITE_COLLAB_URL=ws://localhost:8080/collaboration`, `PUBLIC_API_URL=http://backend:8080` (used by `gen-api`).
+- [ ] **Step 2:** Frontend env: `VITE_API_URL=http://localhost:8080`, `VITE_COLLAB_URL=ws://localhost:8080/collaboration`, `PUBLIC_API_URL=http://backend:8080` (used by `gen-api`).
 
 - [ ] **Step 3:** Add a one-shot `gen-api` service or just instruct in README to run `just gen-api` once after the backend is healthy. (CI runs it during `npm run build`.)
 
@@ -2406,6 +2849,91 @@ open http://localhost:3000/login
 
 ---
 
+## Stage-1 operational requirements (data safety)
+
+(Codex pass-3 hidden-dep fix: Y.Doc state is the manuscript — losing it is catastrophic. This was originally listed as a Stage-3 wishlist item; promoting it to Stage 1 because the tool ships to real books in the summer.)
+
+### Backup & snapshots — Task D2.5 (must complete before D2 ships to staging)
+
+> **Stage-1 scope note (Codex pass-4 audit):** D2.5 is the *minimum viable* data-safety layer. We narrowed it to (a) auto-snapshot job (already needed for the editor's version panel), (b) one working `pg_dump` script invoked via a custom-built backup container, (c) one restore drill script, (d) README docs for off-host copy. Off-host automation, monitoring hooks, and retention tiering are explicitly Stage 2 — keeps Stage 1 inside its 7-8 week budget.
+
+**Files:**
+- Create: `backend/src/jobs/snapshotJob.ts`, `backend/src/seed/systemUser.ts`, `deploy/backup/Dockerfile`, `deploy/backup/dump.sh`, `deploy/backup/restore.sh`, `deploy/backup/crontab`
+
+- [ ] **Step 1: Periodic auto-snapshot** — every 30 minutes for any book modified in the last 30 minutes, the backend creates an entry in `book_snapshot` with label `auto-YYYY-MM-DDTHH:MM` and `createdById` set to a synthetic system user (id = `usr_system`, `email = 'system@local'`, `name = 'System'`, hidden from dev quick-login by an explicit filter — see Step 1a). Implementation: `setInterval` in the Express process; per-book debounce via a Map.
+
+- [ ] **Step 1a: System user is hidden from dev quick-login (Codex pass-4 MAJOR #10).** The dev `/api/auth/dev/users` endpoint filters: `WHERE email <> 'system@local'`. The user table also stores `isSystem: boolean` (added to user table in B1) and a CHECK constraint prevents non-system passwords on system rows. Vitest asserts the dev list never contains `system@local`.
+
+- [ ] **Step 2: Custom backup container.** Use a tiny purpose-built image so `pg_dump` and `crond` are both available without entrypoint/command conflicts:
+
+`deploy/backup/Dockerfile`:
+```dockerfile
+FROM alpine:3.19
+RUN apk add --no-cache postgresql16-client dcron tini coreutils
+COPY crontab /etc/crontabs/root
+COPY dump.sh /usr/local/bin/dump.sh
+COPY restore.sh /usr/local/bin/restore.sh
+RUN chmod +x /usr/local/bin/dump.sh /usr/local/bin/restore.sh
+ENTRYPOINT ["/sbin/tini","--"]
+CMD ["crond","-f","-l","2"]
+```
+
+`deploy/backup/crontab`:
+```
+15 2 * * * /usr/local/bin/dump.sh >> /var/log/dump.log 2>&1
+```
+
+`deploy/backup/dump.sh` (Codex pass-4 BLOCKER #3 — was referenced but not specified):
+```sh
+#!/bin/sh
+set -eu
+TS="$(date -u +%Y%m%dT%H%M%SZ)"
+DEST="/backups"
+mkdir -p "$DEST"
+PGPASSWORD="$POSTGRES_PASSWORD" pg_dump \
+    -h "$POSTGRES_HOST" -U "$POSTGRES_USER" \
+    --format=custom --compress=6 --no-owner --no-privileges \
+    "$POSTGRES_DB" > "$DEST/przeswity-$TS.dump"
+# Retention: keep last 14 nightlies + the most-recent of each ISO week (4 weeks) + each month (3 months).
+find "$DEST" -name 'przeswity-*.dump' -mtime +14 -print -delete \
+    | grep -v "$(date -u -d 'monday' +%Y-W%V 2>/dev/null || true)" || true
+echo "[dump] $TS bytes=$(stat -c%s "$DEST/przeswity-$TS.dump")"
+```
+
+`deploy/backup/restore.sh`:
+```sh
+#!/bin/sh
+set -eu
+[ -n "${1:-}" ] || { echo "usage: $0 <dump-file>" >&2; exit 2; }
+PGPASSWORD="$POSTGRES_PASSWORD" pg_restore \
+    -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+    --clean --if-exists --no-owner --no-privileges "$1"
+```
+
+`docker-compose.deploy.yml` excerpt (single command path — no entrypoint/command conflict, Codex pass-4 BLOCKER #2):
+```yaml
+backup:
+    build: { context: ./deploy/backup }
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+        POSTGRES_HOST: db
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        POSTGRES_DB: ${POSTGRES_DB}
+    volumes: [backup-data:/backups]
+volumes:
+    backup-data: {}
+```
+
+- [ ] **Step 3: Restore drill** — `just restore <dump-file>` runs the container's `restore.sh` against the staging DB. Documented in README under "Disaster recovery".
+- [ ] **Step 4: Off-host copy** — README documents that `backup-data` volume should be rsynced to an off-host location (S3 / B2 / Hetzner Storage Box) via a host-level cron. Automation is Stage 2.
+- [ ] **Step 5: Smoke tests** — (a) vitest creates a book, persists edits, runs `snapshotJob` once, asserts an `auto-`-labeled `book_snapshot` row appears; (b) integration test in CI builds the backup image, runs `dump.sh` against a fresh seeded DB, then `restore.sh` against an empty DB, asserts row counts match.
+- [ ] **Step 6: Commit.**
+
+This closes the Codex pass-3 finding that data loss for live manuscripts is a real risk.
+
+---
+
 ## Future Features Wishlist (post-Stage-1 product ideas)
 
 These are not in scope but would meaningfully differentiate the product. Surfacing them now so Stage 2/3 planning has a backlog rather than a blank page.
@@ -2469,8 +2997,7 @@ These are not in scope but would meaningfully differentiate the product. Surfaci
 
 ### Risk-reducing infra
 
-- **Backup & PITR** (point-in-time recovery) for the Y.Doc state — losing a manuscript would be catastrophic.
-- **Per-book Y.Doc snapshots** every 30 min as compressed archives.
+- **Backup & PITR** and **per-book Y.Doc snapshots every 30 min** — promoted into Stage 1 (Task D2.5) per the operational-requirements section above; Stage 2 will add off-host automation and a one-click restore UI.
 - **Offline desktop client** (Tauri or Electron — research mentions Electron explicitly).
 - **Server-side update validator** (honors the Stage-2 placeholder; closes the suggest-only trust gap).
 - **Per-tenant rate limiting** on AI endpoints.
