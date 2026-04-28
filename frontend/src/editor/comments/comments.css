@@ -285,6 +285,7 @@
 .filter-chips {
   display: flex;
   gap: 4px;
+  flex-shrink: 0;
 }
 .filter-chip {
   padding: 4px 11px;

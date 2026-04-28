@@ -261,23 +261,24 @@ export function CommentsSidebar({
             </div>
             <div className="comment-filters">
                 <div className="filter-chips">
-                    {(['open', 'resolved', 'all'] as StatusFilter[]).map((s) => {
-                        const labels: Record<StatusFilter, string> = {
+                    {(() => {
+                        const chipLabels: Record<StatusFilter, string> = {
                             open: `${t('comments.filter.open')} · ${totalOpen}`,
                             resolved: t('comments.filter.resolved'),
                             all: t('comments.filter.all'),
                         };
-                        return (
+                        return (['open', 'resolved', 'all'] as StatusFilter[]).map((s) => (
                             <button
                                 key={s}
                                 type="button"
+                                aria-pressed={statusFilter === s}
                                 className={`filter-chip${statusFilter === s ? ' is-active' : ''}`}
                                 onClick={() => setStatusFilter(s)}
                             >
-                                {labels[s]}
+                                {chipLabels[s]}
                             </button>
-                        );
-                    })}
+                        ));
+                    })()}
                 </div>
                 <select value={authorFilter} onChange={(e) => setAuthorFilter(e.target.value)}>
                     <option value="">{t('comments.filter.allAuthors')}</option>
