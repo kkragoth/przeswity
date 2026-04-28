@@ -315,7 +315,7 @@ export function CommentsSidebar({
                     ref={(el) => {
                         cardsRef.current[thread.id] = el;
                     }}
-                    className={`thread${isActive ? ' is-active' : ''}${isExpanded ? ' is-expanded' : ''}`}
+                    className={`thread${isActive ? ' is-active' : ''}`}
                     onClick={() => onActiveCommentChange(thread.id)}
                 >
                     <div className="thread-head">
