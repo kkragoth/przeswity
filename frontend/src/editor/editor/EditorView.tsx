@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
-import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Toolbar } from './Toolbar';
 import { BubbleToolbar } from './BubbleToolbar';
-import { PageNumbers } from './PageNumbers';
-import { pageCssVars, useWordLikePagination } from './useWordLikePagination';
-import { pageStackHeight, pageTop } from './pageLayout';
+import { HeaderFooterBar, HeaderFooterKind } from '@/editor/editor/HeaderFooterBar';
 import { ContextMenu } from '../shell/ContextMenu';
 import type { ContextMenuItem } from '../shell/ContextMenu';
 import { CommentAnchors } from '../comments/CommentAnchors';
@@ -17,7 +15,18 @@ import { SlashMenu } from './slash/SlashMenu';
 import type { SlashTriggerInfo } from './slash/SlashCommand';
 import type { GlossaryEntry } from '../glossary/GlossaryHighlight';
 
+import type { HeaderClickEvent, FooterClickEvent } from 'tiptap-pagination-plus';
 import { buildExtensions } from './extensions';
+
+// PaginationPlus augments Commands but the module augmentation may not propagate
+// through all tsconfig paths — cast to access the added commands safely.
+interface PaginationCommands {
+    updateHeaderContent: (left: string, right: string) => boolean;
+    updateFooterContent: (left: string, right: string) => boolean;
+}
+function paginationCmds(editor: Editor) {
+    return editor.commands as unknown as PaginationCommands;
+}
 import { buildContextItems } from './contextItems';
 import { useBlockHover } from './useBlockHover';
 import { useBlockDragOver, INITIAL_DRAG_STATE, type DragState } from './useBlockDragDrop';
@@ -53,6 +62,11 @@ interface BlockMenuState {
   pos: number
 }
 
+type HeaderFooterFocus =
+    | { kind: HeaderFooterKind.Header; left: string; right: string }
+    | { kind: HeaderFooterKind.Footer; left: string; right: string }
+    | { kind: 'none' };
+
 const EMPTY_SLASH: SlashTriggerInfo = {
     active: false,
     query: '',
@@ -77,7 +91,7 @@ export function EditorView({
     onEditorReady,
     onToast,
 }: EditorViewProps) {
-    const pageRef = useRef<HTMLDivElement>(null);
+    const { t } = useTranslation('editor');
 
     // Live refs so extension getters never see stale closure values
     const userRef = useRef(user);
@@ -93,12 +107,33 @@ export function EditorView({
     const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
     const [blockMenu, setBlockMenu] = useState<BlockMenuState | null>(null);
     const [slashTrigger, setSlashTrigger] = useState<SlashTriggerInfo>(EMPTY_SLASH);
+    const [headerFooterFocus, setHeaderFooterFocus] = useState<HeaderFooterFocus>({ kind: 'none' });
 
     const dragStateRef = useRef<DragState>({ ...INITIAL_DRAG_STATE });
     const [dropTop, setDropTop] = useState<number | null>(null);
     const resetDrag = () => {
         dragStateRef.current = { ...INITIAL_DRAG_STATE };
         setDropTop(null);
+    };
+
+    // Stable refs so PaginationPlus callbacks always call the latest handler without re-creating extensions
+    const onHeaderClickRef = useRef<(() => void) | undefined>(undefined);
+    const onFooterClickRef = useRef<(() => void) | undefined>(undefined);
+    onHeaderClickRef.current = () => {
+        const meta = collab.doc.getMap<string>('meta');
+        setHeaderFooterFocus({
+            kind: HeaderFooterKind.Header,
+            left: meta.get('headerLeft') ?? '',
+            right: meta.get('headerRight') ?? '',
+        });
+    };
+    onFooterClickRef.current = () => {
+        const meta = collab.doc.getMap<string>('meta');
+        setHeaderFooterFocus({
+            kind: HeaderFooterKind.Footer,
+            left: meta.get('footerLeft') ?? '',
+            right: meta.get('footerRight') ?? '{page}',
+        });
     };
 
     const editor = useEditor(
@@ -115,6 +150,8 @@ export function EditorView({
                     color: userRef.current.color,
                 }),
                 getGlossaryEntries: () => glossaryRef.current,
+                getOnHeaderClick: (): HeaderClickEvent => (_params) => onHeaderClickRef.current?.(),
+                getOnFooterClick: (): FooterClickEvent => (_params) => onFooterClickRef.current?.(),
             }),
             editorProps: {
                 attributes: { class: 'prose-editor', spellcheck: 'true' },
@@ -190,11 +227,19 @@ export function EditorView({
         },
         [collab, user.id],
     );
-    const pageCount = useWordLikePagination(editor);
-    const pageStackStyle = {
-        ...pageCssVars,
-        '--page-stack-height': `${pageStackHeight(pageCount)}px`,
-    } as CSSProperties;
+
+    // Sync Yjs meta map → PaginationPlus header/footer content
+    useEffect(() => {
+        if (!editor) return;
+        const meta = collab.doc.getMap<string>('meta');
+        const syncHeaderFooter = () => {
+            paginationCmds(editor).updateHeaderContent(meta.get('headerLeft') ?? '', meta.get('headerRight') ?? '');
+            paginationCmds(editor).updateFooterContent(meta.get('footerLeft') ?? '', meta.get('footerRight') ?? '{page}');
+        };
+        meta.observe(syncHeaderFooter);
+        collab.ready.then(syncHeaderFooter).catch(() => {});
+        return () => meta.unobserve(syncHeaderFooter);
+    }, [editor, collab]);
 
     useEffect(() => {
         if (editor) editor.setEditable(canEditOrSuggest);
@@ -254,30 +299,49 @@ export function EditorView({
         onCreateComment(id, quote);
     };
 
+    const applyHeaderFooter = (
+        kind: HeaderFooterKind.Header | HeaderFooterKind.Footer,
+        left: string,
+        right: string,
+    ) => {
+        if (!editor) return;
+        const meta = collab.doc.getMap<string>('meta');
+        if (kind === HeaderFooterKind.Header) {
+            meta.set('headerLeft', left);
+            meta.set('headerRight', right);
+            paginationCmds(editor).updateHeaderContent(left, right);
+        } else {
+            meta.set('footerLeft', left);
+            meta.set('footerRight', right);
+            paginationCmds(editor).updateFooterContent(left, right);
+        }
+        setHeaderFooterFocus({ kind: 'none' });
+    };
+
     const blockMenuItems: ContextMenuItem[] = blockMenu
         ? [
             {
-                label: 'Move up',
+                label: t('blockMenu.moveUp'),
                 icon: '↑',
                 shortcut: '⌥⇧↑',
                 action: () => moveBlock(editor!, blockMenu.pos, 'up'),
             },
             {
-                label: 'Move down',
+                label: t('blockMenu.moveDown'),
                 icon: '↓',
                 shortcut: '⌥⇧↓',
                 action: () => moveBlock(editor!, blockMenu.pos, 'down'),
             },
             { label: '', separator: true },
             {
-                label: 'Duplicate',
+                label: t('blockMenu.duplicate'),
                 icon: '⎘',
                 shortcut: '⌘D',
                 action: () => duplicateBlock(editor!, blockMenu.pos),
             },
             { label: '', separator: true },
             {
-                label: 'Delete block',
+                label: t('blockMenu.deleteBlock'),
                 icon: '🗑',
                 danger: true,
                 action: () => deleteBlock(editor!, blockMenu.pos),
@@ -306,19 +370,24 @@ export function EditorView({
                     onToast={onToast ?? (() => {})}
                 />
             )}
+            {editor && headerFooterFocus.kind !== 'none' && (
+                <HeaderFooterBar
+                    kind={headerFooterFocus.kind}
+                    left={headerFooterFocus.left}
+                    right={headerFooterFocus.right}
+                    onApply={(left, right) =>
+                        applyHeaderFooter(
+                            headerFooterFocus.kind as HeaderFooterKind.Header | HeaderFooterKind.Footer,
+                            left,
+                            right,
+                        )
+                    }
+                    onDismiss={() => setHeaderFooterFocus({ kind: 'none' })}
+                />
+            )}
             <div className="editor-scroll">
-                <div className="editor-page" ref={pageRef} onMouseDown={focusOnEmptyClick} style={pageStackStyle}>
-                    <div className="editor-paper-layer" aria-hidden="true">
-                        {Array.from({ length: pageCount }, (_, i) => (
-                            <div
-                                key={i}
-                                className="editor-paper-sheet"
-                                style={{ '--page-top': `${pageTop(i)}px` } as CSSProperties}
-                            />
-                        ))}
-                    </div>
+                <div className="editor-page" onMouseDown={focusOnEmptyClick}>
                     <EditorContent editor={editor} />
-                    <PageNumbers pageCount={pageCount} />
                     <CommentAnchors
                         editor={editor}
                         doc={collab.doc}

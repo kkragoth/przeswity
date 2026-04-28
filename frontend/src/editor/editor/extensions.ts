@@ -1,3 +1,4 @@
+import type { AnyExtension } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
@@ -57,7 +58,7 @@ export interface ExtensionsConfig {
     getOnFooterClick?: () => FooterClickEvent | undefined;
 }
 
-export function buildExtensions(config: ExtensionsConfig) {
+export function buildExtensions(config: ExtensionsConfig): AnyExtension[] {
     const { collab, user } = config;
     return [
         StarterKit.configure({ undoRedo: false }),
@@ -106,5 +107,5 @@ export function buildExtensions(config: ExtensionsConfig) {
             onHeaderClick: (params) => config.getOnHeaderClick?.()?.(params),
             onFooterClick: (params) => config.getOnFooterClick?.()?.(params),
         }),
-    ];
+    ] as unknown as AnyExtension[];
 }

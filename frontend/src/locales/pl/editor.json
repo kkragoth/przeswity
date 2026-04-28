@@ -134,6 +134,12 @@
         "typesetter": "Skład",
         "coordinator": "Koordynator"
     },
+    "blockMenu": {
+        "moveUp": "Przesuń w górę",
+        "moveDown": "Przesuń w dół",
+        "duplicate": "Duplikuj",
+        "deleteBlock": "Usuń blok"
+    },
     "headerFooterBar": {
         "labelHeader": "Nagłówek",
         "labelFooter": "Stopka",

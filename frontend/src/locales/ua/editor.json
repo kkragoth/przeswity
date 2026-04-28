@@ -134,6 +134,12 @@
         "typesetter": "Верстальник",
         "coordinator": "Координатор"
     },
+    "blockMenu": {
+        "moveUp": "Перемістити вгору",
+        "moveDown": "Перемістити вниз",
+        "duplicate": "Дублювати",
+        "deleteBlock": "Видалити блок"
+    },
     "headerFooterBar": {
         "labelHeader": "Верхній колонтитул",
         "labelFooter": "Нижній колонтитул",

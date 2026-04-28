@@ -134,6 +134,12 @@
         "typesetter": "Typesetter",
         "coordinator": "Coordinator"
     },
+    "blockMenu": {
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "duplicate": "Duplicate",
+        "deleteBlock": "Delete block"
+    },
     "headerFooterBar": {
         "labelHeader": "Header",
         "labelFooter": "Footer",
