@@ -1,0 +1,10 @@
+{
+    "name": "przeswity",
+    "private": true,
+    "version": "0.1.0",
+    "workspaces": ["backend", "frontend", "shared/editor-schema"],
+    "scripts": {
+        "build:shared": "npm -w @przeswity/editor-schema run build",
+        "dev:shared": "npm -w @przeswity/editor-schema run dev"
+    }
+}
