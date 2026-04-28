@@ -101,7 +101,26 @@
         "edited": "(edytowano)",
         "resolve": "Rozwiąż",
         "reattach": "Ponownie zakotwicz",
-        "deleteThread": "Usuń wątek"
+        "deleteThread": "Usuń wątek",
+        "filter": {
+            "open": "Otwarte",
+            "resolved": "Rozwiązane",
+            "all": "Wszystkie",
+            "allAuthors": "Wszyscy autorzy",
+            "allRoles": "Wszystkie role"
+        },
+        "empty": "Brak komentarzy. Zaznacz tekst w dokumencie i kliknij 💬, aby dodać.",
+        "noMatch": "Brak komentarzy pasujących do filtrów.",
+        "writeComment": "Napisz komentarz… użyj @ aby wspomnieć",
+        "editComment": "Edytuj komentarz…",
+        "editReply": "Edytuj odpowiedź…",
+        "writeReply": "Odpowiedz… użyj @ aby wspomnieć",
+        "post": "Opublikuj",
+        "resolvedBy": "rozwiązane przez {{name}}",
+        "reopen": "Otwórz ponownie",
+        "deleteConfirm": "Usunąć ten wątek komentarzy?",
+        "deleteResolvedConfirm": "Usunąć ten rozwiązany wątek?",
+        "close": "Zamknij wątek"
     },
     "suggestions": {
         "acceptAll": "Akceptuj wszystkie",

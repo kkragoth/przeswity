@@ -101,7 +101,26 @@
         "edited": "(edited)",
         "resolve": "Resolve",
         "reattach": "Reattach",
-        "deleteThread": "Delete thread"
+        "deleteThread": "Delete thread",
+        "filter": {
+            "open": "Open",
+            "resolved": "Resolved",
+            "all": "All",
+            "allAuthors": "All authors",
+            "allRoles": "All roles"
+        },
+        "empty": "No comments yet. Select text in the document and click 💬 to add one.",
+        "noMatch": "No comments match the current filters.",
+        "writeComment": "Write a comment… use @ to mention",
+        "editComment": "Edit comment…",
+        "editReply": "Edit reply…",
+        "writeReply": "Reply… use @ to mention",
+        "post": "Post",
+        "resolvedBy": "resolved by {{name}}",
+        "reopen": "Reopen",
+        "deleteConfirm": "Delete this comment thread?",
+        "deleteResolvedConfirm": "Delete this resolved thread?",
+        "close": "Close thread"
     },
     "suggestions": {
         "acceptAll": "Accept all",

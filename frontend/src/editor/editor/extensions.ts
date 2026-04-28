@@ -1,4 +1,5 @@
-import type { AnyExtension } from '@tiptap/core';
+import { Extension, type AnyExtension } from '@tiptap/core';
+import { yCursorPlugin, defaultCursorBuilder, defaultSelectionBuilder } from '@tiptap/y-tiptap';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
@@ -7,7 +8,6 @@ import TextAlign from '@tiptap/extension-text-align';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import Collaboration from '@tiptap/extension-collaboration';
-import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
 import Image from '@tiptap/extension-image';
 import { Table } from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
@@ -69,9 +69,18 @@ export function buildExtensions(config: ExtensionsConfig): AnyExtension[] {
         TaskList,
         TaskItem.configure({ nested: true }),
         Collaboration.configure({ document: collab.doc }),
-        CollaborationCursor.configure({
-            provider: collab.provider,
-            user: { name: user.name, color: user.color },
+        // @tiptap/extension-collaboration-cursor@3.0.0 imports yCursorPlugin from y-prosemirror,
+        // but @tiptap/extension-collaboration@3.22.5 registers ySyncPlugin via @tiptap/y-tiptap —
+        // the keys are different instances, so the cursor plugin crashes on init.
+        // Fix: use yCursorPlugin directly from @tiptap/y-tiptap.
+        Extension.create({
+            name: 'collaborationCursor',
+            addProseMirrorPlugins() {
+                // awareness is always defined — we never pass awareness:null to HocuspocusProvider
+                const awareness = collab.provider.awareness!;
+                awareness.setLocalStateField('user', { name: user.name, color: user.color });
+                return [yCursorPlugin(awareness, { cursorBuilder: defaultCursorBuilder, selectionBuilder: defaultSelectionBuilder })];
+            },
         }),
         Comment.configure({ onCommentClick: config.onCommentClick }),
         Insertion,
