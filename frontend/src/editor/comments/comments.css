@@ -418,13 +418,9 @@
   color: var(--text-subtle);
   cursor: pointer;
   flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.15s, background 0.12s;
+  transition: background 0.12s;
   padding: 0;
   line-height: 1;
-}
-.thread.is-active .thread-close-btn {
-  opacity: 1;
 }
 .thread-close-btn:hover {
   background: var(--bg-tint);

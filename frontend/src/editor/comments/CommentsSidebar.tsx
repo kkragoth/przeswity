@@ -356,6 +356,7 @@ export function CommentsSidebar({
                                     type="button"
                                     className="thread-close-btn"
                                     title={t('comments.close')}
+                                    aria-label={t('comments.close')}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         onActiveCommentChange(null);
