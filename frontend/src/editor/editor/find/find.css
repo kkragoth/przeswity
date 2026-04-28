@@ -1,0 +1,73 @@
+/* Find & replace bar */
+.find-bar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 50;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 380px;
+}
+.find-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.find-row input[type='text'] {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font: inherit;
+  font-size: 13px;
+}
+.find-row button {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 13px;
+  min-width: 28px;
+}
+.find-row button:hover {
+  background: var(--bg);
+}
+.find-row button.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.find-row button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.find-counter {
+  font-size: 11px;
+  color: var(--text-subtle);
+  padding: 0 4px;
+  min-width: 60px;
+  text-align: center;
+}
+.find-case {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.find-match {
+  background: rgba(234, 179, 8, 0.3);
+  border-radius: 1px;
+}
+.find-match-current {
+  background: rgba(234, 179, 8, 0.7);
+  outline: 1px solid #ca8a04;
+}
+

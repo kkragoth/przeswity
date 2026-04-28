@@ -1,0 +1,148 @@
+/* Versions */
+.version-create {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.version-create input {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font: inherit;
+}
+.version-create button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.version {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+}
+.version-label {
+  font-weight: 600;
+  font-size: 13px;
+}
+.version-meta {
+  font-size: 11px;
+  color: var(--text-subtle);
+  margin: 2px 0 6px;
+}
+.version-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* Side-by-side diff */
+.diff-sbs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.diff-sbs-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.diff-sbs-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-subtle);
+  padding: 0 4px 6px;
+}
+.diff-sbs .editor-page {
+  padding: 24px 32px;
+  margin: 0;
+  min-height: 400px;
+  max-width: none;
+}
+.diff-page-older .ProseMirror {
+  background: rgba(156, 163, 175, 0.04);
+}
+.diff-page-newer .ProseMirror {
+  background: rgba(21, 128, 61, 0.04);
+}
+.sbs-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-right: 8px;
+}
+.sbs-toggle button {
+  background: white;
+  border: none;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 0;
+  color: var(--text-muted);
+}
+.sbs-toggle button.is-active {
+  background: var(--accent);
+  color: white;
+}
+
+/* Auto-snapshot badge */
+.auto-badge {
+  display: inline-block;
+  background: var(--bg);
+  color: var(--text-subtle);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: middle;
+  font-weight: 600;
+  border: 1px solid var(--border);
+}
+.version.is-auto .version-label {
+  color: var(--text-muted);
+}
+
+/* Compare-mode banner + version highlight */
+.compare-banner {
+  background: var(--accent-soft);
+  color: var(--accent);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.compare-banner button {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  cursor: pointer;
+  margin-left: auto;
+}
+.version.is-compare-src {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+.version.is-compare-target {
+  background: var(--bg-elev);
+}
+.version-actions .btn-danger {
+  color: var(--warning);
+  border-color: var(--warning-soft);
+}
+

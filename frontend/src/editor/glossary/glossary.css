@@ -1,0 +1,96 @@
+/* Glossary */
+.glossary-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 8px;
+  background: var(--bg);
+  border-radius: 8px;
+}
+.glossary-form input {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font: inherit;
+  font-size: 13px;
+}
+.glossary-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+.glossary-actions button {
+  flex: 1;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.glossary-actions button.btn-primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.glossary-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.glossary-entry {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+}
+.glossary-entry.is-editing {
+  border-color: var(--accent);
+}
+.glossary-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.glossary-term-label {
+  font-weight: 600;
+}
+.glossary-arrow {
+  color: var(--text-subtle);
+}
+.glossary-translation {
+  color: var(--text);
+}
+.glossary-notes {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.glossary-buttons {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+.glossary-buttons button {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.glossary-buttons .btn-danger {
+  color: var(--warning);
+  border-color: var(--warning-soft);
+}
+.glossary-term {
+  border-bottom: 1px dotted #9333ea;
+  cursor: help;
+}
+.glossary-term:hover {
+  background: rgba(147, 51, 234, 0.1);
+  border-radius: 2px;
+}
+

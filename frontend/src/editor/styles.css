@@ -1,0 +1,17 @@
+@import './styles/tokens.css';
+@import './styles/layout.css';
+@import './identity/identity.css';
+@import './shell/shell.css';
+@import './editor/editor.css';
+@import './editor/blocks/blocks.css';
+@import './editor/formatting/formatting.css';
+@import './editor/slash/slash.css';
+@import './editor/find/find.css';
+@import './comments/comments.css';
+@import './suggestions/suggestions.css';
+@import './versions/versions.css';
+@import './glossary/glossary.css';
+@import './outline/outline.css';
+@import './meta/meta.css';
+@import './workflow/workflow.css';
+@import './io/io.css';

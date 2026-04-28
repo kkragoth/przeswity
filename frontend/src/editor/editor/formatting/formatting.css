@@ -1,0 +1,86 @@
+/* Special chars dropdown */
+.special-chars-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 8px;
+  z-index: 200;
+  width: 320px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+.special-chars-group {
+  margin-bottom: 8px;
+}
+.special-chars-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-subtle);
+  margin-bottom: 4px;
+  padding: 0 4px;
+}
+.special-chars-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+}
+.special-char {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 0;
+  cursor: pointer;
+  font-size: 14px;
+  text-align: center;
+}
+.special-char:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Highlight popup in toolbar */
+.tb-highlight-wrap {
+  position: relative;
+}
+.tb-highlight-pop {
+  position: absolute;
+  display: none;
+  top: calc(100% + 4px);
+  left: 0;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  padding: 4px;
+  gap: 4px;
+  z-index: 100;
+}
+.tb-highlight-wrap:hover .tb-highlight-pop {
+  display: flex;
+}
+.tb-color-swatch {
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.tb-color-clear {
+  width: 22px;
+  height: 22px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+mark.text-highlight {
+  border-radius: 2px;
+}
+

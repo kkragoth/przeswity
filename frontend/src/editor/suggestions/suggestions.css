@@ -1,0 +1,54 @@
+/* Suggestions */
+.suggestion {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.suggestion-meta {
+  display: flex;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-subtle);
+  margin-bottom: 4px;
+}
+.suggestion-text {
+  margin: 4px 0 6px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.suggestion-text-insertion {
+  text-decoration: underline;
+  color: #15803d;
+}
+.suggestion-text-deletion {
+  text-decoration: line-through;
+  color: #9ca3af;
+}
+.suggestion-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* In-document track-change marks */
+.tc-ins {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+  color: var(--track-color, #15803d);
+}
+.tc-del {
+  text-decoration: line-through;
+  color: var(--track-color, #9ca3af);
+}
+.comment-anchor {
+  background: #fef3c7;
+  border-bottom: 2px solid #f59e0b;
+  cursor: pointer;
+  border-radius: 1px;
+}
+

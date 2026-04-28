@@ -1,0 +1,29 @@
+/* Export dropdown */
+.export-menu {
+  position: relative;
+}
+.export-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  min-width: 240px;
+  padding: 4px;
+  z-index: 100;
+}
+.export-dropdown button {
+  text-align: left;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.export-dropdown button:hover {
+  background: var(--bg);
+}
+

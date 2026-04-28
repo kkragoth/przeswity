@@ -1,0 +1,34 @@
+/* Meta panel */
+.meta-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px;
+}
+.meta-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.meta-field span {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-subtle);
+  font-weight: 600;
+}
+.meta-field input,
+.meta-field select,
+.meta-field textarea {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 13px;
+  background: white;
+}
+.meta-field textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
