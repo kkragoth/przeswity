@@ -44,6 +44,36 @@
         "offline": "Офлайн",
         "reconnecting": "Повторне підключення..."
     },
+    "settings": {
+        "title": "Налаштування",
+        "tabs": {
+            "profile": "Профіль"
+        },
+        "profile": {
+            "saved": "Профіль збережено"
+        }
+    },
+    "people": {
+        "addPeople": "Додати осіб",
+        "selectUser": "Виберіть користувача",
+        "selectRole": "Виберіть роль",
+        "addAssignment": "Додати",
+        "removeAssignment": "Видалити",
+        "noAssignments": "Немає призначень",
+        "submit": "Зберегти призначення"
+    },
+    "bookDetail": {
+        "exportDocx": "Експорт DOCX",
+        "exportMarkdown": "Експорт MD",
+        "snapshot": "Знімок",
+        "editorPlaceholder": "Редактор (буде у F5)",
+        "tabs": {
+            "comments": "Коментарі",
+            "versions": "Версії",
+            "people": "Особи"
+        },
+        "back": "Назад до книг"
+    },
     "books": {
         "title": "Книги",
         "newBook": "Нова книга",

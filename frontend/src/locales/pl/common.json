@@ -44,6 +44,36 @@
         "offline": "Offline",
         "reconnecting": "Łączenie ponownie..."
     },
+    "settings": {
+        "title": "Ustawienia",
+        "tabs": {
+            "profile": "Profil"
+        },
+        "profile": {
+            "saved": "Zapisano profil"
+        }
+    },
+    "people": {
+        "addPeople": "Dodaj osoby",
+        "selectUser": "Wybierz użytkownika",
+        "selectRole": "Wybierz rolę",
+        "addAssignment": "Dodaj",
+        "removeAssignment": "Usuń",
+        "noAssignments": "Brak przypisań",
+        "submit": "Zapisz przypisania"
+    },
+    "bookDetail": {
+        "exportDocx": "Eksport DOCX",
+        "exportMarkdown": "Eksport MD",
+        "snapshot": "Migawka",
+        "editorPlaceholder": "Edytor (port w F5)",
+        "tabs": {
+            "comments": "Komentarze",
+            "versions": "Wersje",
+            "people": "Osoby"
+        },
+        "back": "Wróć do książek"
+    },
     "books": {
         "title": "Książki",
         "newBook": "Nowa książka",

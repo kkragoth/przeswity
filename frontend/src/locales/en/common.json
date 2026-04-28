@@ -44,6 +44,36 @@
         "offline": "Offline",
         "reconnecting": "Reconnecting..."
     },
+    "settings": {
+        "title": "Settings",
+        "tabs": {
+            "profile": "Profile"
+        },
+        "profile": {
+            "saved": "Profile saved"
+        }
+    },
+    "people": {
+        "addPeople": "Add people",
+        "selectUser": "Select user",
+        "selectRole": "Select role",
+        "addAssignment": "Add",
+        "removeAssignment": "Remove",
+        "noAssignments": "No assignments",
+        "submit": "Save assignments"
+    },
+    "bookDetail": {
+        "exportDocx": "Export DOCX",
+        "exportMarkdown": "Export MD",
+        "snapshot": "Snapshot",
+        "editorPlaceholder": "Editor (ported in F5)",
+        "tabs": {
+            "comments": "Comments",
+            "versions": "Versions",
+            "people": "People"
+        },
+        "back": "Back to books"
+    },
     "books": {
         "title": "Books",
         "newBook": "New book",
