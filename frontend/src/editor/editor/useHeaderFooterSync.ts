@@ -31,7 +31,9 @@ interface UseHeaderFooterSyncOptions {
 export function useHeaderFooterSync({ collab, editor, onHeaderClickRef, onFooterClickRef }: UseHeaderFooterSyncOptions) {
     const [headerFooterFocus, setHeaderFooterFocus] = useState<HeaderFooterFocus>({ kind: HeaderFooterKind.None });
 
-    // Update the stable refs each render so PaginationPlus always calls the latest handler
+    // Intentionally outside useEffect — PaginationPlus captures these refs once on extension
+    // construction (via getOnHeaderClick/getOnFooterClick getters), so we must update .current
+    // each render to avoid stale closures over collab/setHeaderFooterFocus.
     onHeaderClickRef.current = () => {
         const meta = collab.doc.getMap<string>('meta');
         setHeaderFooterFocus({
