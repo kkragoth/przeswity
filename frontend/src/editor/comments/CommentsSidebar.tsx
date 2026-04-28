@@ -253,7 +253,7 @@ export function CommentsSidebar({
     const totalOpen = threads.filter((thread) => thread.status === 'open').length;
 
     return (
-        <div className="sidebar comments-sidebar">
+        <div className={`sidebar comments-sidebar${activeCommentId ? ' has-active' : ''}`}>
             <div className="comments-header">
                 <span className="sidebar-title sidebar-title-inline">
           Comments <span className="comment-count-pill">{totalOpen}</span>
@@ -349,6 +349,19 @@ export function CommentsSidebar({
                                     }}
                                 >
                       ✓
+                                </button>
+                            )}
+                            {isActive && (
+                                <button
+                                    type="button"
+                                    className="thread-close-btn"
+                                    title={t('comments.close')}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onActiveCommentChange(null);
+                                    }}
+                                >
+                                    ✕
                                 </button>
                             )}
                         </div>

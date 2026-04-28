@@ -394,6 +394,43 @@
   background: var(--bg);
   opacity: 0.85;
 }
+
+/* Focus mode — dim inactive threads when one is active */
+.comments-sidebar.has-active .thread:not(.is-active) {
+  opacity: 0.45;
+  transition: opacity 0.2s ease;
+}
+.comments-sidebar.has-active .thread:not(.is-active):hover {
+  opacity: 0.75;
+}
+
+/* Close button on active thread */
+.thread-close-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-subtle);
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.12s;
+  padding: 0;
+  line-height: 1;
+}
+.thread.is-active .thread-close-btn {
+  opacity: 1;
+}
+.thread-close-btn:hover {
+  background: var(--bg-tint);
+  color: var(--text);
+}
+
 .thread-head {
   display: flex;
   align-items: center;
