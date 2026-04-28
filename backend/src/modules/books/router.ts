@@ -9,6 +9,7 @@ import { registry } from '../../openapi/registry.js';
 import { BookDto, BookSummaryDto, CreateBookBody, UpdateBookBody } from './schemas.js';
 import { markdownToYDocState, yDocStateToMarkdown } from '@przeswity/editor-schema/markdown';
 import { listVisibleBooks, getBookIfVisible, projectBook } from './service.js';
+import { getPresence } from '../../collab/presence.js';
 
 export const booksRouter = Router();
 
@@ -52,6 +53,12 @@ registry.registerPath({
     operationId: 'bookSnapshotMarkdown',
     request: { params: z.object({ id: z.string(), snapId: z.string() }) },
     responses: { 200: { description: 'snapshot markdown', content: { 'text/markdown': { schema: z.string() } } } },
+});
+registry.registerPath({
+    method: 'get', path: '/api/books/{id}/presence',
+    operationId: 'bookPresence',
+    request: { params: z.object({ id: z.string() }) },
+    responses: { 200: { description: 'presence', content: { 'application/json': { schema: z.object({ users: z.array(z.object({ id: z.string(), name: z.string(), color: z.string() })) }) } } } },
 });
 
 booksRouter.get('/api/books', requireSession, asyncHandler(async (req: any, res: any) => {
@@ -183,4 +190,15 @@ booksRouter.get('/api/books/:id/snapshots/:snapId/markdown', requireSession, asy
     if (!snap) throw new AppError('errors.snapshot.notFound', 404, 'snapshot not found');
     res.set('Content-Type', 'text/markdown; charset=utf-8');
     res.send(yDocStateToMarkdown(new Uint8Array(snap.state)));
+}));
+
+booksRouter.get('/api/books/:id/presence', requireSession, asyncHandler(async (req: any, res: any) => {
+    const me = req.user;
+    const b = await getBookIfVisible(req.params.id, me.id, !!me.isAdmin);
+    if (!b) {
+        const [exists] = await db.select({ id: book.id }).from(book).where(eq(book.id, req.params.id));
+        if (!exists) throw new AppError('errors.book.notFound', 404, 'book not found');
+        throw new AppError('errors.book.forbidden', 403, 'no access');
+    }
+    res.json({ users: getPresence(req.params.id) });
 }));
