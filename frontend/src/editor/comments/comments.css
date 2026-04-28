@@ -390,6 +390,9 @@
     0 0 0 3px var(--accent-soft),
     0 4px 12px rgba(15, 23, 42, 0.08);
 }
+.thread.is-active .avatar-ring {
+  box-shadow: 0 0 0 2px white, 0 0 0 3.5px var(--accent);
+}
 .thread.is-resolved {
   background: var(--bg);
   opacity: 0.85;
@@ -492,6 +495,22 @@
   color: var(--warning);
   border-color: var(--warning-soft);
 }
+.btn-resolve {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+  background: white;
+  color: var(--accent);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s;
+  line-height: 1.4;
+}
+.btn-resolve:hover {
+  background: var(--accent-soft);
+}
 .thread-quote {
   background: var(--bg);
   border-left: 2px solid var(--border-strong);
@@ -506,7 +525,11 @@
   white-space: nowrap;
 }
 .thread.is-active .thread-quote {
+  background: linear-gradient(to right, var(--accent-soft), var(--bg-tint));
+  border-left-color: var(--accent);
   white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
 }
 .thread-preview {
   font-size: 13px;

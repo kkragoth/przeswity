@@ -341,14 +341,13 @@ export function CommentsSidebar({
                             {perms.canResolveComment && isActive && (
                                 <button
                                     type="button"
-                                    className="thread-icon-btn"
-                                    title={t('comments.resolve')}
+                                    className="btn-resolve"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         resolve(thread.id);
                                     }}
                                 >
-                      ✓
+                                    ✓ {t('comments.resolve')}
                                 </button>
                             )}
                             {isActive && (
