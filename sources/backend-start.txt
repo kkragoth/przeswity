@@ -18,3 +18,55 @@ Configure eslint with:
 TipTap editor might want to use crdt like y, websockets and their own lib for realtime. If that's the case add that lib and if necessary add Redis and appropiate connectors|libraries.
 add gitignore
 
+---
+Decisions adopted while drafting plans/start.md (Stage 1):
+
+API contract binding: Zod schemas registered with `@asteasolutions/zod-to-openapi` are the
+single source of truth. Backend exposes `/openapi.json` and Swagger UI at `/docs`. Every
+registered path MUST have a stable `operationId` (a vitest enforces this) so the
+frontend's `@hey-api/openapi-ts` codegen produces predictable hook names. The frontend
+regenerates a typed TanStack-Query client via `just gen-api`; CI fails on drift.
+
+Realtime collab: use Hocuspocus (Yjs-over-WebSocket) mounted on the same Express HTTP
+server via an explicit `server.on('upgrade')` handler that path-filters to env.COLLAB_PATH
+(default `/collaboration`) and destroys other upgrades. We do NOT use Hocuspocus's
+Express adapter. Persistence via @hocuspocus/extension-database into a `book_yjs_state`
+table. No Redis in Stage 1 (single instance).
+
+Auth: BetterAuth + Drizzle adapter. The auth schema (`user`, `session`, `account`,
+`verification`) is generated from the BetterAuth CLI (`@better-auth/cli generate`) and
+committed under `src/db/auth-schema.ts`. Domain tables extend `user` via separate columns
+declared as BetterAuth `additionalFields` (isAdmin, isCoordinator, competencyTags, color,
+preferredLocale). Cookie domain is empty on localhost; SameSite=lax; Secure in prod.
+
+Dev quick-login: route is gated by BOTH `NODE_ENV !== 'production'` AND
+`ENABLE_DEV_AUTH === true`. App refuses to boot if both `NODE_ENV=production` and
+`ENABLE_DEV_AUTH=true` are set. Single shared dev password (`devseed1234`) used by all
+seeded accounts; defined once in `src/seed/devPassword.ts`.
+
+Errors / i18n: API responses use `{ error: { code, message } }`. `code` is a stable
+identifier (e.g. `errors.book.notFound`); `message` is an English fallback for logs/curl.
+Frontend translates codes via `locales/{pl,en,ua}/errors.json`.
+
+Shared editor schema: a workspace package `@przeswity/editor-schema` at
+`shared/editor-schema/` exports `buildSchemaExtensions()` and
+`markdownToYDocState(md)` consumed by both backend (seed + book create) and frontend
+(Tiptap editor). The package contains schema-bearing extensions ONLY (no DOM, no React,
+no providers). Backend uses `prosemirror-markdown` to parse markdown against the shared
+schema, then `y-prosemirror`'s `prosemirrorJSONToYDoc` to produce the initial Y.Doc state.
+Frontend imports the same `buildSchemaExtensions()` and adds browser-only extensions
+(Collaboration, CollaborationCursor, SmartPaste, FindReplace, SlashCommand,
+GlossaryHighlight, SuggestionMode) on top.
+
+Per-book role enforcement: `onAuthenticate` returns `roles: Role[]` (NEVER a joined
+string). It sets `data.connection.readOnly` based on a `mergePermissions(roles)` helper.
+Suggest-only roles (proofreader, translator, author) are read-only at the Yjs protocol
+level in Stage 1; their suggestions go through an explicit REST endpoint
+`POST /api/books/:id/suggestions` that applies marked insertions/deletions in a
+privileged transaction. Stage 2 promotes this to a real Yjs-update validator.
+
+Seeds: idempotent. Deterministic IDs derived from sha256(namespace + email/slug). Users
+upserted via signUpEmail (USER_ALREADY_EXISTS swallowed) plus `ON CONFLICT (email) DO
+UPDATE`. Books and assignments upserted by composite PKs. The whole seed runs in one
+transaction.
+
