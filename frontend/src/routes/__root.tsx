@@ -1,6 +1,23 @@
-import * as React from 'react';
-import { createRootRoute, Outlet } from '@tanstack/react-router';
+import { createRootRouteWithContext, Outlet } from '@tanstack/react-router';
+import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
+import { Toaster } from 'sonner';
+import type { Session } from '@/auth/types';
 
-export const Route = createRootRoute({
-    component: () => <Outlet />,
+interface RouterContext {
+    queryClient: QueryClient;
+    session: Session | null;
+}
+
+export const Route = createRootRouteWithContext<RouterContext>()({
+    component: RootLayout,
 });
+
+function RootLayout() {
+    const { queryClient } = Route.useRouteContext();
+    return (
+        <QueryClientProvider client={queryClient}>
+            <Outlet />
+            <Toaster position="top-right" />
+        </QueryClientProvider>
+    );
+}

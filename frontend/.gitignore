@@ -3,3 +3,4 @@ dist/
 .env
 .env.local
 src/api/generated/
+src/routeTree.gen.ts
