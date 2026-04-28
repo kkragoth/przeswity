@@ -17,13 +17,14 @@
 .editor-host.pane-right-hidden { --right-effective: 0px; }
 
 /* ---------- Main grid ----------
-   minmax() guards content width — panes never push it below the measure.
+   The center track must be allowed to shrink; otherwise pane transitions can
+   push the editor off-screen instead of leaving a visible manuscript surface.
 */
 .main-grid {
   display: grid;
   grid-template-columns:
     var(--left-effective)
-    minmax(var(--content-width), 1fr)
+    minmax(0, 1fr)
     var(--right-effective);
   flex: 1;
   min-height: 0;
@@ -48,6 +49,8 @@
   flex-direction: column;
   overflow: hidden;
   min-width: 0;
+  width: 100%;
+  max-width: 100%;
   transition: width var(--d-mid) var(--ease-out);
 }
 .left-pane  { border-right: 1px solid var(--border); }
@@ -129,6 +132,10 @@
 .editor-host.pane-right-rail .right-pane .pane-body { display: none; }
 .editor-host.pane-left-rail .left-pane .vrail-btn,
 .editor-host.pane-right-rail .right-pane .vrail-btn { justify-content: center; padding: var(--sp-3) 0; }
+.editor-host.pane-left-rail .left-pane,
+.editor-host.pane-right-rail .right-pane {
+  width: var(--rail-w);
+}
 
 /* Pane body (scrollable region under the tab strip).
    overscroll-behavior: contain — pane scroll never leaks to the document. */
@@ -137,7 +144,6 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  overscroll-behavior: contain;
   padding: var(--sp-3) var(--sp-3) var(--sp-6);
 }
 
@@ -236,6 +242,12 @@
   .left-pane  { left: 0; }
   .editor-host.pane-left-open  .left-pane  { transform: translateX(0); display: flex; }
   .editor-host.pane-right-open .right-pane { transform: translateX(0); display: flex; }
+  .editor-host.pane-left-rail .left-pane,
+  .editor-host.pane-right-rail .right-pane {
+    width: var(--rail-w);
+    box-shadow: none;
+    transform: translateX(0);
+  }
   .pane-handle { display: none !important; }
 }
 

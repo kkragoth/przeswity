@@ -68,8 +68,8 @@
   --fs-display: 36px;
 
   /* Editor content scale (serif) */
-  --content-fs:    18px;
-  --content-lh:    1.65;
+  --content-fs:    16px;
+  --content-lh:    1.5;
 
   /* Weights */
   --fw-light:  300;
@@ -120,9 +120,9 @@
   --z-popover: 150;
 
   /* ---------- Layout (overrideable per book/user) ---------- */
-  --editor-measure: 720px;       /* content width — books may override */
-  --page-margin-y:  80px;
-  --page-margin-x:  64px;
+  --editor-measure: 602px;       /* A4 at 96dpi with Word's 1in left/right margins */
+  --page-margin-y:  96px;
+  --page-margin-x:  96px;
   --left-pane-w:    260px;
   --right-pane-w:   320px;
   --rail-w:         44px;

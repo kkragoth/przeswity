@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
+import type { CSSProperties } from 'react';
 
 import { Toolbar } from './Toolbar';
 import { BubbleToolbar } from './BubbleToolbar';
 import { PageNumbers } from './PageNumbers';
+import { pageCssVars, useWordLikePagination } from './useWordLikePagination';
+import { pageStackHeight, pageTop } from './pageLayout';
 import { ContextMenu } from '../shell/ContextMenu';
 import type { ContextMenuItem } from '../shell/ContextMenu';
 import { CommentAnchors } from '../comments/CommentAnchors';
@@ -187,6 +190,11 @@ export function EditorView({
         },
         [collab, user.id],
     );
+    const pageCount = useWordLikePagination(editor);
+    const pageStackStyle = {
+        ...pageCssVars,
+        '--page-stack-height': `${pageStackHeight(pageCount)}px`,
+    } as CSSProperties;
 
     useEffect(() => {
         if (editor) editor.setEditable(canEditOrSuggest);
@@ -299,9 +307,18 @@ export function EditorView({
                 />
             )}
             <div className="editor-scroll">
-                <div className="editor-page" ref={pageRef} onMouseDown={focusOnEmptyClick}>
+                <div className="editor-page" ref={pageRef} onMouseDown={focusOnEmptyClick} style={pageStackStyle}>
+                    <div className="editor-paper-layer" aria-hidden="true">
+                        {Array.from({ length: pageCount }, (_, i) => (
+                            <div
+                                key={i}
+                                className="editor-paper-sheet"
+                                style={{ '--page-top': `${pageTop(i)}px` } as CSSProperties}
+                            />
+                        ))}
+                    </div>
                     <EditorContent editor={editor} />
-                    <PageNumbers containerRef={pageRef} />
+                    <PageNumbers pageCount={pageCount} />
                     <CommentAnchors
                         editor={editor}
                         doc={collab.doc}

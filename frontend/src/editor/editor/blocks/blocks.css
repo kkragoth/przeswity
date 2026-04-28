@@ -1,7 +1,7 @@
 /* Block drag handle */
 .block-handle {
   position: absolute;
-  left: -32px;
+  left: calc(var(--page-margin-x) - 36px);
   width: 22px;
   height: 22px;
   background: transparent;
@@ -28,8 +28,8 @@
 }
 .drop-indicator {
   position: absolute;
-  left: 16px;
-  right: 16px;
+  left: var(--page-margin-x);
+  right: var(--page-margin-x);
   height: 2px;
   background: var(--accent);
   border-radius: 1px;
@@ -163,4 +163,3 @@
   font-style: italic;
   font-size: 12px;
 }
-

@@ -7,12 +7,24 @@ interface ProviderRuntime {
     status?: string;
     isConnected?: boolean;
     synced?: boolean;
+    isSynced?: boolean;
+    configuration?: {
+        websocketProvider?: {
+            status?: string;
+            shouldConnect?: boolean;
+            connect?: () => Promise<unknown> | void;
+        };
+    };
 }
 
 function readStatus(provider: HocuspocusProvider): ConnectionStatus {
     const p = provider as unknown as ProviderRuntime;
-    if (p.synced || p.isConnected || p.status === 'connected') return 'online';
-    if (p.status === 'disconnected') return 'offline';
+    const socketStatus = p.configuration?.websocketProvider?.status;
+    const status = p.status ?? socketStatus;
+    if (status === 'disconnected' || socketStatus === 'disconnected') return 'offline';
+    if (status === 'connecting' || socketStatus === 'connecting') return 'connecting';
+    if (status === 'connected' || socketStatus === 'connected') return 'online';
+    if ((p.synced || p.isSynced) && p.isConnected) return 'online';
     return 'connecting';
 }
 
@@ -26,7 +38,10 @@ export function useConnectionStatus(provider: HocuspocusProvider): ConnectionSta
 
     const reconnect = useCallback(() => {
         try {
-            (provider as unknown as { shouldConnect?: boolean }).shouldConnect = true;
+            const runtime = provider as unknown as ProviderRuntime;
+            if (runtime.configuration?.websocketProvider) {
+                runtime.configuration.websocketProvider.shouldConnect = true;
+            }
             void provider.connect();
             setStatus('connecting');
         } catch (err) {
@@ -40,7 +55,7 @@ export function useConnectionStatus(provider: HocuspocusProvider): ConnectionSta
             else if (e.connected === false || e.status === 'disconnected') setStatus('offline');
             else if (e.status === 'connecting') setStatus('connecting');
         };
-        const onSynced = () => setStatus('online');
+        const onSynced = (e?: { state?: boolean }) => setStatus(e?.state === false ? readStatus(provider) : 'online');
         const onClose = () => setStatus('offline');
         const onAuthFailed = () => setStatus('offline');
 
@@ -76,6 +91,15 @@ export function useConnectionStatus(provider: HocuspocusProvider): ConnectionSta
             window.removeEventListener('online', onOnline);
         };
     }, [provider, reconnect]);
+
+    useEffect(() => {
+        if (status === 'online') return;
+        const retry = window.setInterval(() => {
+            if (document.visibilityState !== 'visible') return;
+            if (readStatus(provider) !== 'online') reconnect();
+        }, 3000);
+        return () => window.clearInterval(retry);
+    }, [provider, reconnect, status]);
 
     return { status, reconnect };
 }

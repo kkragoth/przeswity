@@ -26,13 +26,25 @@ export async function authenticate(data: {
         else if (Array.isArray(v)) headers.set(k, v.join(', '));
     }
     const session = await auth.api.getSession({ headers });
-    if (!session) throw new Error('unauthenticated');
-    const u: any = session.user;
+    const u: any = session?.user ?? null;
 
     if (!data.documentName.startsWith('book:')) throw new Error('bad document name');
     const bookId = data.documentName.slice('book:'.length);
     const [b] = await db.select().from(book).where(eq(book.id, bookId));
     if (!b) throw new Error('book not found');
+
+    if (!u) {
+        if (env.ENABLE_DEV_AUTH && env.NODE_ENV !== 'production') {
+            // Dev-only fallback: some WS clients/browsers may omit auth cookies.
+            // Allow collaboration so seeded books/cursors are still testable locally.
+            return {
+                user: { id: 'dev-ws-anon', name: 'Dev WS User', isAdmin: true },
+                roles: ['editor'],
+                readOnly: false,
+            };
+        }
+        throw new Error('unauthenticated');
+    }
 
     if (u.isAdmin || b.createdById === u.id) {
         return { user: u, roles: ['editor'], readOnly: false };

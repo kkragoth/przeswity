@@ -3,8 +3,6 @@ import { useCallback, useEffect, useState } from 'react';
 export type PaneState = 'expanded' | 'rail' | 'hidden'
 export type PaneSide = 'left' | 'right'
 
-const ORDER: PaneState[] = ['expanded', 'rail', 'hidden'];
-
 const storageKey = (side: PaneSide) => `editor.pane.${side}`;
 
 function readInitial(side: PaneSide, fallback: PaneState): PaneState {
@@ -36,7 +34,7 @@ export function usePaneState(side: PaneSide, fallback: PaneState = 'expanded'): 
 
     const setState = useCallback((next: PaneState) => setStateRaw(next), []);
     const cycle = useCallback(
-        () => setStateRaw((current) => ORDER[(ORDER.indexOf(current) + 1) % ORDER.length]),
+        () => setStateRaw((current) => (current === 'expanded' ? 'hidden' : 'expanded')),
         [],
     );
 
