@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import '@/editor/editor/header-footer-bar.css';
 
@@ -25,7 +25,15 @@ export function HeaderFooterBar({ kind, left, right, onApply, onDismiss }: Heade
         setRightVal(right);
     }, [left, right, kind]);
 
-    const handleApply = () => onApply(leftVal, rightVal);
+    const pendingApplyRef = useRef(false);
+
+    // Guard against blur+Enter and blur+click double-fire within the same event cycle
+    const handleApply = () => {
+        if (pendingApplyRef.current) return;
+        pendingApplyRef.current = true;
+        onApply(leftVal, rightVal);
+        setTimeout(() => { pendingApplyRef.current = false; }, 0);
+    };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') handleApply();
