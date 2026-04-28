@@ -1,0 +1,38 @@
+{
+    "auth": {
+        "unauthenticated": "You are not logged in.",
+        "forbidden": "Access denied.",
+        "unknownEmail": "Unknown email address.",
+        "devSignInFailed": "Developer sign-in failed.",
+        "sessionExpired": "Session expired."
+    },
+    "validation": {
+        "required": "This field is required.",
+        "invalid": "Invalid value.",
+        "tooLong": "Value is too long.",
+        "tooShort": "Value is too short.",
+        "empty": "No changes."
+    },
+    "book": {
+        "notFound": "Book does not exist.",
+        "forbidden": "You do not have access to this book.",
+        "titleTooLong": "Title is too long."
+    },
+    "assignment": {
+        "duplicate": "Assignment already exists.",
+        "unknownUsers": "Specified users do not exist.",
+        "notFound": "Assignment does not exist.",
+        "tooManyAssignments": "Too many assignments in one request."
+    },
+    "user": {
+        "duplicate": "User already exists.",
+        "notFound": "User does not exist."
+    },
+    "snapshot": {
+        "notFound": "Snapshot does not exist."
+    },
+    "pdf": {
+        "noFile": "No PDF file."
+    },
+    "internal": "Internal server error."
+}

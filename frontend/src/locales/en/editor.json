@@ -1,0 +1,81 @@
+{
+    "topbar": {
+        "saving": "Saving...",
+        "saved": "Saved",
+        "savedRelative": "Saved · {{time}} ago",
+        "online": "Online",
+        "offline": "Offline",
+        "reconnecting": "Reconnecting...",
+        "shortcuts": "Show shortcuts",
+        "exportDocx": "Export DOCX",
+        "exportMarkdown": "Export Markdown",
+        "snapshot": "Create version snapshot",
+        "language": "Language",
+        "logout": "Sign out"
+    },
+    "panes": {
+        "outline": "Outline",
+        "files": "Files",
+        "glossary": "Glossary",
+        "comments": "Comments",
+        "suggestions": "Suggestions",
+        "versions": "Versions",
+        "people": "People"
+    },
+    "toolbar": {
+        "bold": "Bold",
+        "italic": "Italic",
+        "underline": "Underline",
+        "strike": "Strikethrough",
+        "link": "Link",
+        "heading1": "Heading 1",
+        "heading2": "Heading 2",
+        "heading3": "Heading 3",
+        "blockquote": "Blockquote",
+        "bulletList": "Bullet list",
+        "orderedList": "Ordered list",
+        "taskList": "Task list",
+        "table": "Table",
+        "image": "Image",
+        "undo": "Undo",
+        "redo": "Redo",
+        "clearFormat": "Clear formatting",
+        "suggestingMode": "Suggesting mode"
+    },
+    "comments": {
+        "tabs": {
+            "active": "Active",
+            "resolved": "Resolved",
+            "detached": "Detached"
+        },
+        "addComment": "Add comment",
+        "reply": "Reply",
+        "edited": "(edited)",
+        "resolve": "Resolve",
+        "reattach": "Reattach",
+        "deleteThread": "Delete thread"
+    },
+    "suggestions": {
+        "acceptAll": "Accept all",
+        "rejectAll": "Reject all",
+        "acceptFromAuthor": "Accept from {{author}}",
+        "checkSelection": "Check selection"
+    },
+    "versions": {
+        "snapshot": "Snapshot",
+        "restore": "Restore",
+        "compare": "Compare",
+        "createSnapshot": "Create snapshot",
+        "label": "Label"
+    },
+    "wordCount": {
+        "words": "{{count}} words",
+        "chars": "{{count}} characters",
+        "selection": "{{count}} words selected"
+    },
+    "modes": {
+        "zen": "Focus mode",
+        "preview": "Preview mode",
+        "review": "Review mode"
+    }
+}

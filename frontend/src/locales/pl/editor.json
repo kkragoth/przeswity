@@ -1,0 +1,81 @@
+{
+    "topbar": {
+        "saving": "Zapisywanie...",
+        "saved": "Zapisano",
+        "savedRelative": "Zapisano · {{time}} temu",
+        "online": "Online",
+        "offline": "Offline",
+        "reconnecting": "Łączenie ponownie...",
+        "shortcuts": "Pokaż skróty",
+        "exportDocx": "Eksport DOCX",
+        "exportMarkdown": "Eksport Markdown",
+        "snapshot": "Zrób migawkę wersji",
+        "language": "Język",
+        "logout": "Wyloguj"
+    },
+    "panes": {
+        "outline": "Konspekt",
+        "files": "Pliki",
+        "glossary": "Słownik",
+        "comments": "Komentarze",
+        "suggestions": "Sugestie",
+        "versions": "Wersje",
+        "people": "Osoby"
+    },
+    "toolbar": {
+        "bold": "Pogrubienie",
+        "italic": "Kursywa",
+        "underline": "Podkreślenie",
+        "strike": "Przekreślenie",
+        "link": "Link",
+        "heading1": "Nagłówek 1",
+        "heading2": "Nagłówek 2",
+        "heading3": "Nagłówek 3",
+        "blockquote": "Cytat",
+        "bulletList": "Lista punktowana",
+        "orderedList": "Lista numerowana",
+        "taskList": "Lista zadań",
+        "table": "Tabela",
+        "image": "Obraz",
+        "undo": "Cofnij",
+        "redo": "Ponów",
+        "clearFormat": "Wyczyść formatowanie",
+        "suggestingMode": "Tryb sugerowania"
+    },
+    "comments": {
+        "tabs": {
+            "active": "Aktywne",
+            "resolved": "Rozwiązane",
+            "detached": "Odłączone"
+        },
+        "addComment": "Dodaj komentarz",
+        "reply": "Odpowiedz",
+        "edited": "(edytowano)",
+        "resolve": "Rozwiąż",
+        "reattach": "Ponownie zakotwicz",
+        "deleteThread": "Usuń wątek"
+    },
+    "suggestions": {
+        "acceptAll": "Akceptuj wszystkie",
+        "rejectAll": "Odrzuć wszystkie",
+        "acceptFromAuthor": "Akceptuj od {{author}}",
+        "checkSelection": "Sprawdź zaznaczenie"
+    },
+    "versions": {
+        "snapshot": "Migawka",
+        "restore": "Przywróć",
+        "compare": "Porównaj",
+        "createSnapshot": "Utwórz migawkę",
+        "label": "Etykieta"
+    },
+    "wordCount": {
+        "words": "{{count}} wyrazów",
+        "chars": "{{count}} znaków",
+        "selection": "{{count}} wyrazów zaznaczone"
+    },
+    "modes": {
+        "zen": "Tryb skupienia",
+        "preview": "Tryb podglądu",
+        "review": "Tryb recenzji"
+    }
+}

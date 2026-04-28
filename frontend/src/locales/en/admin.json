@@ -1,0 +1,34 @@
+{
+    "title": "Admin Panel",
+    "tabs": {
+        "users": "Users",
+        "books": "All Books",
+        "system": "System Status"
+    },
+    "users": {
+        "newUser": "New user",
+        "table": {
+            "name": "Name",
+            "email": "Email",
+            "badges": "Badges",
+            "lastLogin": "Last login",
+            "actions": "Actions"
+        },
+        "form": {
+            "title": "User details",
+            "competencyTags": "Competency tags",
+            "color": "Color",
+            "isAdmin": "Administrator",
+            "isCoordinator": "Coordinator"
+        },
+        "deleteConfirm": "Are you sure you want to delete this user?",
+        "loginAs": "Login as"
+    },
+    "system": {
+        "users": "Users",
+        "coordinators": "Coordinators",
+        "books": "Books",
+        "activeSessions": "Active sessions",
+        "yjsBytes": "Y.Doc document size"
+    }
+}

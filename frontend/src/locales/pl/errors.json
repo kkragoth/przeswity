@@ -1,0 +1,38 @@
+{
+    "auth": {
+        "unauthenticated": "Nie jesteś zalogowany.",
+        "forbidden": "Brak uprawnień.",
+        "unknownEmail": "Nieznany adres email.",
+        "devSignInFailed": "Logowanie deweloperskie nie powiodło się.",
+        "sessionExpired": "Sesja wygasła."
+    },
+    "validation": {
+        "required": "To pole jest wymagane.",
+        "invalid": "Nieprawidłowa wartość.",
+        "tooLong": "Wartość jest zbyt długa.",
+        "tooShort": "Wartość jest zbyt krótka.",
+        "empty": "Brak zmian."
+    },
+    "book": {
+        "notFound": "Książka nie istnieje.",
+        "forbidden": "Nie masz dostępu do tej książki.",
+        "titleTooLong": "Tytuł jest zbyt długi."
+    },
+    "assignment": {
+        "duplicate": "Przypisanie już istnieje.",
+        "unknownUsers": "Wskazani użytkownicy nie istnieją.",
+        "notFound": "Przypisanie nie istnieje.",
+        "tooManyAssignments": "Zbyt wiele przypisań w jednym wywołaniu."
+    },
+    "user": {
+        "duplicate": "Użytkownik już istnieje.",
+        "notFound": "Użytkownik nie istnieje."
+    },
+    "snapshot": {
+        "notFound": "Migawka nie istnieje."
+    },
+    "pdf": {
+        "noFile": "Brak pliku PDF."
+    },
+    "internal": "Wewnętrzny błąd serwera."
+}

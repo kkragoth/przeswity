@@ -1,0 +1,34 @@
+{
+    "title": "Панель адміністратора",
+    "tabs": {
+        "users": "Користувачі",
+        "books": "Всі книги",
+        "system": "Стан системи"
+    },
+    "users": {
+        "newUser": "Новий користувач",
+        "table": {
+            "name": "Ім'я",
+            "email": "Email",
+            "badges": "Значки",
+            "lastLogin": "Останній вхід",
+            "actions": "Дії"
+        },
+        "form": {
+            "title": "Дані користувача",
+            "competencyTags": "Теги компетенцій",
+            "color": "Колір",
+            "isAdmin": "Адміністратор",
+            "isCoordinator": "Координатор"
+        },
+        "deleteConfirm": "Ви впевнені, що хочете видалити цього користувача?",
+        "loginAs": "Увійти як"
+    },
+    "system": {
+        "users": "Користувачі",
+        "coordinators": "Координатори",
+        "books": "Книги",
+        "activeSessions": "Активні сесії",
+        "yjsBytes": "Розмір документів Y.Doc"
+    }
+}

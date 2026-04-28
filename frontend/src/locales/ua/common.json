@@ -1,0 +1,44 @@
+{
+    "appName": "Prześwity",
+    "nav": {
+        "home": "Головна",
+        "books": "Книги",
+        "admin": "Панель адміністратора",
+        "coordinator": "Панель координатора",
+        "settings": "Налаштування",
+        "signOut": "Вийти"
+    },
+    "actions": {
+        "save": "Зберегти",
+        "cancel": "Скасувати",
+        "delete": "Видалити",
+        "create": "Створити",
+        "confirm": "Підтвердити",
+        "edit": "Редагувати",
+        "close": "Закрити",
+        "add": "Додати",
+        "submit": "Надіслати",
+        "refresh": "Оновити"
+    },
+    "labels": {
+        "name": "Ім'я",
+        "email": "Email",
+        "password": "Пароль",
+        "title": "Назва",
+        "description": "Опис",
+        "role": "Роль",
+        "status": "Статус",
+        "language": "Мова",
+        "loading": "Завантаження...",
+        "search": "Пошук"
+    },
+    "states": {
+        "loading": "Завантаження...",
+        "saving": "Збереження...",
+        "saved": "Збережено",
+        "error": "Помилка",
+        "online": "Онлайн",
+        "offline": "Офлайн",
+        "reconnecting": "Повторне підключення..."
+    }
+}

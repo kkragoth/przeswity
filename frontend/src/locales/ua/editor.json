@@ -1,0 +1,81 @@
+{
+    "topbar": {
+        "saving": "Збереження...",
+        "saved": "Збережено",
+        "savedRelative": "Збережено · {{time}} тому",
+        "online": "Онлайн",
+        "offline": "Офлайн",
+        "reconnecting": "Повторне підключення...",
+        "shortcuts": "Показати скорочення",
+        "exportDocx": "Експорт DOCX",
+        "exportMarkdown": "Експорт Markdown",
+        "snapshot": "Створити знімок версії",
+        "language": "Мова",
+        "logout": "Вийти"
+    },
+    "panes": {
+        "outline": "Структура",
+        "files": "Файли",
+        "glossary": "Словник",
+        "comments": "Коментарі",
+        "suggestions": "Пропозиції",
+        "versions": "Версії",
+        "people": "Особи"
+    },
+    "toolbar": {
+        "bold": "Жирний",
+        "italic": "Курсив",
+        "underline": "Підкреслення",
+        "strike": "Закреслення",
+        "link": "Посилання",
+        "heading1": "Заголовок 1",
+        "heading2": "Заголовок 2",
+        "heading3": "Заголовок 3",
+        "blockquote": "Цитата",
+        "bulletList": "Маркований список",
+        "orderedList": "Нумерований список",
+        "taskList": "Список завдань",
+        "table": "Таблиця",
+        "image": "Зображення",
+        "undo": "Скасувати",
+        "redo": "Повторити",
+        "clearFormat": "Очистити форматування",
+        "suggestingMode": "Режим пропозицій"
+    },
+    "comments": {
+        "tabs": {
+            "active": "Активні",
+            "resolved": "Вирішені",
+            "detached": "Від'єднані"
+        },
+        "addComment": "Додати коментар",
+        "reply": "Відповісти",
+        "edited": "(відредаговано)",
+        "resolve": "Вирішити",
+        "reattach": "Повторно прикріпити",
+        "deleteThread": "Видалити гілку"
+    },
+    "suggestions": {
+        "acceptAll": "Прийняти всі",
+        "rejectAll": "Відхилити всі",
+        "acceptFromAuthor": "Прийняти від {{author}}",
+        "checkSelection": "Перевірити виділення"
+    },
+    "versions": {
+        "snapshot": "Знімок",
+        "restore": "Відновити",
+        "compare": "Порівняти",
+        "createSnapshot": "Створити знімок",
+        "label": "Мітка"
+    },
+    "wordCount": {
+        "words": "{{count}} слів",
+        "chars": "{{count}} символів",
+        "selection": "{{count}} слів виділено"
+    },
+    "modes": {
+        "zen": "Режим зосередження",
+        "preview": "Режим перегляду",
+        "review": "Режим рецензування"
+    }
+}

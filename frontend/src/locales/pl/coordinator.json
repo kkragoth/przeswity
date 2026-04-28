@@ -1,0 +1,33 @@
+{
+    "title": "Panel koordynatora",
+    "greeting": "Witaj, {{name}}",
+    "newBook": "Nowa książka",
+    "books": {
+        "title": "Moje książki",
+        "table": {
+            "title": "Tytuł",
+            "stage": "Etap",
+            "assignees": "Przypisani",
+            "lastActivity": "Ostatnia aktywność",
+            "actions": "Akcje"
+        },
+        "stage1": "Etap 1"
+    },
+    "newBookForm": {
+        "titleField": "Tytuł",
+        "descriptionField": "Opis",
+        "initialMarkdown": "Treść początkowa (Markdown)",
+        "pasteHint": "Możesz wkleić treść z Worda — formatowanie zostanie oczyszczone.",
+        "preview": "Podgląd",
+        "assignments": "Osoby"
+    },
+    "activity": {
+        "title": "Ostatnia aktywność",
+        "empty": "Brak aktywności"
+    },
+    "empty": {
+        "title": "Nie masz jeszcze książek",
+        "body": "Utwórz pierwszą książkę, aby rozpocząć współpracę.",
+        "cta": "Nowa książka"
+    }
+}

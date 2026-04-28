@@ -1,0 +1,33 @@
+{
+    "title": "Coordinator Panel",
+    "greeting": "Welcome, {{name}}",
+    "newBook": "New book",
+    "books": {
+        "title": "My books",
+        "table": {
+            "title": "Title",
+            "stage": "Stage",
+            "assignees": "Assignees",
+            "lastActivity": "Last activity",
+            "actions": "Actions"
+        },
+        "stage1": "Stage 1"
+    },
+    "newBookForm": {
+        "titleField": "Title",
+        "descriptionField": "Description",
+        "initialMarkdown": "Initial content (Markdown)",
+        "pasteHint": "You can paste content from Word — formatting will be cleaned up.",
+        "preview": "Preview",
+        "assignments": "People"
+    },
+    "activity": {
+        "title": "Recent activity",
+        "empty": "No activity"
+    },
+    "empty": {
+        "title": "You have no books yet",
+        "body": "Create your first book to start collaborating.",
+        "cta": "New book"
+    }
+}

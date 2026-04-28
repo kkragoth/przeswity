@@ -1,0 +1,44 @@
+{
+    "appName": "Prześwity",
+    "nav": {
+        "home": "Home",
+        "books": "Books",
+        "admin": "Admin Panel",
+        "coordinator": "Coordinator Panel",
+        "settings": "Settings",
+        "signOut": "Sign out"
+    },
+    "actions": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "create": "Create",
+        "confirm": "Confirm",
+        "edit": "Edit",
+        "close": "Close",
+        "add": "Add",
+        "submit": "Submit",
+        "refresh": "Refresh"
+    },
+    "labels": {
+        "name": "Name",
+        "email": "Email",
+        "password": "Password",
+        "title": "Title",
+        "description": "Description",
+        "role": "Role",
+        "status": "Status",
+        "language": "Language",
+        "loading": "Loading...",
+        "search": "Search"
+    },
+    "states": {
+        "loading": "Loading...",
+        "saving": "Saving...",
+        "saved": "Saved",
+        "error": "Error",
+        "online": "Online",
+        "offline": "Offline",
+        "reconnecting": "Reconnecting..."
+    }
+}

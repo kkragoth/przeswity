@@ -1,0 +1,34 @@
+{
+    "title": "Panel administratora",
+    "tabs": {
+        "users": "Użytkownicy",
+        "books": "Wszystkie książki",
+        "system": "Status systemu"
+    },
+    "users": {
+        "newUser": "Nowy użytkownik",
+        "table": {
+            "name": "Imię",
+            "email": "Email",
+            "badges": "Znaczniki",
+            "lastLogin": "Ostatnie logowanie",
+            "actions": "Akcje"
+        },
+        "form": {
+            "title": "Dane użytkownika",
+            "competencyTags": "Tagi kompetencji",
+            "color": "Kolor",
+            "isAdmin": "Administrator",
+            "isCoordinator": "Koordynator"
+        },
+        "deleteConfirm": "Czy na pewno chcesz usunąć tego użytkownika?",
+        "loginAs": "Zaloguj jako"
+    },
+    "system": {
+        "users": "Użytkownicy",
+        "coordinators": "Koordynatorzy",
+        "books": "Książki",
+        "activeSessions": "Aktywne sesje",
+        "yjsBytes": "Rozmiar dokumentów Y.Doc"
+    }
+}

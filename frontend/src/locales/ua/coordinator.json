@@ -1,0 +1,33 @@
+{
+    "title": "Панель координатора",
+    "greeting": "Вітаємо, {{name}}",
+    "newBook": "Нова книга",
+    "books": {
+        "title": "Мої книги",
+        "table": {
+            "title": "Назва",
+            "stage": "Етап",
+            "assignees": "Призначені",
+            "lastActivity": "Остання активність",
+            "actions": "Дії"
+        },
+        "stage1": "Етап 1"
+    },
+    "newBookForm": {
+        "titleField": "Назва",
+        "descriptionField": "Опис",
+        "initialMarkdown": "Початковий вміст (Markdown)",
+        "pasteHint": "Ви можете вставити вміст з Word — форматування буде очищено.",
+        "preview": "Попередній перегляд",
+        "assignments": "Особи"
+    },
+    "activity": {
+        "title": "Остання активність",
+        "empty": "Немає активності"
+    },
+    "empty": {
+        "title": "У вас ще немає книг",
+        "body": "Створіть першу книгу, щоб розпочати співпрацю.",
+        "cta": "Нова книга"
+    }
+}

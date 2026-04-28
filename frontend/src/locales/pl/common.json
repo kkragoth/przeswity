@@ -1,0 +1,44 @@
+{
+    "appName": "Prześwity",
+    "nav": {
+        "home": "Strona główna",
+        "books": "Książki",
+        "admin": "Panel administratora",
+        "coordinator": "Panel koordynatora",
+        "settings": "Ustawienia",
+        "signOut": "Wyloguj"
+    },
+    "actions": {
+        "save": "Zapisz",
+        "cancel": "Anuluj",
+        "delete": "Usuń",
+        "create": "Utwórz",
+        "confirm": "Potwierdź",
+        "edit": "Edytuj",
+        "close": "Zamknij",
+        "add": "Dodaj",
+        "submit": "Wyślij",
+        "refresh": "Odśwież"
+    },
+    "labels": {
+        "name": "Imię",
+        "email": "Email",
+        "password": "Hasło",
+        "title": "Tytuł",
+        "description": "Opis",
+        "role": "Rola",
+        "status": "Status",
+        "language": "Język",
+        "loading": "Ładowanie...",
+        "search": "Szukaj"
+    },
+    "states": {
+        "loading": "Ładowanie...",
+        "saving": "Zapisywanie...",
+        "saved": "Zapisano",
+        "error": "Błąd",
+        "online": "Online",
+        "offline": "Offline",
+        "reconnecting": "Łączenie ponownie..."
+    }
+}
