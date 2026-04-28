@@ -8,10 +8,12 @@ import TaskItem from '@tiptap/extension-task-item';
 import Collaboration from '@tiptap/extension-collaboration';
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
 import Image from '@tiptap/extension-image';
-import Table from '@tiptap/extension-table';
+import { Table } from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
+import { PaginationPlus } from 'tiptap-pagination-plus';
+import type { HeaderClickEvent, FooterClickEvent } from 'tiptap-pagination-plus';
 
 import { Comment } from '../comments/Comment';
 import { Insertion, Deletion } from '../suggestions/TrackChange';
@@ -29,25 +31,33 @@ import type { GlossaryEntry } from '../glossary/GlossaryHighlight';
 import type { CollabBundle } from '../collab/yDoc';
 import type { User } from '../identity/types';
 
+// A4 at 96dpi: 794×1123px with 1-inch (96px) margins on all sides.
+// Content width = 794 - 96 - 96 = 602px (matches --editor-measure token).
+const A4_PAGE = {
+    pageHeight: 1123,
+    pageWidth: 794,
+    marginTop: 96,
+    marginBottom: 96,
+    marginLeft: 96,
+    marginRight: 96,
+} as const;
+
 export interface ExtensionsConfig {
-  collab: CollabBundle
-  user: User
-  onCommentClick: (id: string) => void
-  onSlashTrigger: (info: SlashTriggerInfo) => void
-  getSuggestingEnabled: () => boolean
-  getSuggestionAuthor: () => { id: string; name: string; color: string }
-  getGlossaryEntries: () => GlossaryEntry[]
+    collab: CollabBundle
+    user: User
+    onCommentClick: (id: string) => void
+    onSlashTrigger: (info: SlashTriggerInfo) => void
+    getSuggestingEnabled: () => boolean
+    getSuggestionAuthor: () => { id: string; name: string; color: string }
+    getGlossaryEntries: () => GlossaryEntry[]
+    getOnHeaderClick: () => HeaderClickEvent | undefined
+    getOnFooterClick: () => FooterClickEvent | undefined
 }
 
-/**
- * Builds the full Tiptap extension list for the main editor. Each option
- * is a getter so it stays live without recreating the editor when the
- * caller's state changes.
- */
 export function buildExtensions(config: ExtensionsConfig) {
     const { collab, user } = config;
     return [
-        StarterKit.configure({ history: false }),
+        StarterKit.configure({ undoRedo: false }),
         Underline,
         Link.configure({ openOnClick: false }),
         CharacterCount,
@@ -78,6 +88,20 @@ export function buildExtensions(config: ExtensionsConfig) {
         SuggestionMode.configure({
             getEnabled: config.getSuggestingEnabled,
             getAuthor: config.getSuggestionAuthor,
+        }),
+        PaginationPlus.configure({
+            ...A4_PAGE,
+            pageGap: 32,
+            contentMarginTop: 8,
+            contentMarginBottom: 8,
+            pageGapBorderColor: '#d4cfc9',
+            pageBreakBackground: '#f0ede8',
+            headerLeft: '',
+            headerRight: '',
+            footerLeft: '',
+            footerRight: '{page}',
+            onHeaderClick: (params) => config.getOnHeaderClick()?.(params),
+            onFooterClick: (params) => config.getOnFooterClick()?.(params),
         }),
     ];
 }
