@@ -65,7 +65,7 @@ interface BlockMenuState {
 type HeaderFooterFocus =
     | { kind: HeaderFooterKind.Header; left: string; right: string }
     | { kind: HeaderFooterKind.Footer; left: string; right: string }
-    | { kind: 'none' };
+    | { kind: HeaderFooterKind.None };
 
 const EMPTY_SLASH: SlashTriggerInfo = {
     active: false,
@@ -107,7 +107,7 @@ export function EditorView({
     const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
     const [blockMenu, setBlockMenu] = useState<BlockMenuState | null>(null);
     const [slashTrigger, setSlashTrigger] = useState<SlashTriggerInfo>(EMPTY_SLASH);
-    const [headerFooterFocus, setHeaderFooterFocus] = useState<HeaderFooterFocus>({ kind: 'none' });
+    const [headerFooterFocus, setHeaderFooterFocus] = useState<HeaderFooterFocus>({ kind: HeaderFooterKind.None });
 
     const dragStateRef = useRef<DragState>({ ...INITIAL_DRAG_STATE });
     const [dropTop, setDropTop] = useState<number | null>(null);
@@ -309,13 +309,15 @@ export function EditorView({
         if (kind === HeaderFooterKind.Header) {
             meta.set('headerLeft', left);
             meta.set('headerRight', right);
+            // Direct call ensures immediate local render; meta.observe will also fire, but that's intentional.
             paginationCmds(editor).updateHeaderContent(left, right);
         } else {
             meta.set('footerLeft', left);
             meta.set('footerRight', right);
+            // Direct call ensures immediate local render; meta.observe will also fire, but that's intentional.
             paginationCmds(editor).updateFooterContent(left, right);
         }
-        setHeaderFooterFocus({ kind: 'none' });
+        setHeaderFooterFocus({ kind: HeaderFooterKind.None });
     };
 
     const blockMenuItems: ContextMenuItem[] = blockMenu
@@ -370,7 +372,7 @@ export function EditorView({
                     onToast={onToast ?? (() => {})}
                 />
             )}
-            {editor && headerFooterFocus.kind !== 'none' && (
+            {editor && headerFooterFocus.kind !== HeaderFooterKind.None && (
                 <HeaderFooterBar
                     kind={headerFooterFocus.kind}
                     left={headerFooterFocus.left}
@@ -382,7 +384,7 @@ export function EditorView({
                             right,
                         )
                     }
-                    onDismiss={() => setHeaderFooterFocus({ kind: 'none' })}
+                    onDismiss={() => setHeaderFooterFocus({ kind: HeaderFooterKind.None })}
                 />
             )}
             <div className="editor-scroll">

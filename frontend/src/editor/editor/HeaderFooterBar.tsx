@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import '@/editor/editor/header-footer-bar.css';
 
 export enum HeaderFooterKind {
+    None = 'none',
     Header = 'header',
     Footer = 'footer',
 }
