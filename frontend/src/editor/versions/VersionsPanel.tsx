@@ -130,7 +130,7 @@ export function VersionsPanel({ doc, user, editor, onToast }: VersionsPanelProps
         )
             return;
         const json = jsonFromSnapshot(v);
-        editor.commands.setContent(json, true);
+        editor.commands.setContent(json, { emitUpdate: true });
         onToast?.(`Restored: ${v.label}`, 'success');
     };
 

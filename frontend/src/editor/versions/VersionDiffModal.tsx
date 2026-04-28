@@ -13,7 +13,7 @@ import type { JSONNode } from './diffDoc';
 import { diffStats } from './diffDoc';
 
 const READ_ONLY_EXTENSIONS = [
-    StarterKit.configure({ history: false }),
+    StarterKit.configure({ undoRedo: false }),
     Underline,
     Link.configure({ openOnClick: false }),
     TextAlign.configure({ types: ['heading', 'paragraph'] }),

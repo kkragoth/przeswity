@@ -21,7 +21,7 @@ export function TemplatesMenu({ editor, onToast }: TemplatesMenuProps) {
             )
         )
             return;
-        editor.commands.setContent(t.content as never, true);
+        editor.commands.setContent(t.content as never, { emitUpdate: true });
         onToast?.(`Loaded template: ${t.name}`, 'success');
         setOpen(false);
     };

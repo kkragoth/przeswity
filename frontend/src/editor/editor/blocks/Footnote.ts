@@ -49,8 +49,8 @@ export const Footnote = Node.create({
                 e.preventDefault();
                 const next = window.prompt('Footnote text', node.attrs.text || '');
                 if (next === null) return;
-                const pos = typeof getPos === 'function' ? getPos() : null;
-                if (pos === null) return;
+                const pos = typeof getPos === 'function' ? getPos() : undefined;
+                if (pos === undefined) return;
                 editor
                     .chain()
                     .setNodeSelection(pos)

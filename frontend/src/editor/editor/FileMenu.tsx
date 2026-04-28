@@ -63,7 +63,7 @@ export function FileMenu({ editor, perms, onToast }: FileMenuProps) {
             } else {
                 html = await marked.parse(await file.text());
             }
-            editor.commands.setContent(html, true);
+            editor.commands.setContent(html, { emitUpdate: true });
             onToast(`Imported ${file.name}`, 'success');
         } catch (err) {
             onToast(`Import failed: ${(err as Error).message}`, 'error');
@@ -74,7 +74,7 @@ export function FileMenu({ editor, perms, onToast }: FileMenuProps) {
         const tmpl = TEMPLATES.find((x) => x.id === id);
         if (!tmpl) return;
         if (!window.confirm(`Apply template "${tmpl.name}"?\n\nThis replaces the current document.`)) return;
-        editor.commands.setContent(tmpl.content as never, true);
+        editor.commands.setContent(tmpl.content as never, { emitUpdate: true });
         onToast(`Loaded template: ${tmpl.name}`, 'success');
     };
 

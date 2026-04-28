@@ -62,7 +62,7 @@ export function ImportMenu({ editor, onToast }: ImportMenuProps) {
                 const text = await file.text();
                 html = await marked.parse(text);
             }
-            editor.commands.setContent(html, true);
+            editor.commands.setContent(html, { emitUpdate: true });
             onToast?.(`Imported ${file.name}`, 'success');
         } catch (err) {
             console.error(err);

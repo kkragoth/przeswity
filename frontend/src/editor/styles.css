@@ -5,7 +5,6 @@
 @import './shell/shell.css';
 @import './editor/editor.css';
 @import './editor/toolbar.css';
-@import './editor/page-numbers.css';
 @import './editor/blocks/blocks.css';
 @import './editor/formatting/formatting.css';
 @import './editor/slash/slash.css';

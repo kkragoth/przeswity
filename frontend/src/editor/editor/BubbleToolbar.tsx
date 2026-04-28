@@ -1,4 +1,4 @@
-import { BubbleMenu } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
 import type { Editor } from '@tiptap/react';
 
 interface BubbleToolbarProps {
@@ -9,7 +9,7 @@ interface BubbleToolbarProps {
 
 export function BubbleToolbar({ editor, canComment, onAddComment }: BubbleToolbarProps) {
     return (
-        <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
+        <BubbleMenu editor={editor}>
             <div className="bubble-menu">
                 <button
                     type="button"
