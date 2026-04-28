@@ -33,6 +33,9 @@ import type { User } from '../identity/types';
 
 // A4 at 96dpi: 794×1123px with 1-inch (96px) margins on all sides.
 // Content width = 794 - 96 - 96 = 602px (matches --editor-measure token).
+const PAGE_GAP_BORDER_COLOR = '#d4cfc9';
+const PAGE_BREAK_BACKGROUND = '#f0ede8';
+
 const A4_PAGE = {
     pageHeight: 1123,
     pageWidth: 794,
@@ -43,15 +46,15 @@ const A4_PAGE = {
 } as const;
 
 export interface ExtensionsConfig {
-    collab: CollabBundle
-    user: User
-    onCommentClick: (id: string) => void
-    onSlashTrigger: (info: SlashTriggerInfo) => void
-    getSuggestingEnabled: () => boolean
-    getSuggestionAuthor: () => { id: string; name: string; color: string }
-    getGlossaryEntries: () => GlossaryEntry[]
-    getOnHeaderClick: () => HeaderClickEvent | undefined
-    getOnFooterClick: () => FooterClickEvent | undefined
+    collab: CollabBundle;
+    user: User;
+    onCommentClick: (id: string) => void;
+    onSlashTrigger: (info: SlashTriggerInfo) => void;
+    getSuggestingEnabled: () => boolean;
+    getSuggestionAuthor: () => { id: string; name: string; color: string };
+    getGlossaryEntries: () => GlossaryEntry[];
+    getOnHeaderClick?: () => HeaderClickEvent | undefined;
+    getOnFooterClick?: () => FooterClickEvent | undefined;
 }
 
 export function buildExtensions(config: ExtensionsConfig) {
@@ -94,14 +97,14 @@ export function buildExtensions(config: ExtensionsConfig) {
             pageGap: 32,
             contentMarginTop: 8,
             contentMarginBottom: 8,
-            pageGapBorderColor: '#d4cfc9',
-            pageBreakBackground: '#f0ede8',
+            pageGapBorderColor: PAGE_GAP_BORDER_COLOR,
+            pageBreakBackground: PAGE_BREAK_BACKGROUND,
             headerLeft: '',
             headerRight: '',
             footerLeft: '',
             footerRight: '{page}',
-            onHeaderClick: (params) => config.getOnHeaderClick()?.(params),
-            onFooterClick: (params) => config.getOnFooterClick()?.(params),
+            onHeaderClick: (params) => config.getOnHeaderClick?.()?.(params),
+            onFooterClick: (params) => config.getOnFooterClick?.()?.(params),
         }),
     ];
 }
