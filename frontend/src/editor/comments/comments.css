@@ -541,8 +541,20 @@
   overflow: hidden;
 }
 .thread-expandable {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.25s cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 0.2s ease;
+}
+.thread.is-active .thread-expandable {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.thread-expandable-inner {
+  min-height: 0;
   overflow: hidden;
-  transition: max-height 0.25s ease, opacity 0.2s ease;
 }
 .thread-body {
   font-size: 13px;

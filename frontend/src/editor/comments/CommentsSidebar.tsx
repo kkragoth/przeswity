@@ -406,13 +406,8 @@ export function CommentsSidebar({
                             {thread.body && !isExpanded && (
                                 <div className="thread-preview">{previewBody(thread.body)}</div>
                             )}
-                            <div
-                                className="thread-expandable"
-                                style={{
-                                    maxHeight: isExpanded ? 1600 : 0,
-                                    opacity: isExpanded ? 1 : 0,
-                                }}
-                            >
+                            <div className="thread-expandable">
+                                <div className="thread-expandable-inner">
                                 {thread.body &&
                       (editingThread === thread.id ? (
                           <div className="thread-draft">
@@ -600,6 +595,7 @@ export function CommentsSidebar({
                                         </div>
                                     </div>
                                 )}
+                                </div>
                             </div>
                         </>
                     )}
