@@ -64,9 +64,11 @@ export function useHeaderFooterSync({ collab, editor, onHeaderClickRef, onFooter
                 meta.get('footerRight') ?? '{page}',
             );
         };
+        let cancelled = false;
+        const guardedSync = () => { if (!cancelled) syncHeaderFooter(); };
         meta.observe(syncHeaderFooter);
-        collab.ready.then(syncHeaderFooter).catch(() => {});
-        return () => meta.unobserve(syncHeaderFooter);
+        collab.ready.then(guardedSync).catch(() => {});
+        return () => { cancelled = true; meta.unobserve(syncHeaderFooter); };
     }, [editor, collab]);
 
     const applyHeaderFooter = (kind: HeaderFooterKind.Header | HeaderFooterKind.Footer, left: string, right: string) => {
