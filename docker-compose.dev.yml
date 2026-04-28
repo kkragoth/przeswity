@@ -1,8 +1,20 @@
-# Filled in by Tasks B1, D1. Skeleton only.
 services:
     db:
         image: postgres:16-alpine
+        environment:
+            POSTGRES_USER: przeswity
+            POSTGRES_PASSWORD: przeswity
+            POSTGRES_DB: przeswity
+        ports: ["5433:5432"]
+        volumes: [pgdata:/var/lib/postgresql/data]
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U przeswity"]
+            interval: 2s
+            timeout: 2s
+            retries: 30
     backend:
         image: alpine
     frontend:
         image: alpine
+volumes:
+    pgdata: {}
