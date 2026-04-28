@@ -567,24 +567,24 @@ export function CommentsSidebar({
                                                         e.stopPropagation();
                                                         submitReply(thread.id);
                                                     }}
-                                                >
-                                                ↑
-                                                </button>
+                                                >↑</button>
                                             </div>
-                                            <div className="thread-compose-footer">
-                                                <button
-                                                    type="button"
-                                                    className="thread-icon-btn thread-remove"
-                                                    title={t('comments.deleteThread')}
-                                                    aria-label={t('comments.deleteThread')}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (window.confirm(t('comments.deleteConfirm'))) remove(thread.id);
-                                                    }}
-                                                >
-                                                🗑
-                                                </button>
-                                            </div>
+                                            {perms.canResolveComment && (
+                                                <div className="thread-compose-footer">
+                                                    <button
+                                                        type="button"
+                                                        className="thread-icon-btn thread-remove"
+                                                        title={t('comments.deleteThread')}
+                                                        aria-label={t('comments.deleteThread')}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (window.confirm(t('comments.deleteConfirm'))) remove(thread.id);
+                                                        }}
+                                                    >
+                                                        🗑
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
