@@ -16,9 +16,9 @@ import TableHeader from '@tiptap/extension-table-header';
 import { PaginationPlus } from 'tiptap-pagination-plus';
 import type { HeaderClickEvent, FooterClickEvent } from 'tiptap-pagination-plus';
 
-import { Comment } from '../comments/Comment';
-import { Insertion, Deletion } from '../suggestions/TrackChange';
-import { SuggestionMode } from '../suggestions/SuggestionMode';
+import { Comment } from '@/editor/comments/Comment';
+import { Insertion, Deletion } from '@/editor/suggestions/TrackChange';
+import { SuggestionMode } from '@/editor/suggestions/SuggestionMode';
 import { SmartPaste } from './formatting/SmartPaste';
 import { SmartTypography } from './formatting/SmartTypography';
 import { Highlight } from './formatting/Highlight';
@@ -27,10 +27,10 @@ import { Footnote } from './blocks/Footnote';
 import { TableOfContents } from './blocks/Toc';
 import { SlashCommand } from './slash/SlashCommand';
 import type { SlashTriggerInfo } from './slash/SlashCommand';
-import { GlossaryHighlight } from '../glossary/GlossaryHighlight';
-import type { GlossaryEntry } from '../glossary/GlossaryHighlight';
-import type { CollabBundle } from '../collab/yDoc';
-import type { User } from '../identity/types';
+import { GlossaryHighlight } from '@/editor/glossary/GlossaryHighlight';
+import type { GlossaryEntry } from '@/editor/glossary/GlossaryHighlight';
+import type { CollabBundle } from '@/editor/collab/yDoc';
+import type { User } from '@/editor/identity/types';
 
 // A4 at 96dpi: 794×1123px with 1-inch (96px) margins on all sides.
 // Content width = 794 - 96 - 96 = 602px (matches --editor-measure token).

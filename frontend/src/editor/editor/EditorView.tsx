@@ -6,35 +6,26 @@ import { useTranslation } from 'react-i18next';
 import { Toolbar } from './Toolbar';
 import { BubbleToolbar } from './BubbleToolbar';
 import { HeaderFooterBar, HeaderFooterKind } from '@/editor/editor/HeaderFooterBar';
-import { ContextMenu } from '../shell/ContextMenu';
-import type { ContextMenuItem } from '../shell/ContextMenu';
-import { CommentAnchors } from '../comments/CommentAnchors';
+import { ContextMenu } from '@/editor/shell/ContextMenu';
+import { CommentAnchors } from '@/editor/comments/CommentAnchors';
 import { DragHandle } from './blocks/DragHandle';
 import { moveBlock, duplicateBlock, deleteBlock } from './blocks/blockOps';
 import { SlashMenu } from './slash/SlashMenu';
 import type { SlashTriggerInfo } from './slash/SlashCommand';
-import type { GlossaryEntry } from '../glossary/GlossaryHighlight';
+import type { GlossaryEntry } from '@/editor/glossary/GlossaryHighlight';
 
 import type { HeaderClickEvent, FooterClickEvent } from 'tiptap-pagination-plus';
 import { buildExtensions } from './extensions';
 
-// PaginationPlus augments Commands but the module augmentation may not propagate
-// through all tsconfig paths — cast to access the added commands safely.
-interface PaginationCommands {
-    updateHeaderContent: (left: string, right: string) => boolean;
-    updateFooterContent: (left: string, right: string) => boolean;
-}
-function paginationCmds(editor: Editor) {
-    return editor.commands as unknown as PaginationCommands;
-}
-import { buildContextItems } from './contextItems';
 import { useBlockHover } from './useBlockHover';
 import { useBlockDragOver, INITIAL_DRAG_STATE, type DragState } from './useBlockDragDrop';
 import { useCommentScrollPulse } from './useCommentScrollPulse';
+import { useHeaderFooterSync } from './useHeaderFooterSync';
+import { useEditorContextMenu } from './useEditorContextMenu';
 
-import type { CollabBundle } from '../collab/yDoc';
-import type { User } from '../identity/types';
-import { ROLE_PERMISSIONS } from '../identity/types';
+import type { CollabBundle } from '@/editor/collab/yDoc';
+import type { User } from '@/editor/identity/types';
+import { ROLE_PERMISSIONS } from '@/editor/identity/types';
 
 export interface EditorViewProps {
   collab: CollabBundle
@@ -50,22 +41,11 @@ export interface EditorViewProps {
   onToast?: (msg: string, kind?: 'info' | 'success' | 'error') => void
 }
 
-interface ContextMenuState {
-  x: number
-  y: number
-  items: ContextMenuItem[]
-}
-
 interface BlockMenuState {
   x: number
   y: number
   pos: number
 }
-
-type HeaderFooterFocus =
-    | { kind: HeaderFooterKind.Header; left: string; right: string }
-    | { kind: HeaderFooterKind.Footer; left: string; right: string }
-    | { kind: HeaderFooterKind.None };
 
 const EMPTY_SLASH: SlashTriggerInfo = {
     active: false,
@@ -104,10 +84,8 @@ export function EditorView({
     const perms = ROLE_PERMISSIONS[user.role];
     const canEditOrSuggest = perms.canEdit || perms.canSuggest;
 
-    const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
     const [blockMenu, setBlockMenu] = useState<BlockMenuState | null>(null);
     const [slashTrigger, setSlashTrigger] = useState<SlashTriggerInfo>(EMPTY_SLASH);
-    const [headerFooterFocus, setHeaderFooterFocus] = useState<HeaderFooterFocus>({ kind: HeaderFooterKind.None });
 
     const dragStateRef = useRef<DragState>({ ...INITIAL_DRAG_STATE });
     const [dropTop, setDropTop] = useState<number | null>(null);
@@ -116,25 +94,9 @@ export function EditorView({
         setDropTop(null);
     };
 
-    // Stable refs so PaginationPlus callbacks always call the latest handler without re-creating extensions
+    // Stable refs captured by PaginationPlus on extension build — updated each render by the sync hook
     const onHeaderClickRef = useRef<(() => void) | undefined>(undefined);
     const onFooterClickRef = useRef<(() => void) | undefined>(undefined);
-    onHeaderClickRef.current = () => {
-        const meta = collab.doc.getMap<string>('meta');
-        setHeaderFooterFocus({
-            kind: HeaderFooterKind.Header,
-            left: meta.get('headerLeft') ?? '',
-            right: meta.get('headerRight') ?? '',
-        });
-    };
-    onFooterClickRef.current = () => {
-        const meta = collab.doc.getMap<string>('meta');
-        setHeaderFooterFocus({
-            kind: HeaderFooterKind.Footer,
-            left: meta.get('footerLeft') ?? '',
-            right: meta.get('footerRight') ?? '{page}',
-        });
-    };
 
     const editor = useEditor(
         {
@@ -228,18 +190,20 @@ export function EditorView({
         [collab, user.id],
     );
 
-    // Sync Yjs meta map → PaginationPlus header/footer content
-    useEffect(() => {
-        if (!editor) return;
-        const meta = collab.doc.getMap<string>('meta');
-        const syncHeaderFooter = () => {
-            paginationCmds(editor).updateHeaderContent(meta.get('headerLeft') ?? '', meta.get('headerRight') ?? '');
-            paginationCmds(editor).updateFooterContent(meta.get('footerLeft') ?? '', meta.get('footerRight') ?? '{page}');
-        };
-        meta.observe(syncHeaderFooter);
-        collab.ready.then(syncHeaderFooter).catch(() => {});
-        return () => meta.unobserve(syncHeaderFooter);
-    }, [editor, collab]);
+    const { headerFooterFocus, setHeaderFooterFocus, applyHeaderFooter } = useHeaderFooterSync({
+        collab,
+        editor,
+        onHeaderClickRef,
+        onFooterClickRef,
+    });
+
+    const { contextMenu, setContextMenu } = useEditorContextMenu({
+        editor,
+        collab,
+        userRef,
+        onCreateComment,
+        onActiveCommentChange,
+    });
 
     useEffect(() => {
         if (editor) editor.setEditable(canEditOrSuggest);
@@ -262,31 +226,6 @@ export function EditorView({
     const hoveredBlock = useBlockHover(editor);
     useBlockDragOver(editor, dragStateRef, setDropTop);
 
-    // Right-click context menu
-    useEffect(() => {
-        if (!editor) return;
-        const dom = editor.view.dom as HTMLElement;
-        const handler = (e: MouseEvent) => {
-            if (e.shiftKey) return;
-            e.preventDefault();
-            e.stopPropagation();
-            const view = editor.view;
-            const coords = view.posAtCoords({ left: e.clientX, top: e.clientY });
-            const clickPos = coords ? coords.pos : view.state.selection.from;
-            const sel = editor.state.selection;
-            const insideSelection = !sel.empty && clickPos >= sel.from && clickPos <= sel.to;
-            if (!insideSelection && coords) editor.commands.setTextSelection(clickPos);
-
-            const items = buildContextItems(editor, userRef.current, collab.doc, clickPos, {
-                onCreateComment,
-                onActiveCommentChange,
-            });
-            setContextMenu({ x: e.clientX, y: e.clientY, items });
-        };
-        dom.addEventListener('contextmenu', handler);
-        return () => dom.removeEventListener('contextmenu', handler);
-    }, [editor, collab.doc, onCreateComment, onActiveCommentChange]);
-
     useCommentScrollPulse(editor, activeCommentId);
 
     const addCommentFromBubble = () => {
@@ -299,28 +238,7 @@ export function EditorView({
         onCreateComment(id, quote);
     };
 
-    const applyHeaderFooter = (
-        kind: HeaderFooterKind.Header | HeaderFooterKind.Footer,
-        left: string,
-        right: string,
-    ) => {
-        if (!editor) return;
-        const meta = collab.doc.getMap<string>('meta');
-        if (kind === HeaderFooterKind.Header) {
-            meta.set('headerLeft', left);
-            meta.set('headerRight', right);
-            // Direct call ensures immediate local render; meta.observe will also fire, but that's intentional.
-            paginationCmds(editor).updateHeaderContent(left, right);
-        } else {
-            meta.set('footerLeft', left);
-            meta.set('footerRight', right);
-            // Direct call ensures immediate local render; meta.observe will also fire, but that's intentional.
-            paginationCmds(editor).updateFooterContent(left, right);
-        }
-        setHeaderFooterFocus({ kind: HeaderFooterKind.None });
-    };
-
-    const blockMenuItems: ContextMenuItem[] = blockMenu
+    const blockMenuItems = blockMenu
         ? [
             {
                 label: t('blockMenu.moveUp'),
