@@ -9,7 +9,7 @@ dev-down:
 
 # regenerate the OpenAPI client from a running backend
 gen-api:
-    cd frontend && npm run gen-api
+    cd frontend && PUBLIC_API_URL=http://localhost:8080 npm run gen-api
 
 # run the deploy stack
 deploy:
