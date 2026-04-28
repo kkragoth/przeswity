@@ -12,9 +12,51 @@ services:
             interval: 2s
             timeout: 2s
             retries: 30
+
+    installer:
+        image: node:22-alpine
+        working_dir: /repo
+        volumes:
+            - ".:/repo"
+            - "node_modules:/repo/node_modules"
+        command: sh -c "npm install --no-audit --no-fund && npm -w @przeswity/editor-schema run build"
+
+    shared:
+        image: node:22-alpine
+        working_dir: /repo
+        volumes:
+            - ".:/repo"
+            - "node_modules:/repo/node_modules"
+        depends_on:
+            installer: { condition: service_completed_successfully }
+        command: sh -c "npm run dev:shared"
+
     backend:
-        image: alpine
-    frontend:
-        image: alpine
+        image: node:22-alpine
+        working_dir: /repo/backend
+        volumes:
+            - ".:/repo"
+            - "node_modules:/repo/node_modules"
+        depends_on:
+            db: { condition: service_healthy }
+            installer: { condition: service_completed_successfully }
+            shared: { condition: service_started }
+        environment:
+            NODE_ENV: development
+            PORT: '8080'
+            DATABASE_URL: postgres://przeswity:przeswity@db:5432/przeswity
+            BETTER_AUTH_SECRET: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+            BETTER_AUTH_URL: http://localhost:8080
+            CORS_ORIGINS: http://localhost:3000
+            COOKIE_DOMAIN: ''
+            COOKIE_SECURE: 'false'
+            PUBLIC_API_URL: http://localhost:8080
+            COLLAB_PATH: /collaboration
+            ENABLE_DEV_AUTH: 'true'
+        command: sh -c "npm -w backend run db:migrate && (npm -w backend run db:seed || echo '[seed] skipped (likely re-run)') && npm -w backend run dev"
+        ports:
+            - "8080:8080"
+
 volumes:
     pgdata: {}
+    node_modules: {}
