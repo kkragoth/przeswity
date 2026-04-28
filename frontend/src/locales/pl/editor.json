@@ -149,5 +149,11 @@
         "placeholderRight": "{page} z {total}",
         "tokensHint": "tokeny: {page} {total}",
         "close": "Zamknij"
+    },
+    "exportMenu": {
+        "trigger": "Eksportuj ▾",
+        "markdown": "Markdown (.md)",
+        "docxClean": "DOCX — czysty (sugestie zaakceptowane)",
+        "docxTracks": "DOCX — ze śledzeniem zmian"
     }
 }

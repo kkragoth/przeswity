@@ -149,5 +149,11 @@
         "placeholderRight": "{page} з {total}",
         "tokensHint": "токени: {page} {total}",
         "close": "Закрити"
+    },
+    "exportMenu": {
+        "trigger": "Експорт ▾",
+        "markdown": "Markdown (.md)",
+        "docxClean": "DOCX — чистий (пропозиції прийнято)",
+        "docxTracks": "DOCX — зі відстеженням змін"
     }
 }

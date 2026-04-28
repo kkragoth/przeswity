@@ -1,14 +1,30 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Editor } from '@tiptap/react';
 import { saveAs } from 'file-saver';
-import { editorToMarkdown } from './markdown';
-import { editorToDocxBlob } from './docx';
+import { editorToMarkdown } from '@/editor/io/markdown';
+import { editorToDocxBlob } from '@/editor/io/docx';
+import type { ExportOptions } from '@/editor/io/docx';
 
 interface ExportMenuProps {
-  editor: Editor | null
+    editor: Editor | null;
+}
+
+function readPaginationOpts(editor: Editor): Pick<ExportOptions, 'headerLeft' | 'headerRight' | 'footerLeft' | 'footerRight'> {
+    const s = (editor.storage as unknown as Record<string, unknown>)['PaginationPlus'] as {
+        headerLeft?: string; headerRight?: string;
+        footerLeft?: string; footerRight?: string;
+    } | undefined;
+    return {
+        headerLeft: s?.headerLeft ?? '',
+        headerRight: s?.headerRight ?? '',
+        footerLeft: s?.footerLeft ?? '',
+        footerRight: s?.footerRight ?? '',
+    };
 }
 
 export function ExportMenu({ editor }: ExportMenuProps) {
+    const { t } = useTranslation('editor');
     const [open, setOpen] = useState(false);
 
     if (!editor) return null;
@@ -21,13 +37,13 @@ export function ExportMenu({ editor }: ExportMenuProps) {
     };
 
     const downloadDocxClean = async () => {
-        const blob = await editorToDocxBlob(editor, { acceptSuggestions: true });
+        const blob = await editorToDocxBlob(editor, { acceptSuggestions: true, ...readPaginationOpts(editor) });
         saveAs(blob, 'document-clean.docx');
         setOpen(false);
     };
 
     const downloadDocxWithTracks = async () => {
-        const blob = await editorToDocxBlob(editor, { acceptSuggestions: false });
+        const blob = await editorToDocxBlob(editor, { acceptSuggestions: false, ...readPaginationOpts(editor) });
         saveAs(blob, 'document-with-tracks.docx');
         setOpen(false);
     };
@@ -35,18 +51,18 @@ export function ExportMenu({ editor }: ExportMenuProps) {
     return (
         <div className="export-menu">
             <button type="button" className="tb-btn" onClick={() => setOpen((v) => !v)}>
-        Export ▾
+                {t('exportMenu.trigger')}
             </button>
             {open && (
                 <div className="export-dropdown" onMouseLeave={() => setOpen(false)}>
                     <button type="button" onClick={downloadMarkdown}>
-            Markdown (.md)
+                        {t('exportMenu.markdown')}
                     </button>
                     <button type="button" onClick={downloadDocxClean}>
-            DOCX — clean (suggestions accepted)
+                        {t('exportMenu.docxClean')}
                     </button>
                     <button type="button" onClick={downloadDocxWithTracks}>
-            DOCX — with track-change colors
+                        {t('exportMenu.docxTracks')}
                     </button>
                 </div>
             )}
