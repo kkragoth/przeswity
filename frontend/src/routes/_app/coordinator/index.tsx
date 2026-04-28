@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 export const Route = createFileRoute('/_app/coordinator/')({
     beforeLoad: ({ context }) => {
         const user = context.session?.user as SessionUser | undefined;
-        if (!user?.isAdmin && !user?.isCoordinator) throw redirect({ to: '/' });
+        if (user?.systemRole !== 'admin' && user?.systemRole !== 'project_manager') throw redirect({ to: '/' });
     },
     component: CoordinatorHome,
 });

@@ -5,6 +5,7 @@ import { db } from '../../db/client.js';
 import { book, assignment, bookSnapshot, bookYjsState, user } from '../../db/schema.js';
 import { requireSession } from '../../auth/session.js';
 import { asyncHandler, AppError } from '../../lib/errors.js';
+import { isAdmin } from '../../lib/permissions.js';
 import { registry } from '../../openapi/registry.js';
 import { SnapshotSummaryDto, CreateSnapshotBody } from './schemas.js';
 
@@ -36,7 +37,7 @@ registry.registerPath({
 });
 
 async function visibilityCheck(bookId: string, me: any) {
-    if (me.isAdmin) return { book: null, isOwner: false, roles: [] as string[] };
+    if (isAdmin(me.systemRole)) return { book: null, isOwner: false, roles: [] as string[] };
     const [b] = await db.select().from(book).where(eq(book.id, bookId));
     if (!b) throw new AppError('errors.book.notFound', 404, 'book not found');
     if (b.createdById === me.id) return { book: b, isOwner: true, roles: [] as string[] };
@@ -63,7 +64,7 @@ versionsRouter.get('/api/books/:bookId/snapshots', requireSession, asyncHandler(
 versionsRouter.post('/api/books/:bookId/snapshots', requireSession, asyncHandler(async (req: any, res: any) => {
     const { isOwner, roles } = await visibilityCheck(req.params.bookId, req.user);
     const allowedRoles = new Set(['editor', 'proofreader', 'translator', 'author', 'typesetter', 'coordinator']);
-    const canCreate = req.user.isAdmin || isOwner || roles.some((r: string) => allowedRoles.has(r));
+    const canCreate = isAdmin(req.user.systemRole) || isOwner || roles.some((r: string) => allowedRoles.has(r));
     if (!canCreate) throw new AppError('errors.book.forbidden', 403, 'forbidden');
     const body = CreateSnapshotBody.parse(req.body);
     const [yState] = await db.select().from(bookYjsState).where(eq(bookYjsState.bookId, req.params.bookId));
@@ -95,7 +96,7 @@ versionsRouter.get('/api/books/:bookId/snapshots/:id/state', requireSession, asy
 
 versionsRouter.delete('/api/books/:bookId/snapshots/:id', requireSession, asyncHandler(async (req: any, res: any) => {
     const { isOwner } = await visibilityCheck(req.params.bookId, req.user);
-    if (!req.user.isAdmin && !isOwner) throw new AppError('errors.book.forbidden', 403, 'forbidden');
+    if (!isAdmin(req.user.systemRole) && !isOwner) throw new AppError('errors.book.forbidden', 403, 'forbidden');
     const deleted = await db.delete(bookSnapshot).where(
         and(eq(bookSnapshot.id, req.params.id), eq(bookSnapshot.bookId, req.params.bookId)),
     ).returning({ id: bookSnapshot.id });

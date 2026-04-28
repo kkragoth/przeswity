@@ -27,8 +27,10 @@
             "competencyTags": "Теги компетенцій",
             "competencyTagsHint": "Через кому",
             "color": "Колір",
-            "isAdmin": "Адміністратор",
-            "isCoordinator": "Координатор"
+            "systemRole": "Системна роль",
+            "systemRoleNone": "Звичайний користувач",
+            "systemRoleProjectManager": "Менеджер проекту",
+            "systemRoleAdmin": "Адміністратор"
         },
         "deleteConfirm": "Ви впевнені, що хочете видалити цього користувача?",
         "loginAs": "Увійти як"

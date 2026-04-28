@@ -5,6 +5,7 @@ import { db } from '../../db/client.js';
 import { book, assignment, user } from '../../db/schema.js';
 import { requireSession } from '../../auth/session.js';
 import { asyncHandler, AppError } from '../../lib/errors.js';
+import { isAdmin } from '../../lib/permissions.js';
 import { registry } from '../../openapi/registry.js';
 import {
     AssignmentDto,
@@ -55,7 +56,7 @@ async function loadBook(bookId: string) {
 }
 
 async function isVisibleToUser(bookId: string, me: any) {
-    if (me.isAdmin) return true;
+    if (isAdmin(me.systemRole)) return true;
     const [b] = await db.select().from(book).where(eq(book.id, bookId));
     if (!b) return false;
     if (b.createdById === me.id) return true;
@@ -64,7 +65,7 @@ async function isVisibleToUser(bookId: string, me: any) {
 }
 
 async function canManage(bookId: string, me: any) {
-    if (me.isAdmin) return true;
+    if (isAdmin(me.systemRole)) return true;
     const [b] = await db.select().from(book).where(eq(book.id, bookId));
     if (!b) return false;
     return b.createdById === me.id;

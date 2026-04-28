@@ -1,13 +1,13 @@
 import type { Request, Response, NextFunction } from 'express';
 import { auth } from './betterAuth.js';
 import { fromNodeHeaders } from 'better-auth/node';
+import { SystemRole } from '../db/auth-schema.js';
 
 export type AuthUser = {
     id: string;
     email: string;
     name: string;
-    isAdmin: boolean;
-    isCoordinator: boolean;
+    systemRole: SystemRole | null;
     competencyTags: string[];
     color: string;
     preferredLocale: string;
@@ -47,16 +47,17 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 }
 
 export function requireAdmin(req: Request, res: Response, next: NextFunction) {
-    if (!req.user?.isAdmin) {
+    if (req.user?.systemRole !== SystemRole.Admin) {
         res.status(403).json({ error: { code: 'errors.auth.forbidden', message: 'admin only' } });
         return;
     }
     next();
 }
 
-export function requireCoordinator(req: Request, res: Response, next: NextFunction) {
-    if (!req.user?.isAdmin && !req.user?.isCoordinator) {
-        res.status(403).json({ error: { code: 'errors.auth.forbidden', message: 'coordinator only' } });
+export function requireProjectManager(req: Request, res: Response, next: NextFunction) {
+    const role = req.user?.systemRole;
+    if (role !== SystemRole.Admin && role !== SystemRole.ProjectManager) {
+        res.status(403).json({ error: { code: 'errors.auth.forbidden', message: 'project manager only' } });
         return;
     }
     next();

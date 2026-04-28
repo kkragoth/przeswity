@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { eq, and, inArray, asc } from 'drizzle-orm';
 import { db } from '../../db/client.js';
 import { book, assignment, bookYjsState, bookSnapshot, user, bookStageHistory } from '../../db/schema.js';
-import { requireSession, requireCoordinator, requireAdmin } from '../../auth/session.js';
+import { requireSession, requireProjectManager, requireAdmin } from '../../auth/session.js';
+import { isAdmin, isProjectManager } from '../../lib/permissions.js';
 import { asyncHandler, AppError } from '../../lib/errors.js';
 import { registry } from '../../openapi/registry.js';
 import { BookDto, BookSummaryDto, CreateBookBody, UpdateBookBody, PatchBookStageBody, PatchBookProgressBody, BookStageHistoryDto } from './schemas.js';
@@ -88,7 +89,7 @@ booksRouter.get('/api/books', requireSession, asyncHandler(async (req: any, res:
     for (const r of myAssignmentRows) {
         myRolesByBook.set(r.bookId, [...(myRolesByBook.get(r.bookId) ?? []), r.role]);
     }
-    const books = await listVisibleBooks(me.id, !!me.isAdmin);
+    const books = await listVisibleBooks(me.id, isAdmin(me.systemRole));
     const ids = books.map((b) => b.id);
     const counts = new Map<string, number>();
     if (ids.length > 0) {
@@ -110,7 +111,7 @@ booksRouter.get('/api/books', requireSession, asyncHandler(async (req: any, res:
 
 booksRouter.get('/api/books/:id', requireSession, asyncHandler(async (req: any, res: any) => {
     const me = req.user;
-    const b = await getBookIfVisible(req.params.id, me.id, !!me.isAdmin);
+    const b = await getBookIfVisible(req.params.id, me.id, isAdmin(me.systemRole));
     if (!b) {
         const [exists] = await db.select({ id: book.id }).from(book).where(eq(book.id, req.params.id));
         if (!exists) throw new AppError('errors.book.notFound', 404, 'book not found');
@@ -119,7 +120,7 @@ booksRouter.get('/api/books/:id', requireSession, asyncHandler(async (req: any, 
     res.json(projectBook(b));
 }));
 
-booksRouter.post('/api/books', requireSession, requireCoordinator, asyncHandler(async (req: any, res: any) => {
+booksRouter.post('/api/books', requireSession, requireProjectManager, asyncHandler(async (req: any, res: any) => {
     const body = CreateBookBody.parse(req.body);
     const me = req.user;
     const userIds = [...new Set(body.initialAssignments.map((a) => a.userId))];
@@ -170,7 +171,7 @@ booksRouter.patch('/api/books/:id', requireSession, asyncHandler(async (req: any
     const body = UpdateBookBody.parse(req.body);
     const [existing] = await db.select().from(book).where(eq(book.id, req.params.id));
     if (!existing) throw new AppError('errors.book.notFound', 404, 'book not found');
-    if (!me.isAdmin && existing.createdById !== me.id) {
+    if (!isAdmin(me.systemRole) && existing.createdById !== me.id) {
         throw new AppError('errors.book.forbidden', 403, 'forbidden');
     }
     const update: Partial<typeof book.$inferInsert> = { updatedAt: new Date() };
@@ -182,7 +183,7 @@ booksRouter.patch('/api/books/:id', requireSession, asyncHandler(async (req: any
 
 booksRouter.patch('/api/books/:id/stage', requireSession, asyncHandler(async (req: any, res: any) => {
     const me = req.user;
-    if (!me.isAdmin && !me.isCoordinator) {
+    if (!isProjectManager(me.systemRole)) {
         throw new AppError('errors.book.forbidden', 403, 'forbidden');
     }
     const body = PatchBookStageBody.parse(req.body);
@@ -210,7 +211,7 @@ booksRouter.patch('/api/books/:id/stage', requireSession, asyncHandler(async (re
 
 booksRouter.patch('/api/books/:id/progress', requireSession, asyncHandler(async (req: any, res: any) => {
     const me = req.user;
-    if (!me.isAdmin && !me.isCoordinator) {
+    if (!isProjectManager(me.systemRole)) {
         throw new AppError('errors.book.forbidden', 403, 'forbidden');
     }
     const body = PatchBookProgressBody.parse(req.body);
@@ -228,7 +229,7 @@ booksRouter.patch('/api/books/:id/progress', requireSession, asyncHandler(async 
 
 booksRouter.get('/api/books/:id/stage-history', requireSession, asyncHandler(async (req: any, res: any) => {
     const me = req.user;
-    const b = await getBookIfVisible(req.params.id, me.id, !!me.isAdmin);
+    const b = await getBookIfVisible(req.params.id, me.id, isAdmin(me.systemRole));
     if (!b) {
         const [exists] = await db.select({ id: book.id }).from(book).where(eq(book.id, req.params.id));
         if (!exists) throw new AppError('errors.book.notFound', 404, 'book not found');
@@ -256,7 +257,7 @@ booksRouter.delete('/api/books/:id', requireSession, requireAdmin, asyncHandler(
 
 booksRouter.get('/api/books/:id/markdown', requireSession, asyncHandler(async (req: any, res: any) => {
     const me = req.user;
-    const b = await getBookIfVisible(req.params.id, me.id, !!me.isAdmin);
+    const b = await getBookIfVisible(req.params.id, me.id, isAdmin(me.systemRole));
     if (!b) {
         const [exists] = await db.select({ id: book.id }).from(book).where(eq(book.id, req.params.id));
         if (!exists) throw new AppError('errors.book.notFound', 404, 'book not found');
@@ -273,7 +274,7 @@ booksRouter.get('/api/books/:id/markdown', requireSession, asyncHandler(async (r
 
 booksRouter.get('/api/books/:id/snapshots/:snapId/markdown', requireSession, asyncHandler(async (req: any, res: any) => {
     const me = req.user;
-    const b = await getBookIfVisible(req.params.id, me.id, !!me.isAdmin);
+    const b = await getBookIfVisible(req.params.id, me.id, isAdmin(me.systemRole));
     if (!b) {
         const [exists] = await db.select({ id: book.id }).from(book).where(eq(book.id, req.params.id));
         if (!exists) throw new AppError('errors.book.notFound', 404, 'book not found');
@@ -288,7 +289,7 @@ booksRouter.get('/api/books/:id/snapshots/:snapId/markdown', requireSession, asy
 
 booksRouter.get('/api/books/:id/presence', requireSession, asyncHandler(async (req: any, res: any) => {
     const me = req.user;
-    const b = await getBookIfVisible(req.params.id, me.id, !!me.isAdmin);
+    const b = await getBookIfVisible(req.params.id, me.id, isAdmin(me.systemRole));
     if (!b) {
         const [exists] = await db.select({ id: book.id }).from(book).where(eq(book.id, req.params.id));
         if (!exists) throw new AppError('errors.book.notFound', 404, 'book not found');

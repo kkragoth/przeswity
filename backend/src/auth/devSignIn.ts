@@ -24,8 +24,7 @@ if (devAuthEnabled) {
                 email: user.email,
                 name: user.name,
                 color: user.color,
-                isAdmin: user.isAdmin,
-                isCoordinator: user.isCoordinator,
+                systemRole: user.systemRole,
                 competencyTags: user.competencyTags,
                 preferredLocale: user.preferredLocale,
             })

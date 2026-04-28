@@ -39,7 +39,7 @@ function BooksPage() {
     const { t } = useTranslation('common');
     const { session } = Route.useRouteContext();
     const user = session.user as SessionUser;
-    const canCreate = !!user.isAdmin || !!user.isCoordinator;
+    const canCreate = user.systemRole === 'admin' || user.systemRole === 'project_manager';
 
     const { data: books = [], isLoading } = useQuery({
         queryKey: ['books'],

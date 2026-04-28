@@ -21,8 +21,8 @@ export const projectBook = (b: BookRow) => ({
     updatedAt: new Date(b.updatedAt).toISOString(),
 });
 
-export async function listVisibleBooks(userId: string, isAdmin: boolean): Promise<BookRow[]> {
-    if (isAdmin) {
+export async function listVisibleBooks(userId: string, admin: boolean): Promise<BookRow[]> {
+    if (admin) {
         return db.select().from(book).orderBy(desc(book.updatedAt));
     }
     const myAssigned = await db.select({ bookId: assignment.bookId })
@@ -43,10 +43,10 @@ export async function listVisibleBooks(userId: string, isAdmin: boolean): Promis
     return merged;
 }
 
-export async function getBookIfVisible(bookId: string, userId: string, isAdmin: boolean): Promise<BookRow | null> {
+export async function getBookIfVisible(bookId: string, userId: string, admin: boolean): Promise<BookRow | null> {
     const [b] = await db.select().from(book).where(eq(book.id, bookId));
     if (!b) return null;
-    if (isAdmin) return b;
+    if (admin) return b;
     if (b.createdById === userId) return b;
     const ass = await db.select().from(assignment)
         .where(and(eq(assignment.bookId, bookId), eq(assignment.userId, userId)));

@@ -15,10 +15,10 @@ async function clear() {
     await db.delete(user);
 }
 
-async function createUser(email: string, opts: { isAdmin?: boolean; isCoordinator?: boolean } = {}) {
+async function createUser(email: string, opts: { systemRole?: 'admin' | 'project_manager' } = {}) {
     await auth.api.signUpEmail({ body: { email, password: 'devseed1234', name: email.split('@')[0] }, asResponse: true });
-    if (opts.isAdmin || opts.isCoordinator) {
-        await db.update(user).set({ isAdmin: !!opts.isAdmin, isCoordinator: !!opts.isCoordinator }).where(eq(user.email, email));
+    if (opts.systemRole) {
+        await db.update(user).set({ systemRole: opts.systemRole }).where(eq(user.email, email));
     }
     const [u] = await db.select().from(user).where(eq(user.email, email));
     return u;
@@ -31,7 +31,7 @@ async function signIn(email: string) {
 }
 
 async function seedCoordAndBook() {
-    const c = await createUser('coord@test.com', { isCoordinator: true });
+    const c = await createUser('coord@test.com', { systemRole: 'project_manager' });
     const u1 = await createUser('e1@test.com');
     const u2 = await createUser('e2@test.com');
     const { cookie } = await signIn('coord@test.com');
@@ -83,7 +83,7 @@ describe('assignments API', () => {
 
     it('admin can manage any book', async () => {
         const { u1, bookId } = await seedCoordAndBook();
-        await createUser('admin@test.com', { isAdmin: true });
+        await createUser('admin@test.com', { systemRole: 'admin' });
         const { cookie } = await signIn('admin@test.com');
         await request(app).post(`/api/books/${bookId}/assignments/bulk`).set('Cookie', cookie)
             .send({ assignments: [{ userId: u1.id, role: 'editor' }] }).expect(200);

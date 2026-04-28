@@ -22,10 +22,12 @@ import { EmptyState } from '@/components/EmptyState';
 
 const USERS_KEY = ['users'] as const;
 
+type SystemRole = 'admin' | 'project_manager' | null;
+
 export const Route = createFileRoute('/_app/admin/users')({
     beforeLoad: ({ context }) => {
         const user = context.session?.user as SessionUser | undefined;
-        if (!user?.isAdmin) throw redirect({ to: '/' });
+        if (user?.systemRole !== 'admin') throw redirect({ to: '/' });
     },
     component: AdminUsersPage,
 });
@@ -62,6 +64,12 @@ function AdminUsersPage() {
     );
 }
 
+function systemRoleBadge(systemRole: string | null | undefined) {
+    if (systemRole === 'admin') return <Badge>Admin</Badge>;
+    if (systemRole === 'project_manager') return <Badge variant="secondary">Project Manager</Badge>;
+    return null;
+}
+
 function UsersTable({ users, onChanged }: { users: ReadonlyArray<User>; onChanged: () => void }) {
     const { t: ta } = useTranslation('admin');
     return (
@@ -85,7 +93,6 @@ function UsersTable({ users, onChanged }: { users: ReadonlyArray<User>; onChange
 }
 
 function UserRow({ user, onChanged }: { user: User; onChanged: () => void }) {
-    const { t: ta } = useTranslation('admin');
     const { t: tc } = useTranslation('common');
     return (
         <tr className="border-b">
@@ -97,10 +104,7 @@ function UserRow({ user, onChanged }: { user: User; onChanged: () => void }) {
                 {user.name}
             </td>
             <td className="text-stone-600">{user.email}</td>
-            <td className="space-x-1">
-                {user.isAdmin && <Badge>{ta('users.adminBadge')}</Badge>}
-                {user.isCoordinator && <Badge variant="secondary">{ta('users.coordinatorBadge')}</Badge>}
-            </td>
+            <td className="space-x-1">{systemRoleBadge(user.systemRole)}</td>
             <td className="text-stone-600">{user.competencyTags.join(', ')}</td>
             <td className="space-x-2">
                 <EditUserDialog user={user} onSaved={onChanged} />
@@ -114,8 +118,7 @@ interface UserFormState {
     name: string;
     email: string;
     password: string;
-    isAdmin: boolean;
-    isCoordinator: boolean;
+    systemRole: SystemRole;
     color: string;
     competencyTagsRaw: string;
 }
@@ -125,8 +128,7 @@ function emptyForm(): UserFormState {
         name: '',
         email: '',
         password: '',
-        isAdmin: false,
-        isCoordinator: false,
+        systemRole: null,
         color: '#888888',
         competencyTagsRaw: '',
     };
@@ -137,8 +139,7 @@ function fromUser(user: User): UserFormState {
         name: user.name,
         email: user.email,
         password: '',
-        isAdmin: user.isAdmin,
-        isCoordinator: user.isCoordinator,
+        systemRole: (user.systemRole as SystemRole) ?? null,
         color: user.color,
         competencyTagsRaw: tagsToString(user.competencyTags),
     };
@@ -155,8 +156,7 @@ function NewUserDialog({ onCreated }: { onCreated: () => void }) {
                     email: form.email,
                     name: form.name,
                     password: form.password,
-                    isAdmin: form.isAdmin,
-                    isCoordinator: form.isCoordinator,
+                    systemRole: form.systemRole,
                     competencyTags: stringToTags(form.competencyTagsRaw),
                 },
             }),
@@ -194,8 +194,7 @@ function EditUserDialog({ user, onSaved }: { user: User; onSaved: () => void }) 
         mutationFn: () => {
             const body: UpdateUserBody = {
                 name: form.name,
-                isAdmin: form.isAdmin,
-                isCoordinator: form.isCoordinator,
+                systemRole: form.systemRole,
                 color: form.color,
                 competencyTags: stringToTags(form.competencyTagsRaw),
             };
@@ -288,22 +287,18 @@ function UserFormFields({
                     onChange={(e) => set('competencyTagsRaw', e.target.value)}
                 />
             </div>
-            <label className="flex items-center gap-2 text-sm">
-                <input
-                    type="checkbox"
-                    checked={form.isAdmin}
-                    onChange={(e) => set('isAdmin', e.target.checked)}
-                />
-                {ta('users.form.isAdmin')}
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-                <input
-                    type="checkbox"
-                    checked={form.isCoordinator}
-                    onChange={(e) => set('isCoordinator', e.target.checked)}
-                />
-                {ta('users.form.isCoordinator')}
-            </label>
+            <div>
+                <Label>{ta('users.form.systemRole')}</Label>
+                <select
+                    className="mt-1 w-full rounded border border-input bg-background px-3 py-2 text-sm"
+                    value={form.systemRole ?? ''}
+                    onChange={(e) => set('systemRole', (e.target.value || null) as SystemRole)}
+                >
+                    <option value="">{ta('users.form.systemRoleNone')}</option>
+                    <option value="project_manager">{ta('users.form.systemRoleProjectManager')}</option>
+                    <option value="admin">{ta('users.form.systemRoleAdmin')}</option>
+                </select>
+            </div>
         </div>
     );
 }

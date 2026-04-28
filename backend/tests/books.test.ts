@@ -15,10 +15,10 @@ async function clear() {
     await db.delete(user);
 }
 
-async function createUser(email: string, opts: { isAdmin?: boolean; isCoordinator?: boolean } = {}) {
+async function createUser(email: string, opts: { systemRole?: 'admin' | 'project_manager' } = {}) {
     await auth.api.signUpEmail({ body: { email, password: 'devseed1234', name: email.split('@')[0] }, asResponse: true });
-    if (opts.isAdmin || opts.isCoordinator) {
-        await db.update(user).set({ isAdmin: !!opts.isAdmin, isCoordinator: !!opts.isCoordinator }).where(eq(user.email, email));
+    if (opts.systemRole) {
+        await db.update(user).set({ systemRole: opts.systemRole }).where(eq(user.email, email));
     }
     const [u] = await db.select().from(user).where(eq(user.email, email));
     return u;
@@ -36,7 +36,7 @@ describe('books API', () => {
     beforeEach(async () => { await clear(); });
 
     it('coordinator creates a book with initialMarkdown -> YDoc populated', async () => {
-        await createUser('coord1@test.com', { isCoordinator: true });
+        await createUser('coord1@test.com', { systemRole: 'project_manager' });
         const { cookie } = await signIn('coord1@test.com');
         const md = '# Title\n\nFirst paragraph.\n\n## Sub\n\n* item one\n* item two\n';
         const r = await request(app).post('/api/books').set('Cookie', cookie)
@@ -60,7 +60,7 @@ describe('books API', () => {
     });
 
     it('contributor only sees books they are assigned to', async () => {
-        await createUser('coord2@test.com', { isCoordinator: true });
+        await createUser('coord2@test.com', { systemRole: 'project_manager' });
         const u = await createUser('contrib@test.com');
         const { cookie: ccoord } = await signIn('coord2@test.com');
         await request(app).post('/api/books').set('Cookie', ccoord)
@@ -77,8 +77,8 @@ describe('books API', () => {
     });
 
     it('admin sees all books', async () => {
-        await createUser('coord3@test.com', { isCoordinator: true });
-        await createUser('admin1@test.com', { isAdmin: true });
+        await createUser('coord3@test.com', { systemRole: 'project_manager' });
+        await createUser('admin1@test.com', { systemRole: 'admin' });
         const { cookie: ccoord } = await signIn('coord3@test.com');
         await request(app).post('/api/books').set('Cookie', ccoord).send({ title: 'X', description: '', initialMarkdown: '', initialAssignments: [] }).expect(200);
         await request(app).post('/api/books').set('Cookie', ccoord).send({ title: 'Y', description: '', initialMarkdown: '', initialAssignments: [] }).expect(200);
@@ -88,7 +88,7 @@ describe('books API', () => {
     });
 
     it('returns 422 when initialAssignments references unknown userId', async () => {
-        await createUser('coord4@test.com', { isCoordinator: true });
+        await createUser('coord4@test.com', { systemRole: 'project_manager' });
         const { cookie } = await signIn('coord4@test.com');
         const r = await request(app).post('/api/books').set('Cookie', cookie).send({
             title: 'B', description: '', initialMarkdown: '',
@@ -98,7 +98,7 @@ describe('books API', () => {
     });
 
     it('coordinator can patch stage and reads stage history', async () => {
-        await createUser('coord-stage@test.com', { isCoordinator: true });
+        await createUser('coord-stage@test.com', { systemRole: 'project_manager' });
         const { cookie } = await signIn('coord-stage@test.com');
         const created = await request(app).post('/api/books').set('Cookie', cookie)
             .send({ title: 'workflow', description: '', initialMarkdown: '', initialAssignments: [] }).expect(200);
@@ -120,7 +120,7 @@ describe('books API', () => {
     });
 
     it('rejects illegal stage transitions', async () => {
-        await createUser('coord-illegal@test.com', { isCoordinator: true });
+        await createUser('coord-illegal@test.com', { systemRole: 'project_manager' });
         const { cookie } = await signIn('coord-illegal@test.com');
         const created = await request(app).post('/api/books').set('Cookie', cookie)
             .send({ title: 'workflow', description: '', initialMarkdown: '', initialAssignments: [] }).expect(200);
@@ -131,7 +131,7 @@ describe('books API', () => {
     });
 
     it('coordinator can patch progress; invalid progress rejected', async () => {
-        await createUser('coord-progress@test.com', { isCoordinator: true });
+        await createUser('coord-progress@test.com', { systemRole: 'project_manager' });
         const { cookie } = await signIn('coord-progress@test.com');
         const created = await request(app).post('/api/books').set('Cookie', cookie)
             .send({ title: 'workflow', description: '', initialMarkdown: '', initialAssignments: [] }).expect(200);

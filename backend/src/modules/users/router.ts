@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../../db/client.js';
 import { user, assignment } from '../../db/schema.js';
 import { auth } from '../../auth/betterAuth.js';
-import { requireSession, requireAdmin } from '../../auth/session.js';
+import { requireSession, requireAdmin, requireProjectManager } from '../../auth/session.js';
 import { asyncHandler, AppError } from '../../lib/errors.js';
 import { registry } from '../../openapi/registry.js';
 import { UserDto, MeDto, CreateUserBody, UpdateUserBody, PatchMeBody } from './schemas.js';
@@ -50,8 +50,7 @@ const projectUser = (u: typeof user.$inferSelect) => ({
     id: u.id,
     email: u.email,
     name: u.name,
-    isAdmin: u.isAdmin ?? false,
-    isCoordinator: u.isCoordinator ?? false,
+    systemRole: (u.systemRole ?? null) as 'admin' | 'project_manager' | null,
     competencyTags: u.competencyTags ?? [],
     color: u.color ?? '#7c3aed',
     image: u.image ?? null,
@@ -69,13 +68,18 @@ async function buildMeResponse(userId: string) {
     return { ...projectUser(full), visibleBookCount, assignmentRoleCounts, onboardingDismissedAt: full.onboardingDismissedAt ?? '' };
 }
 
-usersRouter.get('/api/users', requireSession, requireAdmin, asyncHandler(async (_req: any, res: any) => {
+usersRouter.get('/api/users', requireSession, requireProjectManager, asyncHandler(async (_req: any, res: any) => {
     const rows = await db.select().from(user);
     res.json(rows.map(projectUser));
 }));
 
-usersRouter.post('/api/users', requireSession, requireAdmin, asyncHandler(async (req: any, res: any) => {
+usersRouter.post('/api/users', requireSession, requireProjectManager, asyncHandler(async (req: any, res: any) => {
     const body = CreateUserBody.parse(req.body);
+    const me = req.user;
+    // Only admins can create admin users
+    if (body.systemRole === 'admin' && me.systemRole !== 'admin') {
+        throw new AppError('errors.auth.forbidden', 403, 'only admins can create admin users');
+    }
     try {
         await auth.api.signUpEmail({ body: { email: body.email, password: body.password, name: body.name }, asResponse: true });
     } catch (e: any) {
@@ -85,7 +89,7 @@ usersRouter.post('/api/users', requireSession, requireAdmin, asyncHandler(async 
         throw e;
     }
     await db.update(user)
-        .set({ isAdmin: body.isAdmin, isCoordinator: body.isCoordinator, competencyTags: body.competencyTags })
+        .set({ systemRole: body.systemRole, competencyTags: body.competencyTags })
         .where(eq(user.email, body.email));
     const [u] = await db.select().from(user).where(eq(user.email, body.email));
     res.json(projectUser(u));
@@ -95,8 +99,7 @@ usersRouter.patch('/api/users/:id', requireSession, requireAdmin, asyncHandler(a
     const body = UpdateUserBody.parse(req.body);
     const update: Partial<typeof user.$inferInsert> = {};
     if (body.name !== undefined) update.name = body.name;
-    if (body.isAdmin !== undefined) update.isAdmin = body.isAdmin;
-    if (body.isCoordinator !== undefined) update.isCoordinator = body.isCoordinator;
+    if (body.systemRole !== undefined) update.systemRole = body.systemRole;
     if (body.competencyTags !== undefined) update.competencyTags = body.competencyTags;
     if (body.color !== undefined) update.color = body.color;
     if (Object.keys(update).length === 0) throw new AppError('errors.validation.empty', 400, 'no changes');

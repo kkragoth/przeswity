@@ -1,6 +1,11 @@
 import { relations, sql } from "drizzle-orm";
 import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
 
+export enum SystemRole {
+    Admin = 'admin',
+    ProjectManager = 'project_manager',
+}
+
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -12,8 +17,7 @@ export const user = pgTable("user", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
-  isAdmin: boolean("is_admin").default(false),
-  isCoordinator: boolean("is_coordinator").default(false),
+  systemRole: text("system_role"),
   competencyTags: text("competency_tags").array().notNull().default(sql`ARRAY[]::text[]`),
   color: text("color").default("#7c3aed"),
   preferredLocale: text("preferred_locale").default("pl"),

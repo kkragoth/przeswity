@@ -16,10 +16,10 @@ async function clear() {
     await db.delete(user);
 }
 
-async function createUser(email: string, opts: { isAdmin?: boolean; isCoordinator?: boolean } = {}) {
+async function createUser(email: string, opts: { systemRole?: 'admin' | 'project_manager' } = {}) {
     await auth.api.signUpEmail({ body: { email, password: 'devseed1234', name: email.split('@')[0] }, asResponse: true });
-    if (opts.isAdmin || opts.isCoordinator) {
-        await db.update(user).set({ isAdmin: !!opts.isAdmin, isCoordinator: !!opts.isCoordinator }).where(eq(user.email, email));
+    if (opts.systemRole) {
+        await db.update(user).set({ systemRole: opts.systemRole }).where(eq(user.email, email));
     }
     const [u] = await db.select().from(user).where(eq(user.email, email));
     return u;
@@ -32,7 +32,7 @@ async function signIn(email: string) {
 }
 
 async function seedOwnerAndBook() {
-    const owner = await createUser('owner@test.com', { isCoordinator: true });
+    const owner = await createUser('owner@test.com', { systemRole: 'project_manager' });
     const { cookie } = await signIn('owner@test.com');
     const r = await request(app).post('/api/books').set('Cookie', cookie)
         .send({ title: 'TestBook', description: '', initialMarkdown: '', initialAssignments: [] }).expect(200);

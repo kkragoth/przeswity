@@ -8,10 +8,10 @@ import { auth } from '../src/auth/betterAuth';
 async function clear() {
     await db.delete(assignment); await db.delete(bookYjsState); await db.delete(book); await db.delete(user);
 }
-async function makeUser(email: string, opts: { isAdmin?: boolean; isCoordinator?: boolean } = {}) {
+async function makeUser(email: string, opts: { systemRole?: 'admin' | 'project_manager' } = {}) {
     await auth.api.signUpEmail({ body: { email, password: 'devseed1234', name: email.split('@')[0] }, asResponse: true });
-    if (opts.isAdmin || opts.isCoordinator) {
-        await db.update(user).set({ isAdmin: !!opts.isAdmin, isCoordinator: !!opts.isCoordinator }).where(eq(user.email, email));
+    if (opts.systemRole) {
+        await db.update(user).set({ systemRole: opts.systemRole }).where(eq(user.email, email));
     }
     const [u] = await db.select().from(user).where(eq(user.email, email));
     return u;
@@ -33,8 +33,8 @@ describe('collab auth', () => {
     });
 
     it('admin gets full access on any book', async () => {
-        await makeUser('a@test.com', { isAdmin: true });
-        const c = await makeUser('c@test.com', { isCoordinator: true });
+        await makeUser('a@test.com', { systemRole: 'admin' });
+        const c = await makeUser('c@test.com', { systemRole: 'project_manager' });
         const [b] = await db.insert(book).values({ title: 'X', createdById: c.id }).returning();
         const cookie = await signInCookies('a@test.com');
         const ctx = await authenticate({ documentName: `book:${b.id}`, requestHeaders: { cookie } });
@@ -43,7 +43,7 @@ describe('collab auth', () => {
     });
 
     it('owner gets editor', async () => {
-        const c = await makeUser('owner@test.com', { isCoordinator: true });
+        const c = await makeUser('owner@test.com', { systemRole: 'project_manager' });
         const [b] = await db.insert(book).values({ title: 'X', createdById: c.id }).returning();
         const cookie = await signInCookies('owner@test.com');
         const ctx = await authenticate({ documentName: `book:${b.id}`, requestHeaders: { cookie } });
@@ -52,7 +52,7 @@ describe('collab auth', () => {
     });
 
     it('proofreader-only: read-write (canSuggest)', async () => {
-        const c = await makeUser('coord2@test.com', { isCoordinator: true });
+        const c = await makeUser('coord2@test.com', { systemRole: 'project_manager' });
         const u = await makeUser('proof@test.com');
         const [b] = await db.insert(book).values({ title: 'X', createdById: c.id }).returning();
         await db.insert(assignment).values({ bookId: b.id, userId: u.id, role: 'proofreader' });
@@ -63,15 +63,15 @@ describe('collab auth', () => {
     });
 
     it('global coordinator (not owner, not assigned): rejected', async () => {
-        const c1 = await makeUser('owner3@test.com', { isCoordinator: true });
-        await makeUser('other_coord@test.com', { isCoordinator: true });
+        const c1 = await makeUser('owner3@test.com', { systemRole: 'project_manager' });
+        await makeUser('other_coord@test.com', { systemRole: 'project_manager' });
         const [b] = await db.insert(book).values({ title: 'X', createdById: c1.id }).returning();
         const cookie = await signInCookies('other_coord@test.com');
         await expect(authenticate({ documentName: `book:${b.id}`, requestHeaders: { cookie } })).rejects.toThrow();
     });
 
     it('rejects bad documentName', async () => {
-        await makeUser('z@test.com', { isCoordinator: true });
+        await makeUser('z@test.com', { systemRole: 'project_manager' });
         const cookie = await signInCookies('z@test.com');
         await expect(authenticate({ documentName: 'notabook:abc', requestHeaders: { cookie } })).rejects.toThrow('bad document name');
     });

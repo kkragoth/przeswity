@@ -8,7 +8,7 @@ describe('better-auth config', () => {
     it('has additionalFields configured', () => {
         const fields = auth.options.user?.additionalFields;
         expect(fields).toBeDefined();
-        expect(fields?.isAdmin).toBeDefined();
+        expect(fields?.systemRole).toBeDefined();
         expect(fields?.preferredLocale).toBeDefined();
         expect(fields?.isSystem).toBeDefined();
     });

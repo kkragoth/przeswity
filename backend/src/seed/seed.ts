@@ -18,12 +18,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fix = (name: string) => fs.readFileSync(path.join(__dirname, 'fixtures', name), 'utf8');
 
 type Role = 'editor' | 'proofreader' | 'translator' | 'author' | 'typesetter' | 'coordinator';
+type SystemRole = 'admin' | 'project_manager' | null;
 
 interface SeedUser {
     email: string;
     name: string;
-    isAdmin: boolean;
-    isCoordinator: boolean;
+    systemRole: SystemRole;
     tags: string[];
     color: string;
 }
@@ -74,15 +74,15 @@ type PMJson = {
 };
 
 const USERS: SeedUser[] = [
-    { email: 'admin@local.test', name: 'Admin Adminowska', isAdmin: true, isCoordinator: false, tags: [], color: '#dc2626' },
-    { email: 'coord1@local.test', name: 'Anna Koordynator', isAdmin: false, isCoordinator: true, tags: ['koordynator'], color: '#2563eb' },
-    { email: 'coord2@local.test', name: 'Bartek Koordynator', isAdmin: false, isCoordinator: true, tags: ['koordynator'], color: '#0ea5e9' },
-    { email: 'editor1@local.test', name: 'Ewa Redaktor', isAdmin: false, isCoordinator: false, tags: ['redaktor'], color: '#16a34a' },
-    { email: 'editor2@local.test', name: 'Filip Redaktor', isAdmin: false, isCoordinator: false, tags: ['redaktor'], color: '#22c55e' },
-    { email: 'proof1@local.test', name: 'Gosia Korektor', isAdmin: false, isCoordinator: false, tags: ['korekta'], color: '#a855f7' },
-    { email: 'trans1@local.test', name: 'Hubert Tłumacz', isAdmin: false, isCoordinator: false, tags: ['tłumacz'], color: '#f59e0b' },
-    { email: 'type1@local.test', name: 'Iza Składacz', isAdmin: false, isCoordinator: false, tags: ['skład'], color: '#ec4899' },
-    { email: 'author1@local.test', name: 'Jan Autor', isAdmin: false, isCoordinator: false, tags: ['autor'], color: '#7c3aed' },
+    { email: 'admin@local.test', name: 'Admin Adminowska', systemRole: 'admin', tags: [], color: '#dc2626' },
+    { email: 'pm1@local.test', name: 'Anna Kierownik', systemRole: 'project_manager', tags: ['kierownik'], color: '#2563eb' },
+    { email: 'pm2@local.test', name: 'Bartek Kierownik', systemRole: 'project_manager', tags: ['kierownik'], color: '#0ea5e9' },
+    { email: 'editor1@local.test', name: 'Ewa Redaktor', systemRole: null, tags: ['redaktor'], color: '#16a34a' },
+    { email: 'editor2@local.test', name: 'Filip Redaktor', systemRole: null, tags: ['redaktor'], color: '#22c55e' },
+    { email: 'proof1@local.test', name: 'Gosia Korektor', systemRole: null, tags: ['korekta'], color: '#a855f7' },
+    { email: 'trans1@local.test', name: 'Hubert Tłumacz', systemRole: null, tags: ['tłumacz'], color: '#f59e0b' },
+    { email: 'type1@local.test', name: 'Iza Składacz', systemRole: null, tags: ['skład'], color: '#ec4899' },
+    { email: 'author1@local.test', name: 'Jan Autor', systemRole: null, tags: ['autor'], color: '#7c3aed' },
 ];
 
 const BOOKS: SeedBook[] = [
@@ -91,7 +91,7 @@ const BOOKS: SeedBook[] = [
         title: 'Geopolityka rzek',
         description: 'Esej o roli rzek transgranicznych w polityce międzynarodowej.',
         fixture: 'geopolityka-rzek.md',
-        ownerEmail: 'coord1@local.test',
+        ownerEmail: 'pm1@local.test',
         assignments: [
             { email: 'editor1@local.test', role: 'editor' },
             { email: 'proof1@local.test', role: 'proofreader' },
@@ -103,7 +103,7 @@ const BOOKS: SeedBook[] = [
         title: 'Atlas wiatrów',
         description: 'Tłumaczenie atlasu wiatrów stałych i lokalnych.',
         fixture: 'atlas-wiatrow.md',
-        ownerEmail: 'coord1@local.test',
+        ownerEmail: 'pm1@local.test',
         assignments: [
             { email: 'trans1@local.test', role: 'translator' },
             { email: 'editor2@local.test', role: 'editor' },
@@ -116,7 +116,7 @@ const BOOKS: SeedBook[] = [
         title: 'Krótka historia chmur',
         description: 'Krótki esej o klasyfikacji chmur.',
         fixture: 'krotka-historia-chmur.md',
-        ownerEmail: 'coord1@local.test',
+        ownerEmail: 'pm1@local.test',
         assignments: [
             { email: 'editor1@local.test', role: 'editor' },
             { email: 'proof1@local.test', role: 'proofreader' },
@@ -127,7 +127,7 @@ const BOOKS: SeedBook[] = [
         title: 'Notatki marginesu',
         description: 'Krótkie rozważania.',
         fixture: 'notatki-marginesu.md',
-        ownerEmail: 'coord2@local.test',
+        ownerEmail: 'pm2@local.test',
         assignments: [
             { email: 'editor2@local.test', role: 'editor' },
         ],
@@ -147,8 +147,7 @@ async function upsertSeedUser(spec: SeedUser) {
     // BetterAuth owns the id — we only update non-auth fields.
     await db.update(user).set({
         name: spec.name,
-        isAdmin: spec.isAdmin,
-        isCoordinator: spec.isCoordinator,
+        systemRole: spec.systemRole,
         competencyTags: spec.tags,
         color: spec.color,
         preferredLocale: 'pl',
@@ -195,7 +194,7 @@ function actorByEmail(spec: SeedBook, email: string, idByEmail: Map<string, stri
         throw new Error(`[seed] missing actor for ${email}`);
     }
     const assignedRole = spec.assignments.find((a) => a.email === email)?.role;
-    const role: Role = assignedRole ?? (u.isCoordinator ? 'coordinator' : 'editor');
+    const role: Role = assignedRole ?? 'editor';
     return { id: uid, name: u.name, role, color: u.color };
 }
 

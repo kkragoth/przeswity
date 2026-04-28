@@ -5,6 +5,7 @@ import { db } from '../../db/client.js';
 import { book, assignment, user, commentThread, commentMessage } from '../../db/schema.js';
 import { requireSession } from '../../auth/session.js';
 import { asyncHandler, AppError } from '../../lib/errors.js';
+import { isAdmin } from '../../lib/permissions.js';
 import { registry } from '../../openapi/registry.js';
 import {
     CommentThreadDto,
@@ -111,7 +112,7 @@ async function getUserAssignmentRoles(bookId: string, userId: string): Promise<s
 }
 
 async function hasReadAccess(bookId: string, me: any): Promise<boolean> {
-    if (me.isAdmin) return true;
+    if (isAdmin(me.systemRole)) return true;
     const [b] = await db.select().from(book).where(eq(book.id, bookId));
     if (!b) return false;
     if (b.createdById === me.id) return true;
@@ -120,7 +121,7 @@ async function hasReadAccess(bookId: string, me: any): Promise<boolean> {
 }
 
 async function canResolveThread(bookId: string, me: any): Promise<boolean> {
-    if (me.isAdmin) return true;
+    if (isAdmin(me.systemRole)) return true;
     const [b] = await db.select().from(book).where(eq(book.id, bookId));
     if (!b) return false;
     if (b.createdById === me.id) return true;
@@ -129,7 +130,7 @@ async function canResolveThread(bookId: string, me: any): Promise<boolean> {
 }
 
 async function canDeleteThread(bookId: string, me: any): Promise<boolean> {
-    if (me.isAdmin) return true;
+    if (isAdmin(me.systemRole)) return true;
     const [b] = await db.select().from(book).where(eq(book.id, bookId));
     if (!b) return false;
     return b.createdById === me.id;
@@ -334,7 +335,7 @@ commentsRouter.delete('/api/comments/:threadId/messages/:messageId', requireSess
         and(eq(commentMessage.id, req.params.messageId), eq(commentMessage.threadId, thread.id)),
     );
     if (!msg) throw new AppError('errors.comment.notFound', 404, 'message not found');
-    if (msg.authorId !== me.id && !me.isAdmin) {
+    if (msg.authorId !== me.id && !isAdmin(me.systemRole)) {
         throw new AppError('errors.comment.forbidden', 403, 'forbidden');
     }
 

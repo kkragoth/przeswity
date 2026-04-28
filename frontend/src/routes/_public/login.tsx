@@ -88,8 +88,7 @@ interface DevUser {
     id: string;
     email: string;
     name: string;
-    isAdmin: boolean;
-    isCoordinator: boolean;
+    systemRole: 'admin' | 'project_manager' | null;
 }
 
 function DevQuickLogin({ onLogin }: { onLogin: () => Promise<void> }) {
@@ -146,8 +145,8 @@ function DevQuickLogin({ onLogin }: { onLogin: () => Promise<void> }) {
                             <div className="font-medium">{u.name}</div>
                             <div className="text-xs text-stone-500">{u.email}</div>
                             <div className="mt-1 flex gap-1">
-                                {u.isAdmin && <Badge>Admin</Badge>}
-                                {u.isCoordinator && <Badge variant="secondary">Koord</Badge>}
+                                {u.systemRole === 'admin' && <Badge>Admin</Badge>}
+                                {u.systemRole === 'project_manager' && <Badge variant="secondary">PM</Badge>}
                             </div>
                         </div>
                         <Button

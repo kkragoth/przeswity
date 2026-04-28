@@ -34,7 +34,7 @@ function AppLayout() {
 
     if (immersive) {
         return (
-            <div className="min-h-dvh flex flex-col bg-background text-foreground">
+            <div className="h-dvh overflow-hidden flex flex-col bg-background text-foreground">
                 <Outlet />
             </div>
         );
@@ -47,10 +47,10 @@ function AppLayout() {
                     <Link to="/" className="font-serif text-lg font-semibold tracking-tight">{t('appName')}</Link>
                     <nav className="flex items-center gap-4 text-sm">
                         <Link to="/books" className="hover:text-primary transition-colors">{t('nav.books')}</Link>
-                        {user.isAdmin && (
+                        {user.systemRole === 'admin' && (
                             <Link to="/admin" className="hover:text-primary transition-colors">{t('nav.admin')}</Link>
                         )}
-                        {(user.isAdmin || user.isCoordinator) && (
+                        {(user.systemRole === 'admin' || user.systemRole === 'project_manager') && (
                             <Link to="/coordinator" className="hover:text-primary transition-colors">{t('nav.coordinator')}</Link>
                         )}
                         <Link to="/settings" className="hover:text-primary transition-colors">{t('nav.settings')}</Link>

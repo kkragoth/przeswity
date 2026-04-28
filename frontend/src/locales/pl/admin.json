@@ -27,8 +27,10 @@
             "competencyTags": "Tagi kompetencji",
             "competencyTagsHint": "Oddziel przecinkami",
             "color": "Kolor",
-            "isAdmin": "Administrator",
-            "isCoordinator": "Koordynator"
+            "systemRole": "Rola systemowa",
+            "systemRoleNone": "Zwykły użytkownik",
+            "systemRoleProjectManager": "Kierownik projektu",
+            "systemRoleAdmin": "Administrator"
         },
         "deleteConfirm": "Czy na pewno chcesz usunąć tego użytkownika?",
         "loginAs": "Zaloguj jako"

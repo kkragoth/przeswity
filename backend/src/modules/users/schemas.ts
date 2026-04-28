@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import { registry } from '../../openapi/registry.js';
 
+export const SystemRoleEnum = z.enum(['admin', 'project_manager']).nullable();
+
 export const UserDto = z.object({
     id: z.string(),
     email: z.string().email(),
     name: z.string(),
-    isAdmin: z.boolean(),
-    isCoordinator: z.boolean(),
+    systemRole: SystemRoleEnum,
     competencyTags: z.array(z.string()),
     color: z.string(),
     image: z.string().nullable().optional(),
@@ -23,15 +24,13 @@ export const CreateUserBody = z.object({
     email: z.string().email(),
     name: z.string().min(1),
     password: z.string().min(8),
-    isAdmin: z.boolean().default(false),
-    isCoordinator: z.boolean().default(false),
+    systemRole: SystemRoleEnum.default(null),
     competencyTags: z.array(z.string()).default([]),
 }).openapi('CreateUserBody');
 
 export const UpdateUserBody = z.object({
     name: z.string().min(1).optional(),
-    isAdmin: z.boolean().optional(),
-    isCoordinator: z.boolean().optional(),
+    systemRole: SystemRoleEnum.optional(),
     competencyTags: z.array(z.string()).optional(),
     color: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),
 }).openapi('UpdateUserBody');

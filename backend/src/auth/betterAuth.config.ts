@@ -17,8 +17,7 @@ export const auth = betterAuth({
     },
     user: {
         additionalFields: {
-            isAdmin: { type: 'boolean', defaultValue: false, input: false },
-            isCoordinator: { type: 'boolean', defaultValue: false, input: false },
+            systemRole: { type: 'string', defaultValue: null, input: false },
             competencyTags: { type: 'string[]', defaultValue: [], input: false },
             color: { type: 'string', defaultValue: '#7c3aed', input: false },
             preferredLocale: { type: 'string', defaultValue: 'pl', input: false },

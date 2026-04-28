@@ -3,7 +3,7 @@ import { db } from '../db/client.js';
 import { assignment, book } from '../db/schema.js';
 import { and, eq } from 'drizzle-orm';
 import type { Role } from '../lib/permissions.js';
-import { mergePermissions } from '../lib/permissions.js';
+import { mergePermissions, isAdmin } from '../lib/permissions.js';
 import { env } from '../env.js';
 
 export interface CollabContext {
@@ -38,7 +38,7 @@ export async function authenticate(data: {
             // Dev-only fallback: some WS clients/browsers may omit auth cookies.
             // Allow collaboration so seeded books/cursors are still testable locally.
             return {
-                user: { id: 'dev-ws-anon', name: 'Dev WS User', isAdmin: true },
+                user: { id: 'dev-ws-anon', name: 'Dev WS User', systemRole: 'admin' },
                 roles: ['editor'],
                 readOnly: false,
             };
@@ -46,7 +46,7 @@ export async function authenticate(data: {
         throw new Error('unauthenticated');
     }
 
-    if (u.isAdmin || b.createdById === u.id) {
+    if (isAdmin(u.systemRole) || b.createdById === u.id) {
         return { user: u, roles: ['editor'], readOnly: false };
     }
 

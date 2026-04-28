@@ -35,7 +35,7 @@ function BookDetail() {
 
     const myRoles = (assignmentsQ.data ?? []).filter((a: any) => a.userId === u.id).map((a: any) => a.role);
     const isOwner = bookQ.data.createdById === u.id;
-    const role = (myRoles[0] ?? (isOwner || u.isAdmin ? 'editor' : 'editor')) as string;
+    const role = (myRoles[0] ?? 'editor') as string;
 
     return (
         <EditorHost

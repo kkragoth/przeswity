@@ -1,5 +1,8 @@
-export type Role = 'editor' | 'proofreader' | 'translator' | 'author' | 'typesetter' | 'coordinator';
-export const ROLES = ['editor', 'proofreader', 'translator', 'author', 'typesetter', 'coordinator'] as const;
+import { SystemRole } from '../db/auth-schema.js';
+
+export type BookRole = 'editor' | 'proofreader' | 'translator' | 'author' | 'typesetter' | 'coordinator';
+export type Role = BookRole;
+export const ROLES: BookRole[] = ['editor', 'proofreader', 'translator', 'author', 'typesetter', 'coordinator'];
 
 export type Permissions = {
     canEdit: boolean;
@@ -10,7 +13,7 @@ export type Permissions = {
     canDeleteBook: boolean;
 };
 
-const ROLE_PERMS: Record<Role, Permissions> = {
+const ROLE_PERMS: Record<BookRole, Permissions> = {
     editor:      { canEdit: true,  canSuggest: false, canComment: true,  canResolve: true,  canManagePeople: false, canDeleteBook: false },
     proofreader: { canEdit: false, canSuggest: true,  canComment: true,  canResolve: false, canManagePeople: false, canDeleteBook: false },
     translator:  { canEdit: false, canSuggest: true,  canComment: true,  canResolve: false, canManagePeople: false, canDeleteBook: false },
@@ -19,7 +22,7 @@ const ROLE_PERMS: Record<Role, Permissions> = {
     coordinator: { canEdit: false, canSuggest: false, canComment: true,  canResolve: true,  canManagePeople: true,  canDeleteBook: false },
 };
 
-export function mergePermissions(roles: Role[]): Permissions {
+export function mergePermissions(roles: BookRole[]): Permissions {
     const start: Permissions = { canEdit: false, canSuggest: false, canComment: false, canResolve: false, canManagePeople: false, canDeleteBook: false };
     return roles.reduce((acc, r) => {
         const p = ROLE_PERMS[r];
@@ -34,12 +37,20 @@ export function mergePermissions(roles: Role[]): Permissions {
     }, start);
 }
 
+export function isAdmin(systemRole: string | null | undefined): boolean {
+    return systemRole === SystemRole.Admin;
+}
+
+export function isProjectManager(systemRole: string | null | undefined): boolean {
+    return systemRole === SystemRole.Admin || systemRole === SystemRole.ProjectManager;
+}
+
 export function permissionsForUser(
-    roles: Role[],
-    user: { isAdmin: boolean; isCoordinator: boolean; isOwner?: boolean },
+    roles: BookRole[],
+    user: { systemRole?: string | null; isOwner?: boolean },
 ): Permissions {
     const base = mergePermissions(roles);
-    if (user.isAdmin) {
+    if (isAdmin(user.systemRole)) {
         return { canEdit: true, canSuggest: true, canComment: true, canResolve: true, canManagePeople: true, canDeleteBook: true };
     }
     if (user.isOwner) {

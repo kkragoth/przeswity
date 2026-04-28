@@ -14,10 +14,10 @@ async function clearDb() {
     await db.delete(user);
 }
 
-async function createUser(email: string, opts: { isAdmin?: boolean; isCoordinator?: boolean } = {}) {
+async function createUser(email: string, opts: { systemRole?: 'admin' | 'project_manager' } = {}) {
     await auth.api.signUpEmail({ body: { email, password: 'devseed1234', name: email.split('@')[0] }, asResponse: true });
-    if (opts.isAdmin || opts.isCoordinator) {
-        await db.update(user).set({ isAdmin: !!opts.isAdmin, isCoordinator: !!opts.isCoordinator }).where(eq(user.email, email));
+    if (opts.systemRole) {
+        await db.update(user).set({ systemRole: opts.systemRole }).where(eq(user.email, email));
     }
     const [u] = await db.select().from(user).where(eq(user.email, email));
     return u;
@@ -51,7 +51,7 @@ describe('users API', () => {
     });
 
     it('GET /api/users — 200 for admin', async () => {
-        await createUser('admin1@test.com', { isAdmin: true });
+        await createUser('admin1@test.com', { systemRole: 'admin' });
         const { cookie } = await signIn('admin1@test.com');
         const r = await request(app).get('/api/users').set('Cookie', cookie).expect(200);
         expect(Array.isArray(r.body)).toBe(true);
