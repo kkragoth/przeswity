@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
-import type { HocuspocusProvider } from '@hocuspocus/provider'
+import { useCallback, useEffect, useState } from 'react';
+import type { HocuspocusProvider } from '@hocuspocus/provider';
 
 export type ConnectionStatus = 'connecting' | 'online' | 'offline'
 

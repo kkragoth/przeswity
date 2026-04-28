@@ -1,0 +1,17 @@
+.page-numbers {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.page-number {
+    position: absolute;
+    right: var(--page-margin-x);
+    font-family: var(--font-ui);
+    font-size: 11px;
+    color: var(--text-subtle);
+    opacity: 0.55;
+    line-height: 1;
+    user-select: none;
+}

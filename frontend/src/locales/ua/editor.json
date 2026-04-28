@@ -13,7 +13,16 @@
         "exportMarkdown": "Експорт Markdown",
         "snapshot": "Створити знімок версії",
         "language": "Мова",
-        "logout": "Вийти"
+        "logout": "Вийти",
+        "booksLink": "Книги",
+        "synced": "Збережено",
+        "syncing": "Збереження…",
+        "offlineLocal": "Офлайн — локальні зміни",
+        "toggleLeftPane": "Показати/приховати лівий панель",
+        "toggleRightPane": "Показати/приховати правий панель",
+        "menuMyBooks": "Мої книги",
+        "menuSettings": "Налаштування",
+        "menuLogout": "Вийти"
     },
     "panes": {
         "outline": "Структура",
@@ -24,12 +33,30 @@
         "versions": "Версії",
         "people": "Особи"
     },
+    "pane": {
+        "outline": "Зміст",
+        "versions": "Версії",
+        "glossary": "Словник",
+        "meta": "Метадані",
+        "files": "Файли",
+        "comments": "Коментарі",
+        "suggestions": "Пропозиції",
+        "collapse": "Згорнути панель",
+        "expand": "Розгорнути панель"
+    },
+    "outlineEmpty": {
+        "title": "Зміст порожній",
+        "action": "Додати перший заголовок"
+    },
+    "filesPlaceholder": "Репозиторій файлів — незабаром",
     "toolbar": {
         "bold": "Жирний",
         "italic": "Курсив",
         "underline": "Підкреслення",
         "strike": "Закреслення",
+        "code": "Код",
         "link": "Посилання",
+        "highlight": "Виділення",
         "heading1": "Заголовок 1",
         "heading2": "Заголовок 2",
         "heading3": "Заголовок 3",
@@ -42,8 +69,26 @@
         "undo": "Скасувати",
         "redo": "Повторити",
         "clearFormat": "Очистити форматування",
+        "specialChar": "Спеціальний символ",
         "suggestingMode": "Режим пропозицій",
-        "suggestingForced": "Режим пропозицій примусово увімкнено для вашої ролі"
+        "suggestingForced": "Режим пропозицій примусово увімкнено для вашої ролі",
+        "modeEdit": "Редагування",
+        "modeSuggest": "Пропозиції",
+        "modeForcedTooltip": "Ваша роль вимагає режиму пропозицій",
+        "fileMenu": "Файл",
+        "import": "Імпорт",
+        "export": "Експорт",
+        "templates": "Шаблони",
+        "style": {
+            "body": "Основний текст",
+            "h1": "Заголовок 1",
+            "h2": "Заголовок 2",
+            "h3": "Заголовок 3",
+            "quote": "Цитата",
+            "bulletList": "Маркований список",
+            "orderedList": "Нумерований список",
+            "taskList": "Список завдань"
+        }
     },
     "comments": {
         "tabs": {

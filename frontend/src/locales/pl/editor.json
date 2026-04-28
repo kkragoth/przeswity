@@ -13,7 +13,16 @@
         "exportMarkdown": "Eksport Markdown",
         "snapshot": "Zrób migawkę wersji",
         "language": "Język",
-        "logout": "Wyloguj"
+        "logout": "Wyloguj",
+        "booksLink": "Książki",
+        "synced": "Zapisano",
+        "syncing": "Zapisuję…",
+        "offlineLocal": "Offline — zmiany lokalne",
+        "toggleLeftPane": "Pokaż/ukryj lewy panel",
+        "toggleRightPane": "Pokaż/ukryj prawy panel",
+        "menuMyBooks": "Moje książki",
+        "menuSettings": "Ustawienia",
+        "menuLogout": "Wyloguj"
     },
     "panes": {
         "outline": "Konspekt",
@@ -24,12 +33,30 @@
         "versions": "Wersje",
         "people": "Osoby"
     },
+    "pane": {
+        "outline": "Spis treści",
+        "versions": "Wersje",
+        "glossary": "Słownik",
+        "meta": "Metadane",
+        "files": "Pliki",
+        "comments": "Komentarze",
+        "suggestions": "Sugestie",
+        "collapse": "Zwiń panel",
+        "expand": "Rozwiń panel"
+    },
+    "outlineEmpty": {
+        "title": "Spis treści jest pusty",
+        "action": "Dodaj pierwszy nagłówek"
+    },
+    "filesPlaceholder": "Repozytorium plików — wkrótce",
     "toolbar": {
         "bold": "Pogrubienie",
         "italic": "Kursywa",
         "underline": "Podkreślenie",
         "strike": "Przekreślenie",
+        "code": "Kod",
         "link": "Link",
+        "highlight": "Wyróżnienie",
         "heading1": "Nagłówek 1",
         "heading2": "Nagłówek 2",
         "heading3": "Nagłówek 3",
@@ -42,8 +69,26 @@
         "undo": "Cofnij",
         "redo": "Ponów",
         "clearFormat": "Wyczyść formatowanie",
+        "specialChar": "Znak specjalny",
         "suggestingMode": "Tryb sugerowania",
-        "suggestingForced": "Tryb sugerowania wymuszony przez Twoją rolę"
+        "suggestingForced": "Tryb sugerowania wymuszony przez Twoją rolę",
+        "modeEdit": "Edycja",
+        "modeSuggest": "Sugerowanie",
+        "modeForcedTooltip": "Twoja rola wymaga trybu sugerowania",
+        "fileMenu": "Plik",
+        "import": "Importuj",
+        "export": "Eksportuj",
+        "templates": "Szablony",
+        "style": {
+            "body": "Treść",
+            "h1": "Nagłówek 1",
+            "h2": "Nagłówek 2",
+            "h3": "Nagłówek 3",
+            "quote": "Cytat",
+            "bulletList": "Lista punktowana",
+            "orderedList": "Lista numerowana",
+            "taskList": "Lista zadań"
+        }
     },
     "comments": {
         "tabs": {

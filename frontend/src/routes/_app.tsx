@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, Outlet, Link } from '@tanstack/react-router';
+import { createFileRoute, redirect, Outlet, Link, useRouterState } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { authClient } from '@/auth/client';
 import { LanguageSwitcher } from '@/i18n/LanguageSwitcher';
@@ -16,27 +16,46 @@ export const Route = createFileRoute('/_app')({
     component: AppLayout,
 });
 
+/**
+ * Hide the global chrome on routes that own the full viewport
+ * (today: the editor at /books/$bookId — owns its own header).
+ */
+function isImmersiveRoute(pathname: string): boolean {
+    return /^\/books\/[^/]+$/.test(pathname);
+}
+
 function AppLayout() {
     const { session } = Route.useRouteContext();
     const { t } = useTranslation('common');
     useSessionPing();
     const user = session.user as SessionUser;
+    const pathname = useRouterState({ select: (s) => s.location.pathname });
+    const immersive = isImmersiveRoute(pathname);
+
+    if (immersive) {
+        return (
+            <div className="min-h-dvh flex flex-col bg-background text-foreground">
+                <Outlet />
+            </div>
+        );
+    }
+
     return (
-        <div className="min-h-dvh bg-stone-100 flex flex-col">
-            <header className="bg-white border-b">
+        <div className="min-h-dvh bg-background text-foreground flex flex-col">
+            <header className="bg-card border-b border-border">
                 <div className="mx-auto max-w-7xl px-4 h-14 flex items-center justify-between">
-                    <Link to="/" className="font-semibold text-lg">{t('appName')}</Link>
+                    <Link to="/" className="font-serif text-lg font-semibold tracking-tight">{t('appName')}</Link>
                     <nav className="flex items-center gap-4 text-sm">
-                        <Link to="/books" className="hover:underline">{t('nav.books')}</Link>
+                        <Link to="/books" className="hover:text-primary transition-colors">{t('nav.books')}</Link>
                         {user.isAdmin && (
-                            <Link to="/admin" className="hover:underline">{t('nav.admin')}</Link>
+                            <Link to="/admin" className="hover:text-primary transition-colors">{t('nav.admin')}</Link>
                         )}
                         {(user.isAdmin || user.isCoordinator) && (
-                            <Link to="/coordinator" className="hover:underline">{t('nav.coordinator')}</Link>
+                            <Link to="/coordinator" className="hover:text-primary transition-colors">{t('nav.coordinator')}</Link>
                         )}
-                        <Link to="/settings" className="hover:underline">{t('nav.settings')}</Link>
+                        <Link to="/settings" className="hover:text-primary transition-colors">{t('nav.settings')}</Link>
                         <LanguageSwitcher />
-                        <span className="text-stone-500">{user.email}</span>
+                        <span className="text-muted-foreground">{user.email}</span>
                     </nav>
                 </div>
             </header>

@@ -2,50 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Editorial palette — mirrors editor tokens but in HSL for shadcn/Tailwind. */
 @layer base {
     :root {
-        --background: 0 0% 100%;
-        --foreground: 222 47% 11%;
-        --card: 0 0% 100%;
-        --card-foreground: 222 47% 11%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 222 47% 11%;
-        --primary: 222 47% 11%;
-        --primary-foreground: 210 40% 98%;
-        --secondary: 210 40% 96%;
-        --secondary-foreground: 222 47% 11%;
-        --muted: 210 40% 96%;
-        --muted-foreground: 215 16% 47%;
-        --accent: 210 40% 96%;
-        --accent-foreground: 222 47% 11%;
-        --destructive: 0 84% 60%;
-        --destructive-foreground: 210 40% 98%;
-        --border: 214 32% 91%;
-        --input: 214 32% 91%;
-        --ring: 222 47% 11%;
+        /* Warm off-white surfaces */
+        --background: 42 25% 95%;       /* #f5f3ee */
+        --foreground: 35 18% 11%;       /* #1f1c17 */
+        --card: 45 38% 98%;             /* #fbfaf6 */
+        --card-foreground: 35 18% 11%;
+        --popover: 45 38% 98%;
+        --popover-foreground: 35 18% 11%;
+
+        /* Oxblood primary */
+        --primary: 352 60% 30%;         /* #7a1f2b */
+        --primary-foreground: 45 38% 98%;
+
+        --secondary: 40 24% 90%;
+        --secondary-foreground: 35 18% 11%;
+        --muted: 40 24% 90%;
+        --muted-foreground: 30 12% 38%;
+        --accent: 40 24% 90%;
+        --accent-foreground: 35 18% 11%;
+
+        --destructive: 0 64% 33%;
+        --destructive-foreground: 45 38% 98%;
+
+        --border: 40 28% 84%;           /* #e3ddcf */
+        --input: 40 28% 84%;
+        --ring: 352 60% 30%;
+
         --radius: 0.5rem;
     }
     .dark {
-        --background: 222 47% 11%;
-        --foreground: 210 40% 98%;
-        --card: 222 47% 11%;
-        --card-foreground: 210 40% 98%;
-        --popover: 222 47% 11%;
-        --popover-foreground: 210 40% 98%;
-        --primary: 210 40% 98%;
-        --primary-foreground: 222 47% 11%;
-        --secondary: 217 33% 18%;
-        --secondary-foreground: 210 40% 98%;
-        --muted: 217 33% 18%;
-        --muted-foreground: 215 20% 65%;
-        --accent: 217 33% 18%;
-        --accent-foreground: 210 40% 98%;
-        --destructive: 0 63% 31%;
-        --destructive-foreground: 210 40% 98%;
-        --border: 217 33% 18%;
-        --input: 217 33% 18%;
-        --ring: 213 27% 84%;
+        --background: 30 10% 9%;
+        --foreground: 42 32% 88%;
+        --card: 30 10% 12%;
+        --card-foreground: 42 32% 88%;
+        --popover: 30 10% 12%;
+        --popover-foreground: 42 32% 88%;
+        --primary: 351 53% 52%;
+        --primary-foreground: 45 38% 98%;
+        --secondary: 30 8% 18%;
+        --secondary-foreground: 42 32% 88%;
+        --muted: 30 8% 18%;
+        --muted-foreground: 35 14% 60%;
+        --accent: 30 8% 18%;
+        --accent-foreground: 42 32% 88%;
+        --destructive: 0 50% 40%;
+        --destructive-foreground: 45 38% 98%;
+        --border: 30 10% 22%;
+        --input: 30 10% 22%;
+        --ring: 351 53% 52%;
     }
     * { @apply border-border; }
-    body { @apply bg-background text-foreground; }
+    body {
+        @apply bg-background text-foreground;
+        font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-feature-settings: 'kern', 'liga', 'calt';
+    }
+    .font-serif { font-family: 'Source Serif 4', Georgia, serif; }
+    .font-mono { font-family: 'IBM Plex Mono', Menlo, monospace; }
 }

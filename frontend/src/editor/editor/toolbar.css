@@ -1,0 +1,327 @@
+/* ==========================================================================
+   Toolbar — 3-zone editorial toolbar
+   Zone 1: Mode toggle (left)
+   Zone 2: Style dropdown (dominant)
+   Zone 3: Inline formatting (compact)
+   Far right: File menu
+   ========================================================================== */
+
+/* ---------- Shell ---------- */
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 12px;
+    height: var(--toolbar-h, 48px);
+    background: var(--bg-elev);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    overflow-x: auto;
+    overflow-y: visible;
+}
+.toolbar.is-suggesting {
+    background: var(--warning-soft);
+    border-bottom-color: var(--warning);
+}
+.tb-spacer {
+    flex: 1;
+}
+.tb-group {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+}
+.tb-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border);
+    margin: 0 8px;
+    flex-shrink: 0;
+}
+
+/* ---------- Common button ---------- */
+.tb-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--r-2);
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: background var(--d-fast) var(--ease-out), color var(--d-fast) var(--ease-out);
+    flex-shrink: 0;
+}
+.tb-btn:hover {
+    background: var(--bg-tint);
+    color: var(--text);
+}
+.tb-btn.is-active {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--accent-ring);
+}
+.tb-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+/* File menu trigger is wider */
+.tb-file-trigger {
+    width: auto;
+    padding: 0 10px;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    gap: 4px;
+}
+
+/* ---------- Zone 1: Mode segmented control ---------- */
+.mode-toggle {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    width: 220px;
+    background: var(--bg-sunken);
+    border: 1px solid var(--border);
+    border-radius: var(--r-3);
+    padding: 2px;
+    gap: 2px;
+    position: relative;
+    flex-shrink: 0;
+}
+.mode-toggle--locked {
+    opacity: 0.65;
+}
+.mode-seg {
+    flex: 1;
+    height: 100%;
+    border: none;
+    border-radius: calc(var(--r-3) - 2px);
+    background: transparent;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background var(--d-fast) var(--ease-out), color var(--d-fast) var(--ease-out);
+    white-space: nowrap;
+}
+.mode-seg:hover:not(:disabled) {
+    background: var(--bg-tint);
+    color: var(--text);
+}
+.mode-seg.is-active {
+    background: var(--accent);
+    color: var(--text-on-accent);
+    font-weight: var(--fw-semi);
+}
+.mode-seg:disabled {
+    cursor: not-allowed;
+}
+.mode-lock-icon {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+/* ---------- Zone 2: Style dropdown ---------- */
+.style-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 180px;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-2);
+    background: var(--bg-elev);
+    cursor: pointer;
+    gap: 6px;
+    flex-shrink: 0;
+    transition: border-color var(--d-fast) var(--ease-out);
+}
+.style-trigger:hover {
+    border-color: var(--border-strong);
+    background: var(--bg-tint);
+}
+.style-trigger:focus-visible {
+    outline: 2px solid var(--accent-ring);
+    outline-offset: 1px;
+}
+.style-trigger-label {
+    font-family: var(--font-display);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    text-align: left;
+}
+.style-trigger-chevron {
+    color: var(--text-subtle);
+    flex-shrink: 0;
+}
+
+/* Content portal */
+.style-select-content {
+    z-index: var(--z-popover);
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--r-3);
+    box-shadow: var(--shadow-paper-2);
+    min-width: 240px;
+    overflow: hidden;
+}
+.style-select-viewport {
+    padding: 4px;
+}
+
+/* Individual style items */
+.style-select-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 8px;
+    border-radius: var(--r-2);
+    cursor: default;
+    outline: none;
+    user-select: none;
+    position: relative;
+}
+.style-select-item:hover,
+.style-select-item[data-highlighted] {
+    background: var(--bg-tint);
+}
+.style-select-item[data-state='checked'] .style-item-check {
+    opacity: 1;
+}
+.style-item-check {
+    opacity: 0;
+    font-size: 11px;
+    color: var(--accent);
+    margin-left: 4px;
+    flex-shrink: 0;
+}
+
+/* Preview text rendered IN its target style */
+.style-preview {
+    flex: 1;
+    font-family: var(--font-display);
+    color: var(--text);
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.style-preview-p    { font-size: 14px; font-weight: 400; }
+.style-preview-h1   { font-size: 20px; font-weight: 700; }
+.style-preview-h2   { font-size: 17px; font-weight: 600; }
+.style-preview-h3   { font-size: 15px; font-weight: 600; }
+.style-preview-quote {
+    font-size: 13px;
+    font-style: italic;
+    color: var(--text-muted);
+    border-left: 2px solid var(--border-strong);
+    padding-left: 6px;
+}
+.style-preview-bulletList,
+.style-preview-orderedList,
+.style-preview-taskList {
+    font-size: 14px;
+    font-weight: 400;
+}
+
+/* Shortcut badge in item */
+.style-shortcut {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-subtle);
+    background: var(--bg-sunken);
+    border: 1px solid var(--border);
+    border-radius: var(--r-1);
+    padding: 1px 4px;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+/* ---------- Highlight popover ---------- */
+.tb-highlight-wrap {
+    position: relative;
+    display: inline-flex;
+}
+.tb-highlight-pop {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--r-3);
+    padding: 6px;
+    gap: 4px;
+    flex-wrap: wrap;
+    width: 140px;
+    z-index: var(--z-popover);
+    box-shadow: var(--shadow-paper-2);
+}
+.tb-highlight-wrap:hover .tb-highlight-pop,
+.tb-highlight-wrap:focus-within .tb-highlight-pop {
+    display: flex;
+}
+.tb-color-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    padding: 0;
+    transition: transform var(--d-fast) var(--ease-out);
+}
+.tb-color-swatch:hover {
+    transform: scale(1.2);
+}
+.tb-color-clear {
+    width: 18px;
+    height: 18px;
+    font-size: 14px;
+    line-height: 1;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ---------- Tooltip ---------- */
+.tb-tooltip {
+    background: var(--text);
+    color: var(--bg-elev);
+    border-radius: var(--r-2);
+    padding: 4px 8px;
+    font-size: var(--fs-xs);
+    max-width: 200px;
+    white-space: nowrap;
+    z-index: var(--z-popover);
+}
+.tb-tooltip-kbd {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
+    padding: 0 3px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    margin-left: 4px;
+}
+
+/* ---------- File menu dropdown ---------- */
+.tb-dropdown-content {
+    min-width: 200px;
+    font-size: var(--fs-sm);
+}

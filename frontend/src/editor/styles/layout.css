@@ -1,221 +1,282 @@
-/* ---------- Editor toolbar ---------- */
-.editor-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 6px 16px;
-  background: var(--bg-elev);
-  border-bottom: 1px solid var(--border);
-  min-height: 44px;
-}
-.editor-toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-.editor-doc-title {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 360px;
-}
-.editor-toolbar-right {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 12px;
-}
-.suggesting-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--text-muted);
-  cursor: pointer;
-  user-select: none;
-}
-.suggesting-toggle input[type='checkbox'] {
-  accent-color: var(--accent);
-}
-.peers {
-  display: flex;
-  gap: 4px;
-}
-.peer-dot {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  color: white;
-  font-size: 11px;
-  font-weight: 600;
-  border: 2px solid white;
-  box-shadow: 0 0 0 1px var(--border);
-}
+/* ==========================================================================
+   Editor layout — header / left pane / center / right pane / status bar
+   Center column never shrinks below the typographic measure; panes give way.
+   ========================================================================== */
 
-/* ---------- Main grid ---------- */
+/* ---------- Host ---------- */
+.editor-host {
+  /* Width tokens are mutated by .pane-* classes below, never inline. */
+  --left-effective:  var(--left-pane-w);
+  --right-effective: var(--right-pane-w);
+  --content-width:
+    calc(var(--editor-measure) + var(--page-margin-x) * 2);
+}
+.editor-host.pane-left-rail   { --left-effective: var(--rail-w); }
+.editor-host.pane-left-hidden { --left-effective: 0px; }
+.editor-host.pane-right-rail   { --right-effective: var(--rail-w); }
+.editor-host.pane-right-hidden { --right-effective: 0px; }
+
+/* ---------- Main grid ----------
+   minmax() guards content width — panes never push it below the measure.
+*/
 .main-grid {
   display: grid;
-  grid-template-columns: 280px 1fr 340px;
+  grid-template-columns:
+    var(--left-effective)
+    minmax(var(--content-width), 1fr)
+    var(--right-effective);
   flex: 1;
   min-height: 0;
+  background: var(--bg);
 }
-.left-pane,
-.right-pane {
-  background: var(--bg-elev);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.right-pane {
-  border-right: none;
-  border-left: 1px solid var(--border);
-}
-.tab-bar {
-  display: flex;
-  border-bottom: 1px solid var(--border);
-  padding: 4px 8px;
-  gap: 4px;
-}
-.tab-bar button {
-  background: transparent;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-.tab-bar button.is-active {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
+
+/* ---------- Center pane ---------- */
 .center-pane {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  position: relative;
   overflow: hidden;
+  background: var(--bg);
+}
+
+/* ---------- Side panes (shared) ---------- */
+.left-pane,
+.right-pane {
+  background: var(--bg-elev);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+  transition: width var(--d-mid) var(--ease-out);
+}
+.left-pane  { border-right: 1px solid var(--border); }
+.right-pane { border-left:  1px solid var(--border); }
+
+/* Hidden state — pane fully removed from grid track. */
+.editor-host.pane-left-hidden  .left-pane  { display: none; }
+.editor-host.pane-right-hidden .right-pane { display: none; }
+
+/* Hidden-pane reveal handles — slim ribbons at edges. */
+.pane-handle {
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 56px;
+  transform: translateY(-50%);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: var(--z-sticky);
+  transition: background var(--d-fast) var(--ease-out), color var(--d-fast);
+}
+.pane-handle:hover { background: var(--bg-tint); color: var(--text); }
+.pane-handle-left  { left: 0;  border-radius: 0 var(--r-2) var(--r-2) 0; border-left: none; }
+.pane-handle-right { right: 0; border-radius: var(--r-2) 0 0 var(--r-2); border-right: none; }
+.editor-host.pane-left-hidden  .pane-handle-left  { display: flex; }
+.editor-host.pane-right-hidden .pane-handle-right { display: flex; }
+
+/* ---------- Vertical tab strip (left rail) ---------- */
+.vrail {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  border-bottom: 1px solid var(--border-soft);
+}
+.vrail-btn {
+  background: transparent;
+  border: none;
+  border-left: 2px solid transparent;
+  padding: var(--sp-3) var(--sp-3);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  text-align: left;
+  transition: background var(--d-fast) var(--ease-out), color var(--d-fast),
+              border-color var(--d-fast);
+}
+.vrail-btn:hover { background: var(--bg-tint); color: var(--text); }
+.vrail-btn.is-active {
+  background: var(--bg-tint);
+  border-left-color: var(--accent);
+  color: var(--text);
+}
+.vrail-btn-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+.vrail-btn.is-active .vrail-btn-icon { color: var(--accent); }
+.vrail-btn-label { flex: 1 1 auto; }
+
+/* When pane is in rail mode, hide labels and tighten width. */
+.editor-host.pane-left-rail  .vrail-btn-label,
+.editor-host.pane-right-rail .vrail-btn-label,
+.editor-host.pane-left-rail  .pane-body,
+.editor-host.pane-right-rail .pane-body { display: none; }
+.editor-host.pane-left-rail  .vrail-btn,
+.editor-host.pane-right-rail .vrail-btn { justify-content: center; padding: var(--sp-3) 0; }
+
+/* Pane body (scrollable region under the tab strip).
+   overscroll-behavior: contain — pane scroll never leaks to the document. */
+.pane-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding: var(--sp-3) var(--sp-3) var(--sp-6);
+}
+
+/* Pane header — section title + collapse control. */
+.pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) var(--sp-3) var(--sp-2);
+  border-bottom: 1px solid var(--border-soft);
+}
+.pane-title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: var(--fw-semi);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-subtle);
+  font-feature-settings: 'smcp', 'c2sc';
+}
+.pane-collapse {
+  background: transparent;
+  border: none;
+  border-radius: var(--r-2);
+  padding: var(--sp-1);
+  cursor: pointer;
+  color: var(--text-subtle);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.pane-collapse:hover { background: var(--bg-tint); color: var(--text); }
+.editor-host.pane-left-rail  .pane-header,
+.editor-host.pane-right-rail .pane-header { display: none; }
+
+/* ---------- Pane empty state ---------- */
+.pane-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-3);
+    padding: var(--sp-8) var(--sp-4);
+    text-align: center;
+    color: var(--text-subtle);
+}
+.pane-empty-icon {
+    opacity: 0.45;
+    line-height: 0;
+}
+.pane-empty-title {
+    margin: 0;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    color: var(--text-subtle);
+    line-height: 1.4;
+}
+.pane-empty-action {
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r-2);
+    padding: var(--sp-2) var(--sp-3);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background var(--d-fast) var(--ease-out), color var(--d-fast), border-color var(--d-fast);
+}
+.pane-empty-action:hover {
+    background: var(--bg-tint);
+    color: var(--text);
+    border-color: var(--accent);
+}
+
+/* ---------- Mobile drawer (≤900px) ---------- */
+@media (max-width: 900px) {
+  .editor-host {
+    --left-effective: 0px;
+    --right-effective: 0px;
+  }
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+  .left-pane,
+  .right-pane {
+    position: fixed;
+    top: var(--header-h);
+    bottom: 0;
+    width: min(85vw, 320px);
+    z-index: var(--z-overlay);
+    box-shadow: var(--shadow-paper-3);
+    transform: translateX(-100%);
+    transition: transform var(--d-mid) var(--ease-out);
+  }
+  .right-pane { right: 0; transform: translateX(100%); left: auto; }
+  .left-pane  { left: 0; }
+  .editor-host.pane-left-open  .left-pane  { transform: translateX(0); display: flex; }
+  .editor-host.pane-right-open .right-pane { transform: translateX(0); display: flex; }
+  .pane-handle { display: none !important; }
+}
+
+/* ---------- Sticky header / toolbar ---------- */
+.editor-toolbar,
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
 }
 
 /* ---------- Status bar ---------- */
 .statusbar {
   display: flex;
-  gap: 10px;
-  padding: 6px 16px;
-  border-top: 1px solid var(--border);
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
+  border-top: 1px solid var(--border-soft);
   background: var(--bg-elev);
   color: var(--text-subtle);
-  font-size: 12px;
+  font-size: var(--fs-xs);
+  font-family: var(--font-ui);
 }
 
-/* Word target progress */
-.word-target {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
+/* ---------- Word target progress ---------- */
+.word-target { display: inline-flex; align-items: center; gap: 6px; }
 .word-target-bar {
   display: inline-block;
   width: 80px;
-  height: 5px;
+  height: 4px;
   background: var(--border);
-  border-radius: 3px;
+  border-radius: var(--r-1);
   overflow: hidden;
 }
 .word-target-fill {
   display: block;
   height: 100%;
-  transition: width 0.25s ease;
+  transition: width var(--d-mid) var(--ease-out);
 }
-.word-target-text {
-  font-size: 11px;
-  color: var(--text-muted);
-}
+.word-target-text { font-size: 11px; color: var(--text-muted); }
 
-/* Connection pill */
-.conn-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 2px 10px;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: 11px;
-  cursor: default;
-}
-.conn-pill:not(:disabled) {
-  cursor: pointer;
-}
-.conn-pill:not(:disabled):hover {
-  border-color: var(--border-strong);
-  color: var(--text);
-}
-.conn-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--text-subtle);
-  display: inline-block;
-}
-.conn-online .conn-dot {
-  background: #16a34a;
-  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.15);
-}
-.conn-offline .conn-dot {
-  background: #dc2626;
-}
-.conn-connecting .conn-dot {
-  background: #eab308;
-  animation: conn-pulse 1.4s ease-in-out infinite;
-}
-@keyframes conn-pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
-}
-
-/* ---------- Sidebars ---------- */
-.sidebar {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px;
-}
-.sidebar-title {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-subtle);
-  margin-bottom: 8px;
-  padding: 0 4px;
-}
-.sidebar-title-resolved {
-  margin-top: 16px;
-}
-.sidebar-empty {
-  color: var(--text-subtle);
-  font-style: italic;
-  padding: 4px;
-  font-size: 13px;
-}
-
-/* Center pane needs relative positioning for find-bar absolute */
-.center-pane {
-  position: relative;
-}
-
-/* Collaboration cursor */
+/* ---------- Collaboration cursor (kept) ---------- */
 .collaboration-cursor__caret {
   position: relative;
   margin-left: -1px;
@@ -230,11 +291,12 @@
   top: -1.4em;
   left: -1px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: var(--fw-semi);
   line-height: normal;
   color: white;
   padding: 1px 4px;
   border-radius: 3px 3px 3px 0;
   user-select: none;
   white-space: nowrap;
+  font-family: var(--font-ui);
 }

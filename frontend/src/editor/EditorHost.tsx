@@ -1,24 +1,27 @@
-import './styles.css'
-import { useEffect, useMemo, useState } from 'react'
-import type { Editor } from '@tiptap/react'
+import './styles.css';
+import { useEffect, useMemo, useState } from 'react';
+import type { Editor } from '@tiptap/react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-import { EditorView } from './editor/EditorView'
-import { FindReplaceBar } from './editor/find/FindReplaceBar'
-import { ShortcutsModal } from './workflow/ShortcutsModal'
-import { useGlossary } from './glossary/GlossaryPanel'
-import { ToastProvider, useToast } from './shell/Toast'
-import { createCollab, type CollabBundle } from './collab/yDoc'
-import type { User, Role } from './identity/types'
+import { EditorView } from './editor/EditorView';
+import { FindReplaceBar } from './editor/find/FindReplaceBar';
+import { ShortcutsModal } from './workflow/ShortcutsModal';
+import { useGlossary } from './glossary/GlossaryPanel';
+import { ToastProvider, useToast } from './shell/Toast';
+import { createCollab, type CollabBundle } from './collab/yDoc';
+import type { User, Role } from './identity/types';
 
-import { TopBar } from './app/TopBar'
-import { StatusBar } from './app/StatusBar'
-import { LeftPane, type LeftTab } from './app/LeftPane'
-import { RightPane, type RightTab } from './app/RightPane'
-import { usePeers } from './app/usePeers'
-import { useConnectionStatus } from './app/useConnectionStatus'
-import { useTargetWords } from './app/useTargetWords'
-import { useReadingStats } from './app/useReadingStats'
-import { useGlobalShortcuts } from './app/useGlobalShortcuts'
+import { TopBar } from './app/TopBar';
+import { StatusBar } from './app/StatusBar';
+import { LeftPane, type LeftTab } from './app/LeftPane';
+import { RightPane, type RightTab } from './app/RightPane';
+import { usePeers } from './app/usePeers';
+import { useConnectionStatus } from './app/useConnectionStatus';
+import { useTargetWords } from './app/useTargetWords';
+import { useReadingStats } from './app/useReadingStats';
+import { useGlobalShortcuts } from './app/useGlobalShortcuts';
+import { useSuggestingMode } from './app/useSuggestingMode';
+import { usePaneState } from './app/usePaneState';
 
 interface EditorHostProps {
     bookId: string;
@@ -33,10 +36,14 @@ interface SessionProps {
     collab: CollabBundle;
 }
 
+function paneClass(side: 'left' | 'right', state: 'expanded' | 'rail' | 'hidden'): string {
+    if (state === 'expanded') return '';
+    return `pane-${side}-${state}`;
+}
+
 function EditorSession({ bookId, bookTitle, user, collab }: SessionProps) {
     const toast = useToast();
 
-    const [suggestingMode, setSuggestingMode] = useState(false);
     const [editor, setEditor] = useState<Editor | null>(null);
     const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
     const [pendingNew, setPendingNew] = useState<{ id: string; quote: string } | null>(null);
@@ -45,19 +52,16 @@ function EditorSession({ bookId, bookTitle, user, collab }: SessionProps) {
     const [findOpen, setFindOpen] = useState(false);
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
+    const suggesting = useSuggestingMode(collab.doc, user.role);
+    const leftPane = usePaneState('left', 'expanded');
+    const rightPane = usePaneState('right', 'expanded');
+
     const glossaryEntries = useGlossary(collab.doc);
     const peers = usePeers(collab.provider);
     const conn = useConnectionStatus(collab.provider);
     const targetWords = useTargetWords(collab.doc);
     const stats = useReadingStats(editor);
     useGlobalShortcuts({ findOpen, shortcutsOpen, setFindOpen, setShortcutsOpen });
-
-    const suggestingForced = user.role === 'proofreader' || user.role === 'author';
-    const effectiveSuggesting = suggestingMode || suggestingForced;
-
-    useEffect(() => {
-        if (suggestingForced && !suggestingMode) setSuggestingMode(true);
-    }, [suggestingForced, suggestingMode]);
 
     useEffect(() => {
         if (!editor) return;
@@ -67,47 +71,76 @@ function EditorSession({ bookId, bookTitle, user, collab }: SessionProps) {
     const charCount = editor?.storage.characterCount?.characters() ?? 0;
     const wordCount = editor?.storage.characterCount?.words() ?? 0;
 
+    const hostClassName = ['editor-host', paneClass('left', leftPane.state), paneClass('right', rightPane.state)]
+        .filter(Boolean)
+        .join(' ');
+
     return (
-        <div className="editor-host">
+        <div className={hostClassName}>
             <TopBar
                 doc={collab.doc}
                 room={bookId}
                 user={user}
                 bookTitle={bookTitle}
-                suggestingMode={effectiveSuggesting}
-                onSuggestingModeChange={setSuggestingMode}
-                suggestingForced={suggestingForced}
+                suggestingMode={suggesting.effective}
+                onSuggestingModeChange={suggesting.setMode}
+                suggestingForced={suggesting.forced}
                 connStatus={conn.status}
                 onReconnect={conn.reconnect}
                 peers={peers}
                 editor={editor}
-                onCommentBellClick={() => setRightTab('comments')}
+                onCommentBellClick={() => {
+                    setRightTab('comments');
+                    rightPane.expand();
+                }}
                 onShortcutsOpen={() => setShortcutsOpen(true)}
                 onToast={toast.show}
+                onToggleLeftPane={leftPane.cycle}
+                onToggleRightPane={rightPane.cycle}
             />
             <main className="main-grid">
                 <LeftPane
                     tab={leftTab}
                     onTabChange={setLeftTab}
+                    paneState={leftPane.state}
+                    onExpand={leftPane.expand}
+                    onRail={leftPane.rail}
+                    onHide={leftPane.hide}
                     doc={collab.doc}
                     user={user}
                     editor={editor}
                     onToast={toast.show}
                 />
+                {leftPane.isHidden && (
+                    <button
+                        type="button"
+                        className="pane-handle pane-handle-left"
+                        title="Show left panel"
+                        onClick={leftPane.expand}
+                    >
+                        <ChevronRight size={14} />
+                    </button>
+                )}
                 <section className="center-pane">
                     <EditorView
                         collab={collab}
                         user={user}
-                        suggestingMode={effectiveSuggesting}
+                        suggestingMode={suggesting.effective}
+                        suggestingForced={suggesting.forced}
+                        onSuggestingModeChange={suggesting.setMode}
                         activeCommentId={activeCommentId}
                         glossaryEntries={glossaryEntries}
                         onActiveCommentChange={(id) => {
                             setActiveCommentId(id);
-                            if (id) setRightTab('comments');
+                            if (id) {
+                                setRightTab('comments');
+                                rightPane.expand();
+                            }
                         }}
                         onCreateComment={(id, quote) => {
                             setPendingNew({ id, quote });
                             setRightTab('comments');
+                            rightPane.expand();
                         }}
                         onEditorReady={setEditor}
                         onToast={toast.show}
@@ -123,13 +156,17 @@ function EditorSession({ bookId, bookTitle, user, collab }: SessionProps) {
                         stats={stats}
                         targetWords={targetWords}
                         user={user}
-                        suggestingMode={effectiveSuggesting}
+                        suggestingMode={suggesting.effective}
                         peerCount={peers.length}
                     />
                 </section>
                 <RightPane
                     tab={rightTab}
                     onTabChange={setRightTab}
+                    paneState={rightPane.state}
+                    onExpand={rightPane.expand}
+                    onRail={rightPane.rail}
+                    onHide={rightPane.hide}
                     doc={collab.doc}
                     editor={editor}
                     user={user}
@@ -139,6 +176,16 @@ function EditorSession({ bookId, bookTitle, user, collab }: SessionProps) {
                     pendingNew={pendingNew}
                     onPendingHandled={() => setPendingNew(null)}
                 />
+                {rightPane.isHidden && (
+                    <button
+                        type="button"
+                        className="pane-handle pane-handle-right"
+                        title="Show right panel"
+                        onClick={rightPane.expand}
+                    >
+                        <ChevronLeft size={14} />
+                    </button>
+                )}
             </main>
             {shortcutsOpen && <ShortcutsModal onClose={() => setShortcutsOpen(false)} />}
         </div>

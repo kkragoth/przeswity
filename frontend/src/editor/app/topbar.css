@@ -1,0 +1,242 @@
+/* ==========================================================================
+   Editor TopBar — unified single-row header
+   ========================================================================== */
+
+.topbar {
+    display: flex;
+    align-items: center;
+    height: var(--header-h);
+    padding: 0 var(--sp-3);
+    background: var(--bg-elev);
+    border-bottom: 1px solid var(--border);
+    gap: var(--sp-2);
+    flex-shrink: 0;
+    font-family: var(--font-ui);
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+}
+
+/* ---------- Pane toggle buttons (far left / far right) ---------- */
+.topbar-pane-btn {
+    background: transparent;
+    border: none;
+    border-radius: var(--r-2);
+    padding: var(--sp-1) var(--sp-2);
+    color: var(--text-subtle);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background var(--d-fast) var(--ease-out), color var(--d-fast);
+}
+.topbar-pane-btn:hover {
+    background: var(--bg-tint);
+    color: var(--text);
+}
+
+/* ---------- Logo ---------- */
+.topbar-logo {
+    display: inline-flex;
+    align-items: center;
+    color: var(--accent);
+    flex-shrink: 0;
+    text-decoration: none;
+}
+.topbar-logo:hover {
+    color: var(--accent-hover);
+}
+
+/* ---------- Breadcrumb ---------- */
+.topbar-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-1);
+    min-width: 0;
+    flex-shrink: 1;
+    font-size: var(--fs-sm);
+}
+.topbar-breadcrumb-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color var(--d-fast);
+}
+.topbar-breadcrumb-link:hover {
+    color: var(--text);
+}
+.topbar-breadcrumb-sep {
+    color: var(--text-subtle);
+    flex-shrink: 0;
+    font-size: var(--fs-xs);
+}
+.topbar-book-title {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: var(--fw-medium);
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 360px;
+}
+
+/* ---------- Spacer ---------- */
+.topbar-spacer {
+    flex: 1 1 auto;
+}
+
+/* ---------- Sync status ---------- */
+.topbar-sync {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+    font-size: var(--fs-xs);
+    padding: var(--sp-1) var(--sp-2);
+    border-radius: var(--r-2);
+    border: none;
+    background: transparent;
+    cursor: default;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: var(--font-ui);
+}
+.topbar-sync--online {
+    color: var(--success);
+}
+.topbar-sync--connecting {
+    color: var(--warning);
+}
+.topbar-sync--offline {
+    color: var(--danger);
+    cursor: pointer;
+    background: var(--danger-soft);
+}
+.topbar-sync--offline:hover {
+    background: var(--danger-soft);
+    filter: brightness(0.95);
+}
+
+@keyframes topbar-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.45; }
+}
+.topbar-sync--connecting .topbar-sync-icon {
+    animation: topbar-pulse 1.2s ease-in-out infinite;
+}
+
+/* ---------- Right cluster ---------- */
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-1);
+    flex-shrink: 0;
+}
+
+/* ---------- Peers ---------- */
+.topbar-peers {
+    display: flex;
+    align-items: center;
+    gap: -4px; /* avatars overlap */
+}
+.topbar-peers .avatar {
+    margin-left: -4px;
+}
+.topbar-peers .avatar:first-child {
+    margin-left: 0;
+}
+
+/* ---------- Icon buttons (bell, shortcuts) ---------- */
+.topbar-icon-btn {
+    background: transparent;
+    border: none;
+    border-radius: var(--r-2);
+    padding: var(--sp-1) var(--sp-2);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--d-fast) var(--ease-out), color var(--d-fast);
+}
+.topbar-icon-btn:hover {
+    background: var(--bg-tint);
+    color: var(--text);
+}
+
+/* ---------- Avatar dropdown trigger ---------- */
+.topbar-avatar-trigger {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+    border-radius: var(--r-3);
+    transition: background var(--d-fast) var(--ease-out);
+}
+.topbar-avatar-trigger:hover {
+    background: var(--bg-tint);
+}
+
+/* ---------- Dropdown menu (editor token overrides) ---------- */
+.topbar-dropdown-content {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--r-3);
+    box-shadow: var(--shadow-paper-2);
+    font-family: var(--font-ui);
+    font-size: var(--fs-sm);
+    color: var(--text);
+    min-width: 200px;
+    padding: var(--sp-1);
+    z-index: var(--z-popover);
+}
+.topbar-dropdown-header {
+    padding: var(--sp-2) var(--sp-2) var(--sp-1);
+}
+.topbar-dropdown-name {
+    font-weight: var(--fw-semi);
+    font-size: var(--fs-base);
+    color: var(--text);
+}
+.topbar-dropdown-email {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    margin-top: 1px;
+}
+.topbar-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-2);
+    border-radius: var(--r-2);
+    cursor: pointer;
+    color: var(--text);
+    text-decoration: none;
+    transition: background var(--d-fast) var(--ease-out);
+    font-size: var(--fs-sm);
+    font-family: var(--font-ui);
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+}
+.topbar-dropdown-item:hover,
+.topbar-dropdown-item:focus {
+    background: var(--bg-tint);
+    outline: none;
+}
+.topbar-dropdown-item--danger {
+    color: var(--danger);
+}
+.topbar-dropdown-item--danger:hover {
+    background: var(--danger-soft);
+}
+.topbar-dropdown-sep {
+    height: 1px;
+    background: var(--border-soft);
+    margin: var(--sp-1) 0;
+}

@@ -1,18 +1,170 @@
+/* ==========================================================================
+   Editorial design tokens — Prześwity editor
+   Warm off-white surfaces, oxblood accent, paper shadows, literary type.
+   Dark theme prepared via [data-theme="dark"] override at the bottom.
+   ========================================================================== */
+
 :root {
-  --bg: #f6f7f9;
-  --bg-elev: #ffffff;
-  --border: #e2e5ea;
-  --border-strong: #cdd2d9;
-  --text: #1a1d22;
-  --text-muted: #5a6470;
-  --text-subtle: #8a93a0;
-  --accent: #2563eb;
-  --accent-soft: #dbeafe;
-  --warning: #c2410c;
-  --warning-soft: #ffedd5;
-  --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.06);
+  /* ---------- Surfaces (warm off-white, paper-feel) ---------- */
+  --bg:           #f5f3ee;   /* canvas — outside the page */
+  --bg-elev:      #fbfaf6;   /* panels, toolbar, header */
+  --bg-paper:     #fefdf9;   /* the page itself */
+  --bg-sunken:    #ece9e1;   /* rails, inset wells */
+  --bg-tint:      #f0ede4;   /* hover row, subtle highlight */
+
+  /* ---------- Borders ---------- */
+  --border:        #e3ddcf;
+  --border-strong: #cdc4af;
+  --border-soft:   #ece6d5;
+
+  /* ---------- Text ---------- */
+  --text:        #1f1c17;   /* near-black, warm */
+  --text-muted:  #6b6357;
+  --text-subtle: #8f867a;
+  --text-on-accent: #fbfaf6;
+
+  /* ---------- Accent — oxblood / library leather ---------- */
+  --accent:       #7a1f2b;
+  --accent-hover: #921f30;
+  --accent-soft:  #f3e2e3;
+  --accent-ring:  rgba(122, 31, 43, 0.32);
+
+  /* Secondary accent — ochre (use sparingly) */
+  --ochre:        #b07a18;
+  --ochre-soft:   #f6ebd2;
+
+  /* ---------- Semantic ---------- */
+  --success:       #2f6b3a;
+  --success-soft:  #dde9d8;
+  --warning:       #a85b15;
+  --warning-soft:  #f7e4cb;
+  --danger:        #8a1d1d;
+  --danger-soft:   #f1d6d6;
+
+  /* ---------- Role colors (per-user accent on avatars/comments) ---------- */
+  --role-editor:      #7a1f2b;   /* oxblood */
+  --role-proofreader: #2f6b3a;   /* leaf  */
+  --role-translator:  #b07a18;   /* ochre */
+  --role-author:      #2c4a7d;   /* indigo */
+  --role-typesetter:  #4a3f6b;   /* plum */
+  --role-coordinator: #5b6b2f;   /* moss */
+  --role-ai:          #6b6357;   /* graphite — bot */
+
+  /* ---------- Typography ---------- */
+  --font-display: 'Source Serif 4', 'Source Serif Pro', Georgia, 'Times New Roman', serif;
+  --font-body:    'Source Serif 4', 'Source Serif Pro', Georgia, 'Times New Roman', serif;
+  --font-ui:      'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:    'IBM Plex Mono', Menlo, Consolas, monospace;
+
+  /* Type scale (UI) */
+  --fs-xs:   12px;
+  --fs-sm:   13px;
+  --fs-base: 14px;
+  --fs-md:   15px;
+  --fs-lg:   16px;
+  --fs-xl:   18px;
+  --fs-2xl:  22px;
+  --fs-3xl:  28px;
+  --fs-display: 36px;
+
+  /* Editor content scale (serif) */
+  --content-fs:    18px;
+  --content-lh:    1.65;
+
+  /* Weights */
+  --fw-light:  300;
+  --fw-normal: 400;
+  --fw-medium: 500;
+  --fw-semi:   600;
+  --fw-bold:   700;
+
+  /* ---------- Spacing scale (4px base) ---------- */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --sp-20: 80px;
+  --sp-24: 96px;
+
+  /* ---------- Radii ---------- */
+  --r-1: 2px;
+  --r-2: 4px;
+  --r-3: 8px;
+  --r-4: 12px;
+
+  /* ---------- Paper shadows (layered, soft) ---------- */
+  --shadow-paper-1:
+    0 1px 1px rgba(60, 50, 30, 0.04),
+    0 2px 4px rgba(60, 50, 30, 0.04);
+  --shadow-paper-2:
+    0 1px 2px rgba(60, 50, 30, 0.05),
+    0 4px 12px rgba(60, 50, 30, 0.07),
+    0 12px 32px rgba(60, 50, 30, 0.05);
+  --shadow-paper-3:
+    0 2px 4px rgba(60, 50, 30, 0.06),
+    0 8px 24px rgba(60, 50, 30, 0.10),
+    0 24px 48px rgba(60, 50, 30, 0.08);
+
+  /* ---------- Z-index scale ---------- */
+  --z-base:    1;
+  --z-sticky:  10;
+  --z-overlay: 50;
+  --z-modal:   100;
+  --z-toast:   200;
+  --z-popover: 150;
+
+  /* ---------- Layout (overrideable per book/user) ---------- */
+  --editor-measure: 720px;       /* content width — books may override */
+  --page-margin-y:  80px;
+  --page-margin-x:  64px;
+  --left-pane-w:    260px;
+  --right-pane-w:   320px;
+  --rail-w:         44px;
+  --header-h:       52px;
+  --toolbar-h:      48px;
+
+  /* ---------- Motion ---------- */
+  --ease-out:  cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in:   cubic-bezier(0.55, 0.06, 0.68, 0.19);
+  --d-fast:    120ms;
+  --d-mid:     220ms;
+  --d-slow:    320ms;
 }
 
+/* ---------- Dark mode (prepared, not yet wired) ---------- */
+[data-theme='dark'] {
+  --bg:           #1a1815;
+  --bg-elev:      #221f1b;
+  --bg-paper:     #28241f;
+  --bg-sunken:    #14110e;
+  --bg-tint:      #2d2924;
+
+  --border:        #3a3530;
+  --border-strong: #524c44;
+  --border-soft:   #2e2924;
+
+  --text:        #ebe5d6;
+  --text-muted:  #a89e89;
+  --text-subtle: #7a7264;
+  --text-on-accent: #fbfaf6;
+
+  --accent:       #c54158;
+  --accent-hover: #d4576b;
+  --accent-soft:  #3a1d22;
+  --accent-ring:  rgba(197, 65, 88, 0.32);
+
+  --shadow-paper-1: 0 1px 1px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.3);
+  --shadow-paper-2: 0 1px 2px rgba(0,0,0,0.35), 0 4px 12px rgba(0,0,0,0.4), 0 12px 32px rgba(0,0,0,0.3);
+  --shadow-paper-3: 0 2px 4px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.5), 0 24px 48px rgba(0,0,0,0.4);
+}
+
+/* ---------- Base reset ---------- */
 * {
   box-sizing: border-box;
 }
@@ -22,11 +174,13 @@ body,
 #root {
   height: 100%;
   margin: 0;
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-family: var(--font-ui);
+  font-size: var(--fs-base);
   color: var(--text);
   background: var(--bg);
-  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'kern', 'liga', 'calt';
 }
 
 button {
@@ -34,6 +188,7 @@ button {
   color: inherit;
 }
 
+/* ---------- Editor host shell ---------- */
 .editor-host {
   display: flex;
   flex-direction: column;
@@ -41,8 +196,9 @@ button {
   min-height: 0;
   overflow: hidden;
   background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
 }
 .editor-host-loading {
   background: var(--bg);
 }
-

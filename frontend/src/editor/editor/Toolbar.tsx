@@ -1,189 +1,110 @@
-import type { Editor } from '@tiptap/react'
-import { SpecialCharsMenu } from './formatting/SpecialCharsMenu'
-import { HIGHLIGHT_PALETTE } from './formatting/Highlight'
+import type { Editor } from '@tiptap/react';
+import { useTranslation } from 'react-i18next';
+import * as TooltipPrimitive from '@radix-ui/react-tooltip';
+import {
+    Bold, Italic, Underline, Strikethrough, Code,
+    List, ListOrdered, ListChecks, Link2, Undo2, Redo2,
+} from 'lucide-react';
 
-interface ToolbarProps {
-  editor: Editor
-  suggestingMode: boolean
+import { SpecialCharsMenu } from './formatting/SpecialCharsMenu';
+import { StyleDropdown } from './StyleDropdown';
+import { FileMenu } from './FileMenu';
+import { TbBtn, ModeToggle, HighlightBtn } from './ToolbarPrimitives';
+import type { User } from '../identity/types';
+import { ROLE_PERMISSIONS } from '../identity/types';
+
+export interface ToolbarProps {
+    editor: Editor
+    user: User
+    suggestingMode: boolean
+    suggestingForced: boolean
+    onSuggestingModeChange: (mode: boolean) => void
+    onToast: (msg: string, kind?: 'info' | 'success' | 'error') => void
 }
 
-export function Toolbar({ editor, suggestingMode }: ToolbarProps) {
-  const btn = (active: boolean, onClick: () => void, label: string, title?: string) => (
-    <button
-      key={label}
-      type="button"
-      className={active ? 'tb-btn is-active' : 'tb-btn'}
-      onClick={onClick}
-      title={title ?? label}
-    >
-      {label}
-    </button>
-  )
+const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
+const M = isMac ? '⌘' : 'Ctrl';
 
-  return (
-    <div className={`toolbar${suggestingMode ? ' is-suggesting' : ''}`}>
-      <div className="tb-group">
-        <select
-          className="tb-select"
-          value={
-            editor.isActive('heading', { level: 1 })
-              ? 'h1'
-              : editor.isActive('heading', { level: 2 })
-                ? 'h2'
-                : editor.isActive('heading', { level: 3 })
-                  ? 'h3'
-                  : editor.isActive('blockquote')
-                    ? 'quote'
-                    : 'p'
-          }
-          onChange={(e) => {
-            const v = e.target.value
-            const chain = editor.chain().focus()
-            if (v === 'p') chain.setParagraph().run()
-            else if (v === 'h1') chain.setHeading({ level: 1 }).run()
-            else if (v === 'h2') chain.setHeading({ level: 2 }).run()
-            else if (v === 'h3') chain.setHeading({ level: 3 }).run()
-            else if (v === 'quote') chain.setBlockquote().run()
-          }}
-        >
-          <option value="p">Body</option>
-          <option value="h1">Heading 1</option>
-          <option value="h2">Heading 2</option>
-          <option value="h3">Heading 3</option>
-          <option value="quote">Quote</option>
-        </select>
-      </div>
-      <div className="tb-divider" />
-      <div className="tb-group">
-        {btn(
-          editor.isActive('bold'),
-          () => editor.chain().focus().toggleBold().run(),
-          'B',
-          'Bold',
-        )}
-        {btn(
-          editor.isActive('italic'),
-          () => editor.chain().focus().toggleItalic().run(),
-          'I',
-          'Italic',
-        )}
-        {btn(
-          editor.isActive('underline'),
-          () => editor.chain().focus().toggleUnderline().run(),
-          'U',
-          'Underline',
-        )}
-        {btn(
-          editor.isActive('strike'),
-          () => editor.chain().focus().toggleStrike().run(),
-          'S',
-          'Strikethrough',
-        )}
-        <div className="tb-highlight-wrap">
-          <button
-            type="button"
-            className={editor.isActive('highlight') ? 'tb-btn is-active' : 'tb-btn'}
-            onClick={() => editor.chain().focus().toggleHighlight().run()}
-            title="Highlight"
-          >
-            ▤
-          </button>
-          <div className="tb-highlight-pop">
-            {HIGHLIGHT_PALETTE.map((c) => (
-              <button
-                key={c}
-                type="button"
-                className="tb-color-swatch"
-                style={{ background: c }}
-                title={c}
-                onClick={() => editor.chain().focus().setHighlight({ color: c }).run()}
-              />
-            ))}
-            <button
-              type="button"
-              className="tb-color-clear"
-              title="Remove highlight"
-              onClick={() => editor.chain().focus().unsetHighlight().run()}
-            >
-              ⊘
-            </button>
-          </div>
-        </div>
-      </div>
-      <div className="tb-divider" />
-      <div className="tb-group">
-        {btn(
-          editor.isActive('bulletList'),
-          () => editor.chain().focus().toggleBulletList().run(),
-          '• List',
-        )}
-        {btn(
-          editor.isActive('orderedList'),
-          () => editor.chain().focus().toggleOrderedList().run(),
-          '1. List',
-        )}
-        {btn(
-          editor.isActive('taskList'),
-          () => editor.chain().focus().toggleTaskList().run(),
-          '☑',
-          'Task list',
-        )}
-      </div>
-      <div className="tb-divider" />
-      <div className="tb-group">
-        {btn(
-          editor.isActive({ textAlign: 'left' }),
-          () => editor.chain().focus().setTextAlign('left').run(),
-          '⇤',
-          'Align left',
-        )}
-        {btn(
-          editor.isActive({ textAlign: 'center' }),
-          () => editor.chain().focus().setTextAlign('center').run(),
-          '⇔',
-          'Align center',
-        )}
-        {btn(
-          editor.isActive({ textAlign: 'right' }),
-          () => editor.chain().focus().setTextAlign('right').run(),
-          '⇥',
-          'Align right',
-        )}
-      </div>
-      <div className="tb-divider" />
-      <div className="tb-group">
-        {btn(
-          editor.isActive('link'),
-          () => {
-            const prev = editor.getAttributes('link').href as string | undefined
-            const url = window.prompt('Link URL', prev ?? 'https://')
-            if (url === null) return
-            if (url === '') {
-              editor.chain().focus().unsetLink().run()
-              return
-            }
-            editor.chain().focus().setLink({ href: url }).run()
-          },
-          '🔗',
-          'Link',
-        )}
-        {btn(
-          false,
-          () => editor.chain().focus().undo().run(),
-          '↶',
-          'Undo',
-        )}
-        {btn(
-          false,
-          () => editor.chain().focus().redo().run(),
-          '↷',
-          'Redo',
-        )}
-      </div>
-      <div className="tb-divider" />
-      <div className="tb-group">
-        <SpecialCharsMenu editor={editor} />
-      </div>
-    </div>
-  )
+function hasNoAccess(user: User): boolean {
+    const p = ROLE_PERMISSIONS[user.role];
+    return !p.canEdit && !p.canSuggest;
+}
+
+function Divider() {
+    return <div className="tb-divider" aria-hidden />;
+}
+
+export function Toolbar({
+    editor,
+    user,
+    suggestingMode,
+    suggestingForced,
+    onSuggestingModeChange,
+    onToast,
+}: ToolbarProps) {
+    const { t } = useTranslation('editor');
+    const perms = ROLE_PERMISSIONS[user.role];
+
+    const setLink = () => {
+        const prev = editor.getAttributes('link').href as string | undefined;
+        const url = window.prompt('Link URL', prev ?? 'https://');
+        if (url === null) return;
+        if (url === '') { editor.chain().focus().unsetLink().run(); return; }
+        editor.chain().focus().setLink({ href: url }).run();
+    };
+
+    return (
+        <TooltipPrimitive.Provider delayDuration={400}>
+            <div className={`toolbar${suggestingMode ? ' is-suggesting' : ''}`} role="toolbar" aria-label="Editor toolbar">
+                {/* Zone 1 — Mode toggle (hidden for roles with no access) */}
+                {!hasNoAccess(user) && (
+                    <>
+                        <ModeToggle
+                            suggestingMode={suggestingMode}
+                            suggestingForced={suggestingForced}
+                            onSuggestingModeChange={onSuggestingModeChange}
+                        />
+                        <Divider />
+                    </>
+                )}
+
+                {/* Zone 2 — Block style */}
+                <StyleDropdown editor={editor} />
+                <Divider />
+
+                {/* Zone 3 — Inline formatting */}
+                <div className="tb-group">
+                    <TbBtn active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()} label={t('toolbar.bold')} shortcut={`${M}B`}><Bold size={14} /></TbBtn>
+                    <TbBtn active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()} label={t('toolbar.italic')} shortcut={`${M}I`}><Italic size={14} /></TbBtn>
+                    <TbBtn active={editor.isActive('underline')} onClick={() => editor.chain().focus().toggleUnderline().run()} label={t('toolbar.underline')} shortcut={`${M}U`}><Underline size={14} /></TbBtn>
+                    <TbBtn active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()} label={t('toolbar.strike')}><Strikethrough size={14} /></TbBtn>
+                    <TbBtn active={editor.isActive('code')} onClick={() => editor.chain().focus().toggleCode().run()} label={t('toolbar.code')}><Code size={14} /></TbBtn>
+                    <HighlightBtn editor={editor} label={t('toolbar.highlight')} />
+                </div>
+                <Divider />
+
+                <div className="tb-group">
+                    <TbBtn active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()} label={t('toolbar.bulletList')}><List size={14} /></TbBtn>
+                    <TbBtn active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()} label={t('toolbar.orderedList')}><ListOrdered size={14} /></TbBtn>
+                    <TbBtn active={editor.isActive('taskList')} onClick={() => editor.chain().focus().toggleTaskList().run()} label={t('toolbar.taskList')}><ListChecks size={14} /></TbBtn>
+                </div>
+                <Divider />
+
+                <div className="tb-group">
+                    <TbBtn active={editor.isActive('link')} onClick={setLink} label={t('toolbar.link')} shortcut={`${M}K`}><Link2 size={14} /></TbBtn>
+                    <SpecialCharsMenu editor={editor} />
+                </div>
+                <Divider />
+
+                <div className="tb-group">
+                    <TbBtn active={false} onClick={() => editor.chain().focus().undo().run()} label={t('toolbar.undo')} shortcut={`${M}Z`}><Undo2 size={14} /></TbBtn>
+                    <TbBtn active={false} onClick={() => editor.chain().focus().redo().run()} label={t('toolbar.redo')} shortcut={`${M}⇧Z`}><Redo2 size={14} /></TbBtn>
+                </div>
+
+                {/* Far right — File menu */}
+                <div className="tb-spacer" />
+                <FileMenu editor={editor} perms={perms} onToast={onToast} />
+            </div>
+        </TooltipPrimitive.Provider>
+    );
 }
