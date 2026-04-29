@@ -5,19 +5,21 @@ import {
     Packer,
     Paragraph,
     TextRun,
-    HeadingLevel,
     AlignmentType,
     ExternalHyperlink,
     PageNumber,
     TabStopType,
 } from 'docx';
 import type { Editor } from '@tiptap/react';
-
-// A4 dimensions in twips (1 inch = 1440 twips)
-const A4_WIDTH_TWIPS = 11906;
-const A4_HEIGHT_TWIPS = 16838;
-const MARGIN_TWIPS = 1440;
-const CONTENT_WIDTH_TWIPS = A4_WIDTH_TWIPS - MARGIN_TWIPS * 2;
+import {
+    FONT_FAMILIES,
+    FONT_VARIANTS,
+    TYPOGRAPHY,
+    buildDocxStyles,
+    buildDocxPageProperties,
+    ptToHalfPoints,
+    type BlockKind,
+} from '@/editor/io/typography';
 
 interface JSONNode {
     type: string;
@@ -35,6 +37,35 @@ export interface ExportOptions {
     footerRight?: string;
 }
 
+interface DocxFont {
+    name: string;
+    data: Buffer;
+}
+
+let fontBytesCache: Promise<DocxFont[]> | null = null;
+
+async function loadFontBytes(): Promise<DocxFont[]> {
+    if (!fontBytesCache) {
+        fontBytesCache = Promise.all(
+            FONT_VARIANTS.map(async (v) => {
+                const resp = await fetch(v.file);
+                if (!resp.ok) throw new Error(`Failed to load font ${v.file}: ${resp.status}`);
+                const bytes = new Uint8Array(await resp.arrayBuffer());
+                return { name: v.family, data: bytes as unknown as Buffer };
+            }),
+        );
+    }
+    return fontBytesCache;
+}
+
+const HEADING_STYLE: Record<number, string> = {
+    1: 'Heading1', 2: 'Heading2', 3: 'Heading3',
+    4: 'Heading4', 5: 'Heading5', 6: 'Heading6',
+};
+
+const pageProperties = buildDocxPageProperties();
+const CONTENT_WIDTH_TWIPS = pageProperties.size.width - pageProperties.margin.left - pageProperties.margin.right;
+
 function alignment(attrs: JSONNode['attrs']): (typeof AlignmentType)[keyof typeof AlignmentType] | undefined {
     const a = attrs?.textAlign as string | undefined;
     if (a === 'center') return AlignmentType.CENTER;
@@ -43,8 +74,13 @@ function alignment(attrs: JSONNode['attrs']): (typeof AlignmentType)[keyof typeo
     return undefined;
 }
 
-function inlinesToRuns(nodes: JSONNode[] | undefined, opts: ExportOptions): (TextRun | ExternalHyperlink)[] {
+function inlinesToRuns(
+    nodes: JSONNode[] | undefined,
+    opts: ExportOptions,
+    blockKind: BlockKind = 'body',
+): (TextRun | ExternalHyperlink)[] {
     if (!nodes) return [];
+    const t = TYPOGRAPHY[blockKind];
     const runs: (TextRun | ExternalHyperlink)[] = [];
     for (const n of nodes) {
         if (n.type !== 'text') continue;
@@ -52,10 +88,13 @@ function inlinesToRuns(nodes: JSONNode[] | undefined, opts: ExportOptions): (Tex
         const isDeletion = marks.some((m) => m.type === 'deletion');
         const isInsertion = marks.some((m) => m.type === 'insertion');
         if (opts.acceptSuggestions && isDeletion) continue;
+
         const run = new TextRun({
             text: n.text ?? '',
-            bold: marks.some((m) => m.type === 'bold'),
-            italics: marks.some((m) => m.type === 'italic'),
+            font: FONT_FAMILIES[t.family],
+            size: ptToHalfPoints(t.sizePt),
+            bold: t.bold || marks.some((m) => m.type === 'bold'),
+            italics: t.italic || marks.some((m) => m.type === 'italic'),
             underline: marks.some((m) => m.type === 'underline') ? {} : undefined,
             strike: marks.some((m) => m.type === 'strike') && !opts.acceptSuggestions ? true : undefined,
             color: !opts.acceptSuggestions
@@ -72,52 +111,87 @@ function inlinesToRuns(nodes: JSONNode[] | undefined, opts: ExportOptions): (Tex
     return runs;
 }
 
+function listMarkerRun(text: string): TextRun {
+    return new TextRun({
+        text,
+        font: FONT_FAMILIES[TYPOGRAPHY.listItem.family],
+        size: ptToHalfPoints(TYPOGRAPHY.listItem.sizePt),
+    });
+}
+
 function blockToParagraphs(node: JSONNode, opts: ExportOptions): Paragraph[] {
     switch (node.type) {
         case 'paragraph':
-            return [new Paragraph({ alignment: alignment(node.attrs), children: inlinesToRuns(node.content, opts) })];
+            return [new Paragraph({
+                alignment: alignment(node.attrs),
+                children: inlinesToRuns(node.content, opts, 'body'),
+            })];
         case 'heading': {
             const level = (node.attrs?.level as number) ?? 1;
-            const headingMap: Record<number, (typeof HeadingLevel)[keyof typeof HeadingLevel]> = {
-                1: HeadingLevel.HEADING_1, 2: HeadingLevel.HEADING_2, 3: HeadingLevel.HEADING_3,
-                4: HeadingLevel.HEADING_4, 5: HeadingLevel.HEADING_5, 6: HeadingLevel.HEADING_6,
-            };
-            return [new Paragraph({ heading: headingMap[level] ?? HeadingLevel.HEADING_1, alignment: alignment(node.attrs), children: inlinesToRuns(node.content, opts) })];
+            const styleId = HEADING_STYLE[level] ?? 'Heading1';
+            const kind = `h${level}` as BlockKind;
+            return [new Paragraph({
+                style: styleId,
+                alignment: alignment(node.attrs),
+                children: inlinesToRuns(node.content, opts, kind),
+            })];
         }
         case 'blockquote':
-            return (node.content ?? []).map((c) => new Paragraph({ style: 'IntenseQuote', children: inlinesToRuns(c.content, opts) }));
+            return (node.content ?? []).map((c) => new Paragraph({
+                style: 'IntenseQuote',
+                children: inlinesToRuns(c.content, opts, 'blockquote'),
+            }));
         case 'bulletList':
             return (node.content ?? []).flatMap((li) =>
-                (li.content ?? []).map((c) => new Paragraph({ bullet: { level: 0 }, children: inlinesToRuns(c.content, opts) })),
+                (li.content ?? []).map((c) => new Paragraph({
+                    bullet: { level: 0 },
+                    children: inlinesToRuns(c.content, opts, 'listItem'),
+                })),
             );
         case 'orderedList':
             return (node.content ?? []).flatMap((li, i) =>
-                (li.content ?? []).map((c) => new Paragraph({ children: [new TextRun({ text: `${i + 1}. ` }), ...inlinesToRuns(c.content, opts)] })),
+                (li.content ?? []).map((c) => new Paragraph({
+                    children: [listMarkerRun(`${i + 1}. `), ...inlinesToRuns(c.content, opts, 'listItem')],
+                })),
             );
         case 'taskList':
             return (node.content ?? []).flatMap((li) => {
                 const checked = li.attrs?.checked ? '☑' : '☐';
-                return (li.content ?? []).map((c) => new Paragraph({ children: [new TextRun({ text: `${checked} ` }), ...inlinesToRuns(c.content, opts)] }));
+                return (li.content ?? []).map((c) => new Paragraph({
+                    children: [listMarkerRun(`${checked} `), ...inlinesToRuns(c.content, opts, 'listItem')],
+                }));
             });
         case 'codeBlock':
-            return [new Paragraph({ style: 'Code', children: [new TextRun({ text: node.content?.[0]?.text ?? '', font: 'Courier New' })] })];
+            return [new Paragraph({
+                style: 'Code',
+                children: [new TextRun({
+                    text: node.content?.[0]?.text ?? '',
+                    font: FONT_FAMILIES[TYPOGRAPHY.code.family],
+                    size: ptToHalfPoints(TYPOGRAPHY.code.sizePt),
+                })],
+            })];
         case 'horizontalRule':
-            return [new Paragraph({ border: { bottom: { color: '999999', style: 'single', size: 6, space: 1 } }, children: [] })];
+            return [new Paragraph({
+                border: { bottom: { color: '999999', style: 'single', size: 6, space: 1 } },
+                children: [],
+            })];
         default:
-            return [new Paragraph({ children: inlinesToRuns(node.content, opts) })];
+            return [new Paragraph({ children: inlinesToRuns(node.content, opts, 'body') })];
     }
 }
 
-// Converts a header/footer string with {page}/{total} tokens into TextRun children.
-// {page} → Word PAGE field, {total} → Word NUMPAGES field.
 function parseHfTokens(text: string): TextRun[] {
     const plain = text.replace(/<[^>]+>/g, '').trim();
     if (!plain) return [];
     const parts = plain.split(/(\{page\}|\{total\})/);
+    const baseProps = {
+        font: FONT_FAMILIES.serif,
+        size: ptToHalfPoints(TYPOGRAPHY.body.sizePt),
+    };
     return parts.flatMap((part): TextRun[] => {
-        if (part === '{page}') return [new TextRun({ children: [PageNumber.CURRENT] })];
-        if (part === '{total}') return [new TextRun({ children: [PageNumber.TOTAL_PAGES] })];
-        return part ? [new TextRun({ text: part })] : [];
+        if (part === '{page}') return [new TextRun({ ...baseProps, children: [PageNumber.CURRENT] })];
+        if (part === '{total}') return [new TextRun({ ...baseProps, children: [PageNumber.TOTAL_PAGES] })];
+        return part ? [new TextRun({ ...baseProps, text: part })] : [];
     });
 }
 
@@ -139,14 +213,13 @@ export async function editorToDocxBlob(editor: Editor, opts: ExportOptions = { a
     const footerLeft = opts.footerLeft ?? '';
     const footerRight = opts.footerRight ?? '';
 
+    const fonts = await loadFontBytes();
+
     const doc = new Document({
+        fonts,
+        styles: buildDocxStyles(),
         sections: [{
-            properties: {
-                page: {
-                    size: { width: A4_WIDTH_TWIPS, height: A4_HEIGHT_TWIPS },
-                    margin: { top: MARGIN_TWIPS, bottom: MARGIN_TWIPS, left: MARGIN_TWIPS, right: MARGIN_TWIPS },
-                },
-            },
+            properties: { page: { size: pageProperties.size, margin: pageProperties.margin } },
             headers: headerLeft || headerRight
                 ? { default: new Header({ children: [buildHfParagraph(headerLeft, headerRight)] }) }
                 : undefined,
