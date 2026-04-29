@@ -140,6 +140,19 @@
         "chars": "{{count}} znaków",
         "selection": "{{count}} wyrazów zaznaczone"
     },
+    "statusbar": {
+        "words": "wyrazów",
+        "chars": "zn.",
+        "sent": "zd.",
+        "targetTooltip": "Cel: {{target}} wyrazów",
+        "targetProgress": "{{percent}}% z {{target}}",
+        "role": "rola: {{role}}",
+        "mode": "tryb: {{mode}}",
+        "usersOnline_one": "{{count}} użytkownik online",
+        "usersOnline_few": "{{count}} użytkownicy online",
+        "usersOnline_many": "{{count}} użytkowników online",
+        "usersOnline_other": "{{count}} użytkowników online"
+    },
     "modes": {
         "zen": "Tryb skupienia",
         "preview": "Tryb podglądu",

@@ -140,6 +140,19 @@
         "chars": "{{count}} символів",
         "selection": "{{count}} слів виділено"
     },
+    "statusbar": {
+        "words": "слів",
+        "chars": "симв.",
+        "sent": "реч.",
+        "targetTooltip": "Ціль: {{target}} слів",
+        "targetProgress": "{{percent}}% з {{target}}",
+        "role": "роль: {{role}}",
+        "mode": "режим: {{mode}}",
+        "usersOnline_one": "{{count}} користувач онлайн",
+        "usersOnline_few": "{{count}} користувачі онлайн",
+        "usersOnline_many": "{{count}} користувачів онлайн",
+        "usersOnline_other": "{{count}} користувачів онлайн"
+    },
     "modes": {
         "zen": "Режим зосередження",
         "preview": "Режим перегляду",

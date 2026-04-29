@@ -140,6 +140,17 @@
         "chars": "{{count}} characters",
         "selection": "{{count}} words selected"
     },
+    "statusbar": {
+        "words": "words",
+        "chars": "chars",
+        "sent": "sent",
+        "targetTooltip": "Target: {{target}} words",
+        "targetProgress": "{{percent}}% of {{target}}",
+        "role": "role: {{role}}",
+        "mode": "mode: {{mode}}",
+        "usersOnline_one": "{{count}} user online",
+        "usersOnline_other": "{{count}} users online"
+    },
     "modes": {
         "zen": "Focus mode",
         "preview": "Preview mode",

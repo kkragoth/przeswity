@@ -63,13 +63,14 @@ export function StatusBar({
     connStatus,
     onReconnect,
 }: StatusBarProps) {
+    const { t } = useTranslation('editor');
     const perms = ROLE_PERMISSIONS[user.role];
     const mode = suggestingMode ? 'suggesting' : perms.canEdit ? 'editing' : 'viewing';
     return (
         <footer className="statusbar">
-            <span>{wordCount.toLocaleString()} words</span>
+            <span>{wordCount.toLocaleString()} {t('statusbar.words')}</span>
             {targetWords && targetWords > 0 && (
-                <span className="word-target" title={`Target: ${targetWords.toLocaleString()} words`}>
+                <span className="word-target" title={t('statusbar.targetTooltip', { target: targetWords.toLocaleString() })}>
                     <span className="word-target-bar">
                         <span
                             className="word-target-fill"
@@ -80,25 +81,24 @@ export function StatusBar({
                         />
                     </span>
                     <span className="word-target-text">
-                        {Math.round((wordCount / targetWords) * 100)}% of{' '}
-                        {targetWords.toLocaleString()}
+                        {t('statusbar.targetProgress', { percent: Math.round((wordCount / targetWords) * 100), target: targetWords.toLocaleString() })}
                     </span>
                 </span>
             )}
             <span>·</span>
-            <span>{charCount.toLocaleString()} chars</span>
+            <span>{charCount.toLocaleString()} {t('statusbar.chars')}</span>
             <span>·</span>
             <span>{stats.paragraphs} ¶</span>
             <span>·</span>
-            <span>{stats.sentences} sent</span>
+            <span>{stats.sentences} {t('statusbar.sent')}</span>
             <span>·</span>
             <span>{formatReadingMinutes(stats.readingMinutes)}</span>
             <span>·</span>
-            <span>role: {user.role}</span>
+            <span>{t('statusbar.role', { role: user.role })}</span>
             <span>·</span>
-            <span>mode: {mode}</span>
+            <span>{t('statusbar.mode', { mode })}</span>
             <span>·</span>
-            <span>{peerCount} {peerCount === 1 ? 'user' : 'users'} online</span>
+            <span>{t('statusbar.usersOnline', { count: peerCount })}</span>
             <span className="statusbar-spacer" />
             <SyncMini status={connStatus} onReconnect={onReconnect} />
         </footer>
