@@ -1,8 +1,7 @@
-import type { Editor } from '@tiptap/react';
 import * as Y from 'yjs';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { Cloud, CloudOff, RefreshCw, Keyboard, PanelLeft, PanelRight, ChevronRight, BookOpen, Settings, LogOut } from 'lucide-react';
+import { Cloud, CloudOff, RefreshCw, Keyboard, ChevronRight, BookOpen, Settings, LogOut } from 'lucide-react';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import { Avatar } from '../shell/Avatar';
 import { CommentBell } from '../comments/CommentBell';
@@ -17,18 +16,11 @@ interface TopBarProps {
     room: string;
     user: User;
     bookTitle: string;
-    suggestingMode: boolean;
-    onSuggestingModeChange: (mode: boolean) => void;
-    suggestingForced: boolean;
     connStatus: ConnectionStatus;
     onReconnect: () => void;
     peers: Peer[];
-    editor: Editor | null;
     onCommentBellClick: () => void;
     onShortcutsOpen: () => void;
-    onToast: (msg: string, kind?: 'info' | 'success' | 'error') => void;
-    onToggleLeftPane: () => void;
-    onToggleRightPane: () => void;
 }
 
 function syncModifier(status: ConnectionStatus): string {
@@ -114,14 +106,10 @@ export function TopBar({
     doc, room, user, bookTitle,
     connStatus, onReconnect, peers,
     onCommentBellClick, onShortcutsOpen,
-    onToggleLeftPane, onToggleRightPane,
 }: TopBarProps) {
     const { t } = useTranslation('editor');
     return (
         <header className="topbar">
-            <button type="button" className="topbar-pane-btn" title={t('topbar.toggleLeftPane')} onClick={onToggleLeftPane} aria-label={t('topbar.toggleLeftPane')}>
-                <PanelLeft size={16} />
-            </button>
             <Link to="/books" className="topbar-logo" aria-label="Prześwity">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                     <rect x="3" y="4" width="3" height="12" rx="1" fill="currentColor" />
@@ -149,9 +137,6 @@ export function TopBar({
                     <Keyboard size={16} />
                 </button>
             </div>
-            <button type="button" className="topbar-pane-btn" title={t('topbar.toggleRightPane')} onClick={onToggleRightPane} aria-label={t('topbar.toggleRightPane')}>
-                <PanelRight size={16} />
-            </button>
         </header>
     );
 }

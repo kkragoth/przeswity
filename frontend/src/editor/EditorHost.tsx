@@ -82,21 +82,14 @@ function EditorSession({ bookId, bookTitle, user, collab }: SessionProps) {
                 room={bookId}
                 user={user}
                 bookTitle={bookTitle}
-                suggestingMode={suggesting.effective}
-                onSuggestingModeChange={suggesting.setMode}
-                suggestingForced={suggesting.forced}
                 connStatus={conn.status}
                 onReconnect={conn.reconnect}
                 peers={peers}
-                editor={editor}
                 onCommentBellClick={() => {
                     setRightTab('comments');
                     rightPane.expand();
                 }}
                 onShortcutsOpen={() => setShortcutsOpen(true)}
-                onToast={toast.show}
-                onToggleLeftPane={leftPane.cycle}
-                onToggleRightPane={rightPane.cycle}
             />
             <main className="main-grid">
                 <LeftPane
