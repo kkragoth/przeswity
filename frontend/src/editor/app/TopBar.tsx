@@ -1,54 +1,156 @@
-import * as Y from 'yjs';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { Cloud, CloudOff, RefreshCw, Keyboard, ChevronRight, BookOpen, Settings, LogOut } from 'lucide-react';
+import { ChevronDown, ChevronRight, BookOpen, Settings, LogOut } from 'lucide-react';
+import mammoth from 'mammoth';
+import { marked } from 'marked';
+import { saveAs } from 'file-saver';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import { Avatar } from '../shell/Avatar';
-import { CommentBell } from '../comments/CommentBell';
 import { RoleBadge } from '@/components/RoleBadge';
 import { authClient } from '@/auth/client';
+import type { Editor } from '@tiptap/react';
 import type { User } from '../identity/types';
-import type { ConnectionStatus } from './useConnectionStatus';
-import type { Peer } from './usePeers';
+import type { RolePermissions } from '@/editor/identity/types';
+import { editorToMarkdown } from '@/editor/io/markdown';
+import { editorToDocxBlob } from '@/editor/io/docx';
+import { TEMPLATES } from '@/editor/workflow/templates';
 
-interface TopBarProps {
-    doc: Y.Doc;
-    room: string;
+const MAMMOTH_STYLE_MAP = [
+    "p[style-name='Heading 1'] => h1:fresh",
+    "p[style-name='Heading 2'] => h2:fresh",
+    "p[style-name='Heading 3'] => h3:fresh",
+    "p[style-name='Quote'] => blockquote > p:fresh",
+    "p[style-name='List Bullet'] => ul > li:fresh",
+    "p[style-name='List Number'] => ol > li:fresh",
+    "b => strong",
+    "i => em",
+    "u => u",
+];
+
+export interface TopBarProps {
     user: User;
     bookTitle: string;
-    connStatus: ConnectionStatus;
-    onReconnect: () => void;
-    peers: Peer[];
-    onCommentBellClick: () => void;
-    onShortcutsOpen: () => void;
+    editor: Editor | null;
+    perms: RolePermissions;
+    onToast: (msg: string, kind?: 'info' | 'success' | 'error') => void;
 }
 
-function syncModifier(status: ConnectionStatus): string {
-    if (status === 'online') return 'online';
-    if (status === 'connecting') return 'connecting';
-    return 'offline';
+interface BookTitleMenuProps {
+    bookTitle: string;
+    editor: Editor | null;
+    perms: RolePermissions;
+    onToast: (msg: string, kind?: 'info' | 'success' | 'error') => void;
 }
 
-function SyncIcon({ status }: { status: ConnectionStatus }) {
-    if (status === 'online') return <Cloud size={14} className="topbar-sync-icon" />;
-    if (status === 'connecting') return <RefreshCw size={14} className="topbar-sync-icon" />;
-    return <CloudOff size={14} className="topbar-sync-icon" />;
-}
-
-function SyncStatus({ status, room, onReconnect }: { status: ConnectionStatus; room: string; onReconnect: () => void }) {
+function BookTitleMenu({ bookTitle, editor, perms, onToast }: BookTitleMenuProps) {
     const { t } = useTranslation('editor');
-    const label = status === 'online' ? t('topbar.synced') : status === 'connecting' ? t('topbar.syncing') : t('topbar.offlineLocal');
+    const fileRef = useRef<HTMLInputElement>(null);
+    const [importKind, setImportKind] = useState<'docx' | 'md'>('docx');
+
+    const startImport = (kind: 'docx' | 'md') => {
+        if (!fileRef.current) return;
+        setImportKind(kind);
+        fileRef.current.accept = kind === 'docx' ? '.docx' : '.md,.markdown,.txt';
+        setTimeout(() => fileRef.current?.click(), 0);
+    };
+
+    const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file) return;
+        if (!window.confirm(`Importing "${file.name}" will replace the current document.\n\nProceed?`)) return;
+        try {
+            onToast('Importing…', 'info');
+            let html: string;
+            if (/\.docx$/i.test(file.name)) {
+                const buf = await file.arrayBuffer();
+                const result = await mammoth.convertToHtml({ arrayBuffer: buf }, { styleMap: MAMMOTH_STYLE_MAP });
+                html = result.value;
+            } else {
+                html = await marked.parse(await file.text());
+            }
+            editor!.commands.setContent(html, { emitUpdate: true });
+            onToast(`Imported ${file.name}`, 'success');
+        } catch (err) {
+            onToast(`Import failed: ${(err as Error).message}`, 'error');
+        }
+    };
+
+    const applyTemplate = (id: string) => {
+        const tmpl = TEMPLATES.find((x) => x.id === id);
+        if (!tmpl) return;
+        if (!window.confirm(`Apply template "${tmpl.name}"?\n\nThis replaces the current document.`)) return;
+        editor!.commands.setContent(tmpl.content as never, { emitUpdate: true });
+        onToast(`Loaded template: ${tmpl.name}`, 'success');
+    };
+
+    if (!editor || (!perms.canEdit && !perms.canExport)) {
+        return <span className="topbar-book-title" title={bookTitle}>{bookTitle}</span>;
+    }
+
     return (
-        <button
-            type="button"
-            className={`topbar-sync topbar-sync--${syncModifier(status)}`}
-            title={`${room} — ${label}`}
-            onClick={status === 'offline' ? onReconnect : undefined}
-            disabled={status !== 'offline'}
-        >
-            <SyncIcon status={status} />
-            <span>{label}</span>
-        </button>
+        <>
+            <DropdownMenuPrimitive.Root>
+                <DropdownMenuPrimitive.Trigger asChild>
+                    <button type="button" className="topbar-book-title" title={bookTitle}>
+                        {bookTitle}
+                        <ChevronDown size={11} aria-hidden="true" style={{ flexShrink: 0 }} />
+                    </button>
+                </DropdownMenuPrimitive.Trigger>
+                <DropdownMenuPrimitive.Portal>
+                    <DropdownMenuPrimitive.Content align="start" sideOffset={6} className="topbar-dropdown-content">
+                        {perms.canEdit && (
+                            <>
+                                <div className="topbar-dropdown-label">{t('toolbar.import')}</div>
+                                <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => startImport('docx')}>
+                                    DOCX (.docx)
+                                </DropdownMenuPrimitive.Item>
+                                <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => startImport('md')}>
+                                    Markdown (.md)
+                                </DropdownMenuPrimitive.Item>
+                            </>
+                        )}
+                        {perms.canEdit && perms.canExport && <div className="topbar-dropdown-sep" />}
+                        {perms.canExport && (
+                            <>
+                                <div className="topbar-dropdown-label">{t('toolbar.export')}</div>
+                                <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => {
+                                    const md = editorToMarkdown(editor);
+                                    saveAs(new Blob([md], { type: 'text/markdown;charset=utf-8' }), 'document.md');
+                                }}>
+                                    Markdown (.md)
+                                </DropdownMenuPrimitive.Item>
+                                <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => void editorToDocxBlob(editor, { acceptSuggestions: true }).then((blob) => saveAs(blob, 'document-clean.docx'))}>
+                                    DOCX — clean
+                                </DropdownMenuPrimitive.Item>
+                                <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => void editorToDocxBlob(editor, { acceptSuggestions: false }).then((blob) => saveAs(blob, 'document-with-tracks.docx'))}>
+                                    DOCX — with track changes
+                                </DropdownMenuPrimitive.Item>
+                            </>
+                        )}
+                        {perms.canEdit && (
+                            <>
+                                <div className="topbar-dropdown-sep" />
+                                <div className="topbar-dropdown-label">{t('toolbar.templates')}</div>
+                                {TEMPLATES.map((tmpl) => (
+                                    <DropdownMenuPrimitive.Item key={tmpl.id} className="topbar-dropdown-item" onSelect={() => applyTemplate(tmpl.id)}>
+                                        {tmpl.name}
+                                    </DropdownMenuPrimitive.Item>
+                                ))}
+                            </>
+                        )}
+                    </DropdownMenuPrimitive.Content>
+                </DropdownMenuPrimitive.Portal>
+            </DropdownMenuPrimitive.Root>
+            <input
+                ref={fileRef}
+                type="file"
+                style={{ display: 'none' }}
+                onChange={(e) => void onFile(e)}
+                data-import-kind={importKind}
+            />
+        </>
     );
 }
 
@@ -57,10 +159,12 @@ function UserMenu({ user }: { user: User }) {
     const navigate = useNavigate();
     const { data: session } = authClient.useSession();
     const email = session?.user?.email ?? '';
+
     const handleLogout = async () => {
         await authClient.signOut();
         void navigate({ to: '/login', search: {} as never });
     };
+
     return (
         <DropdownMenuPrimitive.Root>
             <DropdownMenuPrimitive.Trigger asChild>
@@ -102,11 +206,7 @@ function UserMenu({ user }: { user: User }) {
     );
 }
 
-export function TopBar({
-    doc, room, user, bookTitle,
-    connStatus, onReconnect, peers,
-    onCommentBellClick, onShortcutsOpen,
-}: TopBarProps) {
+export function TopBar({ user, bookTitle, editor, perms, onToast }: TopBarProps) {
     const { t } = useTranslation('editor');
     return (
         <header className="topbar">
@@ -120,22 +220,11 @@ export function TopBar({
             <nav className="topbar-breadcrumb" aria-label="breadcrumb">
                 <Link to="/books" className="topbar-breadcrumb-link">{t('topbar.booksLink')}</Link>
                 <ChevronRight size={12} className="topbar-breadcrumb-sep" aria-hidden="true" />
-                <span className="topbar-book-title" title={bookTitle}>{bookTitle}</span>
+                <BookTitleMenu bookTitle={bookTitle} editor={editor} perms={perms} onToast={onToast} />
             </nav>
             <div className="topbar-spacer" />
-            <SyncStatus status={connStatus} room={room} onReconnect={onReconnect} />
-            <div className="topbar-spacer" />
             <div className="topbar-right">
-                {peers.length > 0 && (
-                    <div className="topbar-peers" title={t('topbar.peers')}>
-                        {peers.map((p, i) => <Avatar key={i} name={p.name} color={p.color} size="sm" />)}
-                    </div>
-                )}
-                <CommentBell doc={doc} room={room} userId={user.id} onClick={onCommentBellClick} />
                 <UserMenu user={user} />
-                <button type="button" className="topbar-icon-btn" title={`${t('topbar.shortcuts')} (⌘/)`} onClick={onShortcutsOpen} aria-label={t('topbar.shortcuts')}>
-                    <Keyboard size={16} />
-                </button>
             </div>
         </header>
     );

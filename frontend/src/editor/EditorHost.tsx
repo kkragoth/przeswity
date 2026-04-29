@@ -14,6 +14,7 @@ import { useGlossary } from './glossary/GlossaryPanel';
 import { ToastProvider, useToast } from './shell/Toast';
 import { createCollab, type CollabBundle } from './collab/yDoc';
 import type { User, Role } from './identity/types';
+import { ROLE_PERMISSIONS } from './identity/types';
 
 import { TopBar } from './app/TopBar';
 import { StatusBar } from './app/StatusBar';
@@ -96,18 +97,11 @@ function EditorSession({ bookId, bookTitle, user, collab }: SessionProps) {
     return (
         <div className={hostClassName}>
             <TopBar
-                doc={collab.doc}
-                room={bookId}
                 user={user}
                 bookTitle={bookTitle}
-                connStatus={conn.status}
-                onReconnect={conn.reconnect}
-                peers={peers}
-                onCommentBellClick={() => {
-                    setRightTab('comments');
-                    rightPane.expand();
-                }}
-                onShortcutsOpen={() => setShortcutsOpen(true)}
+                editor={editor}
+                perms={ROLE_PERMISSIONS[user.role]}
+                onToast={toast.show}
             />
             <main className="main-grid">
                 <LeftPane
@@ -185,6 +179,8 @@ function EditorSession({ bookId, bookTitle, user, collab }: SessionProps) {
                         user={user}
                         suggestingMode={suggesting.effective}
                         peerCount={peers.length}
+                        connStatus={conn.status}
+                        onReconnect={conn.reconnect}
                     />
                 </section>
                 <RightPane

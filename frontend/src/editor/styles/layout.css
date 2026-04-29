@@ -308,6 +308,29 @@
   font-family: var(--font-ui);
 }
 
+/* ---------- Status bar sync mini ---------- */
+.statusbar-spacer { flex: 1 1 auto; }
+.statusbar-sync {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: var(--fs-xs);
+  font-family: var(--font-ui);
+  white-space: nowrap;
+  cursor: default;
+}
+.statusbar-sync--online    { color: var(--success); }
+.statusbar-sync--connecting { color: var(--warning); }
+.statusbar-sync--offline   { color: var(--danger); cursor: pointer; }
+@keyframes statusbar-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.statusbar-sync-spin { animation: statusbar-spin 1.2s linear infinite; }
+
 /* ---------- Word target progress ---------- */
 .word-target { display: inline-flex; align-items: center; gap: 6px; }
 .word-target-bar {

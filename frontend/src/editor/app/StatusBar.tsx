@@ -1,22 +1,55 @@
+import { Cloud, CloudOff, RefreshCw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { User } from '../identity/types';
 import { ROLE_PERMISSIONS } from '../identity/types';
 import { formatReadingMinutes } from './readingStats';
 import type { ReadingStatsSummary } from './useReadingStats';
+import type { ConnectionStatus } from './useConnectionStatus';
 
 interface StatusBarProps {
-  wordCount: number
-  charCount: number
-  stats: ReadingStatsSummary
-  targetWords: number | undefined
-  user: User
-  suggestingMode: boolean
-  peerCount: number
+    wordCount: number
+    charCount: number
+    stats: ReadingStatsSummary
+    targetWords: number | undefined
+    user: User
+    suggestingMode: boolean
+    peerCount: number
+    connStatus: ConnectionStatus
+    onReconnect: () => void
 }
 
 function targetFillColor(words: number, target: number): string {
     if (words >= target) return '#16a34a';
     if (words >= target * 0.8) return '#eab308';
     return 'var(--accent)';
+}
+
+function SyncMini({ status, onReconnect }: { status: ConnectionStatus; onReconnect: () => void }) {
+    const { t } = useTranslation('editor');
+    const label = status === 'online'
+        ? t('topbar.synced')
+        : status === 'connecting'
+            ? t('topbar.syncing')
+            : t('topbar.offlineLocal');
+
+    const icon = status === 'online'
+        ? <Cloud size={11} />
+        : status === 'connecting'
+            ? <RefreshCw size={11} className="statusbar-sync-spin" />
+            : <CloudOff size={11} />;
+
+    return (
+        <button
+            type="button"
+            className={`statusbar-sync statusbar-sync--${status}`}
+            onClick={status === 'offline' ? onReconnect : undefined}
+            disabled={status !== 'offline'}
+            title={status === 'offline' ? t('topbar.reconnect') : label}
+        >
+            {icon}
+            <span>{label}</span>
+        </button>
+    );
 }
 
 export function StatusBar({
@@ -27,6 +60,8 @@ export function StatusBar({
     user,
     suggestingMode,
     peerCount,
+    connStatus,
+    onReconnect,
 }: StatusBarProps) {
     const perms = ROLE_PERMISSIONS[user.role];
     const mode = suggestingMode ? 'suggesting' : perms.canEdit ? 'editing' : 'viewing';
@@ -34,10 +69,7 @@ export function StatusBar({
         <footer className="statusbar">
             <span>{wordCount.toLocaleString()} words</span>
             {targetWords && targetWords > 0 && (
-                <span
-                    className="word-target"
-                    title={`Target: ${targetWords.toLocaleString()} words`}
-                >
+                <span className="word-target" title={`Target: ${targetWords.toLocaleString()} words`}>
                     <span className="word-target-bar">
                         <span
                             className="word-target-fill"
@@ -66,9 +98,9 @@ export function StatusBar({
             <span>·</span>
             <span>mode: {mode}</span>
             <span>·</span>
-            <span>
-                {peerCount} {peerCount === 1 ? 'user' : 'users'} online
-            </span>
+            <span>{peerCount} {peerCount === 1 ? 'user' : 'users'} online</span>
+            <span className="statusbar-spacer" />
+            <SyncMini status={connStatus} onReconnect={onReconnect} />
         </footer>
     );
 }
