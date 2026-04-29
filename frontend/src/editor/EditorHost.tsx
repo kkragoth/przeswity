@@ -22,7 +22,8 @@ import { useTargetWords } from './app/useTargetWords';
 import { useReadingStats } from './app/useReadingStats';
 import { useGlobalShortcuts } from './app/useGlobalShortcuts';
 import { useSuggestingMode } from './app/useSuggestingMode';
-import { usePaneState } from './app/usePaneState';
+import { usePaneState, PaneState } from './app/usePaneState';
+import { Toolbar } from './editor/Toolbar';
 
 interface EditorHostProps {
     bookId: string;
@@ -37,8 +38,8 @@ interface SessionProps {
     collab: CollabBundle;
 }
 
-function paneClass(side: 'left' | 'right', state: 'expanded' | 'rail' | 'hidden'): string {
-    if (state === 'expanded') return `pane-${side}-open`;
+function paneClass(side: 'left' | 'right', state: PaneState): string {
+    if (state === PaneState.Expanded) return `pane-${side}-open`;
     return `pane-${side}-${state}`;
 }
 
@@ -55,8 +56,8 @@ function EditorSession({ bookId, bookTitle, user, collab }: SessionProps) {
 
     const { t } = useTranslation('editor');
     const suggesting = useSuggestingMode(collab.doc, user.role);
-    const leftPane = usePaneState('left', 'expanded');
-    const rightPane = usePaneState('right', 'expanded');
+    const leftPane = usePaneState('left', PaneState.Expanded);
+    const rightPane = usePaneState('right', PaneState.Expanded);
 
     const leftTabLabels: Record<LeftTab, string> = {
         outline: t('pane.outline'),
@@ -122,13 +123,29 @@ function EditorSession({ bookId, bookTitle, user, collab }: SessionProps) {
                     <button
                         type="button"
                         className="pane-handle pane-handle-left"
-                        title="Show left panel"
+                        title={t('pane.expand')}
                         onClick={leftPane.expand}
                     >
                         <ChevronRight size={14} />
                     </button>
                 )}
                 <section className="center-pane">
+                    {editor && (
+                        <Toolbar
+                            editor={editor}
+                            user={user}
+                            suggestingMode={suggesting.effective}
+                            suggestingForced={suggesting.forced}
+                            onSuggestingModeChange={suggesting.setMode}
+                            onToast={toast.show}
+                            leftPaneState={leftPane.state}
+                            rightPaneState={rightPane.state}
+                            leftPaneTab={leftTabLabels[leftTab]}
+                            rightPaneTab={rightTabLabels[rightTab]}
+                            onToggleLeftPane={leftPane.cycle}
+                            onToggleRightPane={rightPane.cycle}
+                        />
+                    )}
                     <EditorView
                         collab={collab}
                         user={user}
@@ -151,12 +168,6 @@ function EditorSession({ bookId, bookTitle, user, collab }: SessionProps) {
                         }}
                         onEditorReady={setEditor}
                         onToast={toast.show}
-                        leftPaneState={leftPane.state}
-                        rightPaneState={rightPane.state}
-                        leftPaneTab={leftTabLabels[leftTab]}
-                        rightPaneTab={rightTabLabels[rightTab]}
-                        onToggleLeftPane={leftPane.cycle}
-                        onToggleRightPane={rightPane.cycle}
                     />
                     <FindReplaceBar
                         editor={editor}
@@ -193,7 +204,7 @@ function EditorSession({ bookId, bookTitle, user, collab }: SessionProps) {
                     <button
                         type="button"
                         className="pane-handle pane-handle-right"
-                        title="Show right panel"
+                        title={t('pane.expand')}
                         onClick={rightPane.expand}
                     >
                         <ChevronLeft size={14} />

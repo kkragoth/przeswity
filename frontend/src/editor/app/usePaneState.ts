@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 
-export type PaneState = 'expanded' | 'rail' | 'hidden'
+export enum PaneState {
+    Expanded = 'expanded',
+    Rail = 'rail',
+    Hidden = 'hidden',
+}
 export type PaneSide = 'left' | 'right'
 
 const storageKey = (side: PaneSide) => `editor.pane.${side}`;
@@ -8,7 +12,7 @@ const storageKey = (side: PaneSide) => `editor.pane.${side}`;
 function readInitial(side: PaneSide, fallback: PaneState): PaneState {
     if (typeof window === 'undefined') return fallback;
     const raw = window.localStorage.getItem(storageKey(side));
-    if (raw === 'expanded' || raw === 'rail' || raw === 'hidden') return raw;
+    if (raw === PaneState.Expanded || raw === PaneState.Rail || raw === PaneState.Hidden) return raw as PaneState;
     return fallback;
 }
 
@@ -24,7 +28,7 @@ export interface PaneStateApi {
     isHidden: boolean
 }
 
-export function usePaneState(side: PaneSide, fallback: PaneState = 'expanded'): PaneStateApi {
+export function usePaneState(side: PaneSide, fallback: PaneState = PaneState.Expanded): PaneStateApi {
     const [state, setStateRaw] = useState<PaneState>(() => readInitial(side, fallback));
 
     useEffect(() => {
@@ -34,7 +38,7 @@ export function usePaneState(side: PaneSide, fallback: PaneState = 'expanded'): 
 
     const setState = useCallback((next: PaneState) => setStateRaw(next), []);
     const cycle = useCallback(
-        () => setStateRaw((current) => (current === 'expanded' ? 'hidden' : 'expanded')),
+        () => setStateRaw((current) => (current === PaneState.Expanded ? PaneState.Hidden : PaneState.Expanded)),
         [],
     );
 
@@ -42,11 +46,11 @@ export function usePaneState(side: PaneSide, fallback: PaneState = 'expanded'): 
         state,
         setState,
         cycle,
-        expand: useCallback(() => setStateRaw('expanded'), []),
-        rail: useCallback(() => setStateRaw('rail'), []),
-        hide: useCallback(() => setStateRaw('hidden'), []),
-        isExpanded: state === 'expanded',
-        isRail: state === 'rail',
-        isHidden: state === 'hidden',
+        expand: useCallback(() => setStateRaw(PaneState.Expanded), []),
+        rail: useCallback(() => setStateRaw(PaneState.Rail), []),
+        hide: useCallback(() => setStateRaw(PaneState.Hidden), []),
+        isExpanded: state === PaneState.Expanded,
+        isRail: state === PaneState.Rail,
+        isHidden: state === PaneState.Hidden,
     };
 }

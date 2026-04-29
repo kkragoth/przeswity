@@ -3,7 +3,6 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
 import { useTranslation } from 'react-i18next';
 
-import { Toolbar } from './Toolbar';
 import { BubbleToolbar } from './BubbleToolbar';
 import { HeaderFooterBar, HeaderFooterKind } from '@/editor/editor/HeaderFooterBar';
 import { ContextMenu } from '@/editor/shell/ContextMenu';
@@ -26,8 +25,6 @@ import { useEditorContextMenu } from './useEditorContextMenu';
 import type { CollabBundle } from '@/editor/collab/yDoc';
 import type { User } from '@/editor/identity/types';
 import { ROLE_PERMISSIONS } from '@/editor/identity/types';
-import type { PaneState } from '@/editor/app/usePaneState';
-
 export interface EditorViewProps {
   collab: CollabBundle
   user: User
@@ -40,12 +37,6 @@ export interface EditorViewProps {
   onCreateComment: (commentId: string, originalQuote: string) => void
   onEditorReady: (editor: Editor) => void
   onToast?: (msg: string, kind?: 'info' | 'success' | 'error') => void
-  leftPaneState?: PaneState
-  rightPaneState?: PaneState
-  leftPaneTab?: string
-  rightPaneTab?: string
-  onToggleLeftPane?: () => void
-  onToggleRightPane?: () => void
 }
 
 interface BlockMenuState {
@@ -77,12 +68,6 @@ export function EditorView({
     onCreateComment,
     onEditorReady,
     onToast,
-    leftPaneState,
-    rightPaneState,
-    leftPaneTab,
-    rightPaneTab,
-    onToggleLeftPane,
-    onToggleRightPane,
 }: EditorViewProps) {
     const { t } = useTranslation('editor');
 
@@ -293,22 +278,6 @@ export function EditorView({
 
     return (
         <div className={`editor-shell${suggestingMode ? ' is-suggesting' : ''}`}>
-            {editor && (
-                <Toolbar
-                    editor={editor}
-                    user={user}
-                    suggestingMode={suggestingMode}
-                    suggestingForced={suggestingForced}
-                    onSuggestingModeChange={onSuggestingModeChange ?? (() => {})}
-                    onToast={onToast ?? (() => {})}
-                    leftPaneState={leftPaneState ?? 'expanded'}
-                    rightPaneState={rightPaneState ?? 'expanded'}
-                    leftPaneTab={leftPaneTab ?? ''}
-                    rightPaneTab={rightPaneTab ?? ''}
-                    onToggleLeftPane={onToggleLeftPane ?? (() => {})}
-                    onToggleRightPane={onToggleRightPane ?? (() => {})}
-                />
-            )}
             {editor && headerFooterFocus.kind !== HeaderFooterKind.None && (
                 <HeaderFooterBar
                     kind={headerFooterFocus.kind}

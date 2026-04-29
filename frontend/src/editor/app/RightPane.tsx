@@ -8,7 +8,7 @@ import { CommentsSidebar } from '@/editor/comments/CommentsSidebar';
 import { SuggestionsSidebar } from '@/editor/suggestions/SuggestionsSidebar';
 import type { User } from '@/editor/identity/types';
 import type { Peer } from '@/editor/app/usePeers';
-import type { PaneState } from '@/editor/app/usePaneState';
+import { PaneState } from '@/editor/app/usePaneState';
 
 export type RightTab = 'comments' | 'suggestions'
 
@@ -66,7 +66,7 @@ export function RightPane({
     const userExpandedRef = useRef(false);
 
     useEffect(() => {
-        if (paneState === 'expanded') {
+        if (paneState === PaneState.Expanded) {
             // Mark that the pane is in an explicitly expanded state.
             // We only consider it "user-expanded" if it was already expanded before
             // (i.e., not just initialised). We use prevCountRef as a proxy for
@@ -94,7 +94,7 @@ export function RightPane({
         };
 
         // Auto-collapse on mount if already empty and pane is expanded.
-        if (commentMap.size === 0 && paneState === 'expanded' && !userExpandedRef.current) {
+        if (commentMap.size === 0 && paneState === PaneState.Expanded && !userExpandedRef.current) {
             onRail();
         }
 

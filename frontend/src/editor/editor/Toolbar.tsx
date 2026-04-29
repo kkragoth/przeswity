@@ -13,7 +13,7 @@ import { FileMenu } from './FileMenu';
 import { TbBtn, ModeToggle, HighlightBtn } from './ToolbarPrimitives';
 import type { User } from '../identity/types';
 import { ROLE_PERMISSIONS } from '../identity/types';
-import type { PaneState } from '@/editor/app/usePaneState';
+import { PaneState } from '@/editor/app/usePaneState';
 
 export interface ToolbarProps {
     editor: Editor
@@ -72,9 +72,9 @@ export function Toolbar({
             <div className={`toolbar${suggestingMode ? ' is-suggesting' : ''}`} role="toolbar" aria-label="Editor toolbar">
                 <button
                     type="button"
-                    className={`tb-pane-btn tb-pane-btn--left${leftPaneState === 'expanded' ? ' is-active' : ''}`}
+                    className={`tb-pane-btn tb-pane-btn--left${leftPaneState === PaneState.Expanded ? ' is-active' : ''}`}
                     onClick={onToggleLeftPane}
-                    aria-pressed={leftPaneState === 'expanded'}
+                    aria-pressed={leftPaneState === PaneState.Expanded}
                 >
                     <PanelLeft size={14} />
                     <span>{leftPaneTab}</span>
@@ -129,9 +129,9 @@ export function Toolbar({
                 <FileMenu editor={editor} perms={perms} onToast={onToast} />
                 <button
                     type="button"
-                    className={`tb-pane-btn tb-pane-btn--right${rightPaneState === 'expanded' ? ' is-active' : ''}`}
+                    className={`tb-pane-btn tb-pane-btn--right${rightPaneState === PaneState.Expanded ? ' is-active' : ''}`}
                     onClick={onToggleRightPane}
-                    aria-pressed={rightPaneState === 'expanded'}
+                    aria-pressed={rightPaneState === PaneState.Expanded}
                 >
                     <span>{rightPaneTab}</span>
                     <PanelRight size={14} />
