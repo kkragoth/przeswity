@@ -51,10 +51,12 @@
   --role-ai:          #6b6357;   /* graphite — bot */
 
   /* ---------- Typography ---------- */
-  --font-display: 'Source Serif 4', 'Source Serif Pro', Georgia, 'Times New Roman', serif;
-  --font-body:    'Source Serif 4', 'Source Serif Pro', Georgia, 'Times New Roman', serif;
-  --font-ui:      'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono:    'IBM Plex Mono', Menlo, Consolas, monospace;
+  /* Liberation is shipped via @font-face in editor/fonts.css. The fallback
+     family is crash-safety only — Liberation must always win. */
+  --font-display: 'Liberation Serif', Georgia, serif;
+  --font-body:    'Liberation Serif', Georgia, serif;
+  --font-ui:      'Liberation Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:    'Liberation Mono', Menlo, Consolas, monospace;
 
   /* Type scale (UI) */
   --fs-xs:   12px;
@@ -67,7 +69,9 @@
   --fs-3xl:  28px;
   --fs-display: 36px;
 
-  /* Editor content scale (serif) */
+  /* Editor content scale — driven by typography manifest at runtime via
+     editor/io/typography-css.ts. The values below are static fallbacks
+     used before the runtime emit runs. */
   --content-fs:    16px;
   --content-lh:    1.5;
 

@@ -1,8 +1,10 @@
 import './styles.css';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+
+import { applyTypographyToCssVars } from '@/editor/io/typography-css';
 
 import { EditorView } from './editor/EditorView';
 import { FindReplaceBar } from './editor/find/FindReplaceBar';
@@ -218,6 +220,10 @@ function EditorSession({ bookId, bookTitle, user, collab }: SessionProps) {
 
 function EditorHostInner({ bookId, user: userProp, bookTitle }: EditorHostProps) {
     const [collab, setCollab] = useState<CollabBundle | null>(null);
+
+    useLayoutEffect(() => {
+        applyTypographyToCssVars();
+    }, []);
 
     useEffect(() => {
         const bundle = createCollab(bookId);
