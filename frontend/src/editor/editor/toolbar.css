@@ -325,3 +325,37 @@
     min-width: 200px;
     font-size: var(--fs-sm);
 }
+
+/* ---------- Panel toggle buttons (toolbar edge) ---------- */
+.tb-pane-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    align-self: stretch;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    font-family: var(--font-ui);
+    white-space: nowrap;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background var(--d-fast) var(--ease-out), color var(--d-fast) var(--ease-out);
+}
+.tb-pane-btn:hover {
+    background: var(--bg-tint);
+    color: var(--text);
+}
+.tb-pane-btn--left {
+    margin-left: -12px;
+    border-right: 1px solid var(--border);
+}
+.tb-pane-btn--right {
+    margin-right: -12px;
+    border-left: 1px solid var(--border);
+}
+.tb-pane-btn.is-active {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
