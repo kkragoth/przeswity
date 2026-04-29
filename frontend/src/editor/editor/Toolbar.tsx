@@ -75,6 +75,7 @@ export function Toolbar({
                     className={`tb-pane-btn tb-pane-btn--left${leftPaneState === PaneState.Expanded ? ' is-active' : ''}`}
                     onClick={onToggleLeftPane}
                     aria-pressed={leftPaneState === PaneState.Expanded}
+                    aria-label={t('topbar.toggleLeftPane')}
                 >
                     <PanelLeft size={14} />
                     <span>{leftPaneTab}</span>
@@ -132,6 +133,7 @@ export function Toolbar({
                     className={`tb-pane-btn tb-pane-btn--right${rightPaneState === PaneState.Expanded ? ' is-active' : ''}`}
                     onClick={onToggleRightPane}
                     aria-pressed={rightPaneState === PaneState.Expanded}
+                    aria-label={t('topbar.toggleRightPane')}
                 >
                     <span>{rightPaneTab}</span>
                     <PanelRight size={14} />

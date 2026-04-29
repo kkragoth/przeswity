@@ -77,7 +77,7 @@ export function AppTopBar({ user }: AppTopBarProps) {
 
     return (
         <header className="topbar">
-            <Link to="/" className="topbar-logo" aria-label="Prześwity">
+            <Link to="/" className="topbar-logo" aria-label={t('appName')}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                     <rect x="3" y="4" width="3" height="12" rx="1" fill="currentColor" />
                     <rect x="8.5" y="4" width="2" height="12" rx="0.5" fill="currentColor" opacity="0.6" />

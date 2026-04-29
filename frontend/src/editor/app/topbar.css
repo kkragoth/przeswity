@@ -17,24 +17,6 @@
     z-index: var(--z-sticky);
 }
 
-/* ---------- Pane toggle buttons (far left / far right) ---------- */
-.topbar-pane-btn {
-    background: transparent;
-    border: none;
-    border-radius: var(--r-2);
-    padding: var(--sp-1) var(--sp-2);
-    color: var(--text-subtle);
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: background var(--d-fast) var(--ease-out), color var(--d-fast);
-}
-.topbar-pane-btn:hover {
-    background: var(--bg-tint);
-    color: var(--text);
-}
 
 /* ---------- Logo ---------- */
 .topbar-logo {
