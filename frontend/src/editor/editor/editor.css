@@ -32,6 +32,7 @@
 */
 .editor-page {
     position: relative;
+    width: fit-content; /* shrink to PaginationPlus page width so margin:auto centers it */
     margin: 0 auto;
     max-width: 100%;
 }

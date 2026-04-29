@@ -33,6 +33,7 @@
 
 /* ---------- Center pane ---------- */
 .center-pane {
+  grid-column: 2; /* explicit: stays in column 2 even when left pane is display:none */
   display: flex;
   flex-direction: column;
   min-width: 0;

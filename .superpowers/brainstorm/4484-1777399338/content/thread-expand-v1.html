@@ -1,0 +1,332 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap');
+
+  :root {
+    --bg: #f5f3ee; --bg-elev: #fbfaf6; --bg-paper: #fefdf9; --bg-tint: #f0ede4;
+    --bg-sunken: #ece9e1;
+    --border: #e3ddcf; --border-strong: #cdc4af;
+    --text: #1f1c17; --text-muted: #6b6357; --text-subtle: #8f867a;
+    --accent: #7a1f2b; --accent-soft: #f3e2e3; --accent-hover: #921f30;
+    --font-ui: 'IBM Plex Sans', sans-serif;
+    --font-body: 'Source Serif 4', Georgia, serif;
+    --shadow-1: 0 1px 2px rgba(60,50,30,0.06), 0 2px 6px rgba(60,50,30,0.04);
+    --shadow-active: 0 0 0 2px #f3e2e3, 0 2px 8px rgba(60,50,30,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-ui); background: var(--bg); color: var(--text); padding: 28px 20px; }
+
+  h2 { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+  .subtitle { font-size: 12px; color: var(--text-muted); margin-bottom: 24px; }
+
+  .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .col-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-subtle); margin-bottom: 12px; }
+
+  /* Sidebar simulation */
+  .sidebar-sim {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 12px;
+  }
+
+  /* Filter chips */
+  .chips { display: flex; gap: 4px; margin-bottom: 12px; }
+  .chip {
+    padding: 4px 11px; border-radius: 999px; font-size: 11px; font-weight: 500;
+    border: 1px solid var(--border); background: white; color: var(--text-muted);
+    cursor: pointer;
+  }
+  .chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* Thread cards */
+  .thread {
+    background: var(--bg-paper);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 7px;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s, opacity 0.2s;
+    position: relative;
+  }
+
+  /* ---- DIMMED STATE (others when one is active) ---- */
+  .sidebar-sim.has-active .thread:not(.is-active) {
+    opacity: 0.45;
+  }
+  .sidebar-sim.has-active .thread:not(.is-active):hover {
+    opacity: 0.75;
+  }
+
+  /* ---- ACTIVE STATE ---- */
+  .thread.is-active {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-active);
+  }
+
+  /* Thread head */
+  .thread-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .avatar {
+    width: 28px; height: 28px; border-radius: 999px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: white;
+    transition: box-shadow 0.15s;
+  }
+  .thread.is-active .avatar { box-shadow: 0 0 0 2px white, 0 0 0 3.5px var(--accent); }
+  .thread-meta { flex: 1; min-width: 0; }
+  .thread-name { font-size: 12px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 5px; }
+  .thread-role-chip {
+    font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+    background: var(--bg-tint); color: var(--text-subtle); border-radius: 3px; padding: 1px 5px;
+  }
+  .thread-time { font-size: 11px; color: var(--text-subtle); margin-top: 1px; }
+  .thread-aside { display: flex; align-items: center; gap: 5px; }
+  .reply-badge {
+    font-size: 10px; color: var(--text-subtle); background: var(--bg-tint);
+    border-radius: 999px; padding: 2px 7px; font-weight: 500;
+  }
+  /* Close button — only visible on active */
+  .thread-close {
+    width: 20px; height: 20px; border-radius: 999px;
+    border: 1px solid var(--border); background: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--text-subtle);
+    opacity: 0; transition: opacity 0.15s;
+  }
+  .thread.is-active .thread-close { opacity: 1; }
+
+  /* Quote */
+  .thread-quote {
+    background: var(--bg-tint);
+    border-left: 2px solid var(--border-strong);
+    border-radius: 0 4px 4px 0;
+    padding: 5px 8px; margin-bottom: 6px;
+    font-size: 11px; font-style: italic; color: var(--text-muted);
+    font-family: var(--font-body);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: white-space 0.15s;
+  }
+  .thread.is-active .thread-quote {
+    white-space: normal;
+    background: linear-gradient(to right, var(--accent-soft), var(--bg-tint));
+    border-left-color: var(--accent);
+  }
+
+  /* Collapsed preview */
+  .thread-preview {
+    font-size: 12px; color: var(--text-muted); line-height: 1.45;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  /* Expanded body area */
+  .thread-expand {
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.25s cubic-bezier(0.22,0.61,0.36,1);
+  }
+  .thread.is-active .thread-expand {
+    grid-template-rows: 1fr;
+  }
+  .thread-expand-inner { min-height: 0; overflow: hidden; }
+
+  .thread-body {
+    font-size: 13px; color: var(--text); line-height: 1.5;
+    margin: 2px 0 10px; white-space: pre-wrap; word-break: break-word;
+  }
+
+  /* Replies */
+  .thread-reply {
+    display: flex; gap: 7px;
+    padding: 8px 0 6px;
+    border-top: 1px solid var(--border);
+  }
+  .reply-avatar {
+    width: 22px; height: 22px; border-radius: 999px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700; color: white;
+  }
+  .reply-content { flex: 1; }
+  .reply-row { display: flex; gap: 5px; align-items: baseline; margin-bottom: 2px; }
+  .reply-name { font-size: 11px; font-weight: 600; }
+  .reply-time { font-size: 10px; color: var(--text-subtle); }
+  .reply-body { font-size: 12px; color: var(--text); line-height: 1.4; }
+
+  /* Reply textarea area */
+  .thread-input-row {
+    display: flex; gap: 7px; align-items: flex-start; margin-top: 8px; border-top: 1px solid var(--border); padding-top: 8px;
+  }
+  .thread-textarea {
+    flex: 1; border: 1px solid var(--border); border-radius: 7px;
+    padding: 6px 9px; font: inherit; font-size: 12px; resize: none; min-height: 34px;
+    background: white; color: var(--text); outline: none;
+    transition: border-color 0.15s;
+  }
+  .thread-textarea:focus { border-color: var(--accent); }
+  .thread-textarea::placeholder { color: var(--text-subtle); }
+
+  .btn-resolve {
+    font-size: 11px; padding: 5px 10px; border-radius: 6px;
+    border: 1px solid var(--accent); background: white; color: var(--accent);
+    font-weight: 500; cursor: pointer; white-space: nowrap;
+    transition: background 0.12s;
+  }
+  .btn-resolve:hover { background: var(--accent-soft); }
+  .btn-send {
+    width: 30px; height: 30px; border-radius: 7px;
+    background: var(--accent); border: none; color: white;
+    display: flex; align-items: center; justify-content: center; font-size: 13px;
+    cursor: pointer; flex-shrink: 0; align-self: flex-end;
+  }
+
+  /* Reactions */
+  .reactions { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+  .reaction {
+    display: inline-flex; align-items: center; gap: 3px;
+    background: var(--bg-tint); border: 1px solid var(--border); border-radius: 999px;
+    padding: 2px 8px; font-size: 11px;
+  }
+  .reaction.mine { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .reaction-add { color: var(--text-subtle); background: white; }
+</style>
+
+<h2>Thread expand / collapse — focus mode</h2>
+<p class="subtitle">Left: collapsed list (no active thread). Right: one thread expanded — others dim.</p>
+
+<div class="layout">
+
+  <!-- LEFT: all collapsed -->
+  <div>
+    <div class="col-label">Collapsed — browsing mode</div>
+    <div class="sidebar-sim">
+      <div class="chips">
+        <div class="chip active">Open · 3</div>
+        <div class="chip">Resolved</div>
+        <div class="chip">All</div>
+      </div>
+
+      <div class="thread">
+        <div class="thread-head">
+          <div class="avatar" style="background:#7a1f2b">A</div>
+          <div class="thread-meta">
+            <div class="thread-name">Anna K. <span class="thread-role-chip">editor</span></div>
+            <div class="thread-time">2m ago</div>
+          </div>
+          <div class="thread-aside">
+            <div class="reply-badge">↳ 2</div>
+          </div>
+        </div>
+        <div class="thread-quote">…the syntax was never formally encoded…</div>
+        <div class="thread-preview">This needs a citation — see Wierzbicka 1991 for the comparative morphology reference.</div>
+      </div>
+
+      <div class="thread">
+        <div class="thread-head">
+          <div class="avatar" style="background:#2c4a7d">P</div>
+          <div class="thread-meta">
+            <div class="thread-name">Piotr S. <span class="thread-role-chip">author</span></div>
+            <div class="thread-time">1h ago</div>
+          </div>
+        </div>
+        <div class="thread-quote">…przekształciło się w nową formę…</div>
+        <div class="thread-preview">Suggest breaking this paragraph — it's running long for the pace of the chapter.</div>
+      </div>
+
+      <div class="thread">
+        <div class="thread-head">
+          <div class="avatar" style="background:#2f6b3a">M</div>
+          <div class="thread-meta">
+            <div class="thread-name">Marta B. <span class="thread-role-chip">proofreader</span></div>
+            <div class="thread-time">3h ago</div>
+          </div>
+        </div>
+        <div class="thread-quote">…literackim prześwitem stał się…</div>
+        <div class="thread-preview">Typo: missing diacritic on "prześwitem".</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: one active, others dimmed -->
+  <div>
+    <div class="col-label">Expanded — focus mode</div>
+    <div class="sidebar-sim has-active">
+      <div class="chips">
+        <div class="chip active">Open · 3</div>
+        <div class="chip">Resolved</div>
+        <div class="chip">All</div>
+      </div>
+
+      <!-- ACTIVE thread -->
+      <div class="thread is-active">
+        <div class="thread-head">
+          <div class="avatar" style="background:#7a1f2b">A</div>
+          <div class="thread-meta">
+            <div class="thread-name">Anna K. <span class="thread-role-chip">editor</span></div>
+            <div class="thread-time">2m ago</div>
+          </div>
+          <div class="thread-aside">
+            <div class="btn-resolve">✓ Resolve</div>
+            <div class="thread-close">✕</div>
+          </div>
+        </div>
+        <div class="thread-quote">…the syntax was never formally encoded in the literary tradition…</div>
+
+        <div class="thread-expand" style="grid-template-rows:1fr">
+          <div class="thread-expand-inner">
+            <div class="thread-body">This needs a citation — see Wierzbicka 1991 for the comparative morphology reference. The current phrasing implies something that hasn't been established yet.</div>
+
+            <div class="reactions">
+              <div class="reaction mine">👍 <span>2</span></div>
+              <div class="reaction">❤️ <span>1</span></div>
+              <div class="reaction reaction-add">＋</div>
+            </div>
+
+            <!-- Reply -->
+            <div class="thread-reply">
+              <div class="reply-avatar" style="background:#2c4a7d">P</div>
+              <div class="reply-content">
+                <div class="reply-row">
+                  <span class="reply-name">Piotr S.</span>
+                  <span class="reply-time">30m ago</span>
+                </div>
+                <div class="reply-body">Agreed, I'll add the footnote in the next revision.</div>
+              </div>
+            </div>
+
+            <!-- Input -->
+            <div class="thread-input-row">
+              <textarea class="thread-textarea" placeholder="Reply… use @ to mention" rows="1"></textarea>
+              <button class="btn-send">↑</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- dimmed threads -->
+      <div class="thread">
+        <div class="thread-head">
+          <div class="avatar" style="background:#2c4a7d">P</div>
+          <div class="thread-meta">
+            <div class="thread-name">Piotr S. <span class="thread-role-chip">author</span></div>
+            <div class="thread-time">1h ago</div>
+          </div>
+        </div>
+        <div class="thread-quote">…przekształciło się w nową formę…</div>
+        <div class="thread-preview">Suggest breaking this paragraph.</div>
+      </div>
+
+      <div class="thread">
+        <div class="thread-head">
+          <div class="avatar" style="background:#2f6b3a">M</div>
+          <div class="thread-meta">
+            <div class="thread-name">Marta B. <span class="thread-role-chip">proofreader</span></div>
+            <div class="thread-time">3h ago</div>
+          </div>
+        </div>
+        <div class="thread-quote">…literackim prześwitem stał się…</div>
+        <div class="thread-preview">Typo: missing diacritic.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
