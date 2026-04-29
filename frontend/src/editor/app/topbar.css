@@ -240,3 +240,19 @@
     background: var(--border-soft);
     margin: var(--sp-1) 0;
 }
+
+/* ---------- App-wide user initials badge ---------- */
+.topbar-app-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--text-on-accent);
+    font-size: 10px;
+    font-weight: var(--fw-semi);
+    font-family: var(--font-ui);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
