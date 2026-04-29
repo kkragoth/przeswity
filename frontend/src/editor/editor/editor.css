@@ -45,8 +45,8 @@
     z-index: 1;
     outline: none;
     font-family: var(--font-body);
-    font-size: var(--content-fs);
-    line-height: var(--content-lh);
+    font-size: var(--ed-body-fs);
+    line-height: var(--ed-body-lh);
     color: var(--text);
     font-feature-settings: 'kern', 'liga', 'onum', 'pnum';
 }
@@ -57,47 +57,74 @@
 
 .prose-editor p {
     margin: 0;
-    padding-bottom: 0.85em;
+    padding-bottom: var(--ed-body-mb);
 }
 
 .prose-editor h1 {
     font-family: var(--font-body);
-    font-size: 30px;
-    font-weight: var(--fw-semi);
-    line-height: 1.2;
+    font-size: var(--ed-h1-fs);
+    font-weight: var(--ed-h1-fw);
+    line-height: var(--ed-h1-lh);
     margin: 0;
-    padding-top: 1.4em;
-    padding-bottom: 0.5em;
+    padding-top: var(--ed-h1-mt);
+    padding-bottom: var(--ed-h1-mb);
     color: var(--text);
 }
 
 .prose-editor h2 {
     font-family: var(--font-body);
-    font-size: 22px;
-    font-weight: var(--fw-semi);
-    line-height: 1.3;
+    font-size: var(--ed-h2-fs);
+    font-weight: var(--ed-h2-fw);
+    line-height: var(--ed-h2-lh);
     margin: 0;
-    padding-top: 1.25em;
-    padding-bottom: 0.45em;
+    padding-top: var(--ed-h2-mt);
+    padding-bottom: var(--ed-h2-mb);
     color: var(--text);
 }
 
 .prose-editor h3 {
     font-family: var(--font-body);
-    font-size: 18px;
-    font-weight: var(--fw-semi);
-    line-height: 1.35;
+    font-size: var(--ed-h3-fs);
+    font-weight: var(--ed-h3-fw);
+    line-height: var(--ed-h3-lh);
     margin: 0;
-    padding-top: 1.1em;
-    padding-bottom: 0.4em;
+    padding-top: var(--ed-h3-mt);
+    padding-bottom: var(--ed-h3-mb);
+    color: var(--text);
+}
+
+.prose-editor h4,
+.prose-editor h5 {
+    font-family: var(--font-body);
+    font-size: var(--ed-h4-fs);
+    font-weight: var(--ed-h4-fw);
+    line-height: var(--ed-h4-lh);
+    margin: 0;
+    padding-top: var(--ed-h4-mt);
+    padding-bottom: var(--ed-h4-mb);
+    color: var(--text);
+}
+
+.prose-editor h6 {
+    font-family: var(--font-body);
+    font-size: var(--ed-h6-fs);
+    font-weight: var(--ed-h6-fw);
+    font-style: var(--ed-h6-fst);
+    line-height: var(--ed-h6-lh);
+    margin: 0;
+    padding-top: var(--ed-h6-mt);
+    padding-bottom: var(--ed-h6-mb);
     color: var(--text);
 }
 
 .prose-editor blockquote {
     position: relative;
-    font-style: italic;
+    font-family: var(--font-body);
+    font-size: var(--ed-blockquote-fs);
+    font-style: var(--ed-blockquote-fst);
+    line-height: var(--ed-blockquote-lh);
     margin: 0;
-    padding: 0.55em 0 1.25em 28px;
+    padding: var(--ed-blockquote-mt) 0 var(--ed-blockquote-mb) var(--ed-blockquote-indent);
     color: var(--text-muted);
 }
 
@@ -115,9 +142,9 @@
 
 .prose-editor ul,
 .prose-editor ol {
-    padding-left: 24px;
+    padding-left: var(--ed-listItem-indent);
     margin: 0;
-    padding-bottom: 0.85em;
+    padding-bottom: var(--ed-body-mb);
 }
 
 .prose-editor li::marker {
@@ -131,10 +158,9 @@
     border-radius: var(--r-2);
     overflow-x: auto;
     font-family: var(--font-mono);
-    font-size: 13px;
-    line-height: 1.6;
-    margin: 0;
-    margin-bottom: 0.85em;
+    font-size: var(--ed-code-fs);
+    line-height: var(--ed-code-lh);
+    margin: 0 0 var(--ed-code-mb);
 }
 
 .prose-editor code {
