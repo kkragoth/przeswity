@@ -4,6 +4,7 @@ import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import {
     Bold, Italic, Underline, Strikethrough, Code,
     List, ListOrdered, ListChecks, Link2, Undo2, Redo2,
+    PanelLeft, PanelRight,
 } from 'lucide-react';
 
 import { SpecialCharsMenu } from './formatting/SpecialCharsMenu';
@@ -12,6 +13,7 @@ import { FileMenu } from './FileMenu';
 import { TbBtn, ModeToggle, HighlightBtn } from './ToolbarPrimitives';
 import type { User } from '../identity/types';
 import { ROLE_PERMISSIONS } from '../identity/types';
+import type { PaneState } from '@/editor/app/usePaneState';
 
 export interface ToolbarProps {
     editor: Editor
@@ -20,6 +22,12 @@ export interface ToolbarProps {
     suggestingForced: boolean
     onSuggestingModeChange: (mode: boolean) => void
     onToast: (msg: string, kind?: 'info' | 'success' | 'error') => void
+    leftPaneState: PaneState
+    rightPaneState: PaneState
+    leftPaneTab: string
+    rightPaneTab: string
+    onToggleLeftPane: () => void
+    onToggleRightPane: () => void
 }
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
@@ -41,6 +49,12 @@ export function Toolbar({
     suggestingForced,
     onSuggestingModeChange,
     onToast,
+    leftPaneState,
+    rightPaneState,
+    leftPaneTab,
+    rightPaneTab,
+    onToggleLeftPane,
+    onToggleRightPane,
 }: ToolbarProps) {
     const { t } = useTranslation('editor');
     const perms = ROLE_PERMISSIONS[user.role];
@@ -56,6 +70,15 @@ export function Toolbar({
     return (
         <TooltipPrimitive.Provider delayDuration={400}>
             <div className={`toolbar${suggestingMode ? ' is-suggesting' : ''}`} role="toolbar" aria-label="Editor toolbar">
+                <button
+                    type="button"
+                    className={`tb-pane-btn tb-pane-btn--left${leftPaneState === 'expanded' ? ' is-active' : ''}`}
+                    onClick={onToggleLeftPane}
+                    aria-pressed={leftPaneState === 'expanded'}
+                >
+                    <PanelLeft size={14} />
+                    <span>{leftPaneTab}</span>
+                </button>
                 {/* Zone 1 — Mode toggle (hidden for roles with no access) */}
                 {!hasNoAccess(user) && (
                     <>
@@ -104,6 +127,15 @@ export function Toolbar({
                 {/* Far right — File menu */}
                 <div className="tb-spacer" />
                 <FileMenu editor={editor} perms={perms} onToast={onToast} />
+                <button
+                    type="button"
+                    className={`tb-pane-btn tb-pane-btn--right${rightPaneState === 'expanded' ? ' is-active' : ''}`}
+                    onClick={onToggleRightPane}
+                    aria-pressed={rightPaneState === 'expanded'}
+                >
+                    <span>{rightPaneTab}</span>
+                    <PanelRight size={14} />
+                </button>
             </div>
         </TooltipPrimitive.Provider>
     );

@@ -2,6 +2,7 @@ import './styles.css';
 import { useEffect, useMemo, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { EditorView } from './editor/EditorView';
 import { FindReplaceBar } from './editor/find/FindReplaceBar';
@@ -52,9 +53,22 @@ function EditorSession({ bookId, bookTitle, user, collab }: SessionProps) {
     const [findOpen, setFindOpen] = useState(false);
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
+    const { t } = useTranslation('editor');
     const suggesting = useSuggestingMode(collab.doc, user.role);
     const leftPane = usePaneState('left', 'expanded');
     const rightPane = usePaneState('right', 'expanded');
+
+    const leftTabLabels: Record<LeftTab, string> = {
+        outline: t('pane.outline'),
+        versions: t('pane.versions'),
+        glossary: t('pane.glossary'),
+        meta: t('pane.meta'),
+        files: t('pane.files'),
+    };
+    const rightTabLabels: Record<RightTab, string> = {
+        comments: t('pane.comments'),
+        suggestions: t('pane.suggestions'),
+    };
 
     const glossaryEntries = useGlossary(collab.doc);
     const peers = usePeers(collab.provider);
@@ -137,6 +151,12 @@ function EditorSession({ bookId, bookTitle, user, collab }: SessionProps) {
                         }}
                         onEditorReady={setEditor}
                         onToast={toast.show}
+                        leftPaneState={leftPane.state}
+                        rightPaneState={rightPane.state}
+                        leftPaneTab={leftTabLabels[leftTab]}
+                        rightPaneTab={rightTabLabels[rightTab]}
+                        onToggleLeftPane={leftPane.cycle}
+                        onToggleRightPane={rightPane.cycle}
                     />
                     <FindReplaceBar
                         editor={editor}

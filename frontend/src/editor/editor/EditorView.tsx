@@ -26,6 +26,7 @@ import { useEditorContextMenu } from './useEditorContextMenu';
 import type { CollabBundle } from '@/editor/collab/yDoc';
 import type { User } from '@/editor/identity/types';
 import { ROLE_PERMISSIONS } from '@/editor/identity/types';
+import type { PaneState } from '@/editor/app/usePaneState';
 
 export interface EditorViewProps {
   collab: CollabBundle
@@ -39,6 +40,12 @@ export interface EditorViewProps {
   onCreateComment: (commentId: string, originalQuote: string) => void
   onEditorReady: (editor: Editor) => void
   onToast?: (msg: string, kind?: 'info' | 'success' | 'error') => void
+  leftPaneState?: PaneState
+  rightPaneState?: PaneState
+  leftPaneTab?: string
+  rightPaneTab?: string
+  onToggleLeftPane?: () => void
+  onToggleRightPane?: () => void
 }
 
 interface BlockMenuState {
@@ -70,6 +77,12 @@ export function EditorView({
     onCreateComment,
     onEditorReady,
     onToast,
+    leftPaneState,
+    rightPaneState,
+    leftPaneTab,
+    rightPaneTab,
+    onToggleLeftPane,
+    onToggleRightPane,
 }: EditorViewProps) {
     const { t } = useTranslation('editor');
 
@@ -288,6 +301,12 @@ export function EditorView({
                     suggestingForced={suggestingForced}
                     onSuggestingModeChange={onSuggestingModeChange ?? (() => {})}
                     onToast={onToast ?? (() => {})}
+                    leftPaneState={leftPaneState ?? 'expanded'}
+                    rightPaneState={rightPaneState ?? 'expanded'}
+                    leftPaneTab={leftPaneTab ?? ''}
+                    rightPaneTab={rightPaneTab ?? ''}
+                    onToggleLeftPane={onToggleLeftPane ?? (() => {})}
+                    onToggleRightPane={onToggleRightPane ?? (() => {})}
                 />
             )}
             {editor && headerFooterFocus.kind !== HeaderFooterKind.None && (
