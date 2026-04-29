@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { applyTypographyToCssVars } from '@/editor/io/typography-css';
+import { FONT_VARIANTS } from '@/editor/io/typography';
 
 import { EditorView } from './editor/EditorView';
 import { FindReplaceBar } from './editor/find/FindReplaceBar';
@@ -220,9 +221,22 @@ function EditorSession({ bookId, bookTitle, user, collab }: SessionProps) {
 
 function EditorHostInner({ bookId, user: userProp, bookTitle }: EditorHostProps) {
     const [collab, setCollab] = useState<CollabBundle | null>(null);
+    const [fontsReady, setFontsReady] = useState(false);
 
     useLayoutEffect(() => {
         applyTypographyToCssVars();
+    }, []);
+
+    useEffect(() => {
+        let cancelled = false;
+        Promise.all(
+            FONT_VARIANTS.map((v) =>
+                document.fonts.load(`${v.weight} ${v.style} 16px '${v.family}'`),
+            ),
+        ).then(() => {
+            if (!cancelled) setFontsReady(true);
+        });
+        return () => { cancelled = true; };
     }, []);
 
     useEffect(() => {
@@ -246,7 +260,7 @@ function EditorHostInner({ bookId, user: userProp, bookTitle }: EditorHostProps)
         [userProp.id, userProp.name, userProp.color, userProp.role],
     );
 
-    if (!collab) {
+    if (!collab || !fontsReady) {
         return <div className="editor-host editor-host-loading" />;
     }
 
