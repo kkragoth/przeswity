@@ -9,7 +9,6 @@ import {
 
 import { SpecialCharsMenu } from './formatting/SpecialCharsMenu';
 import { StyleDropdown } from './StyleDropdown';
-import { FileMenu } from './FileMenu';
 import { TbBtn, ModeToggle, HighlightBtn } from './ToolbarPrimitives';
 import type { User } from '../identity/types';
 import { ROLE_PERMISSIONS } from '../identity/types';
@@ -48,7 +47,7 @@ export function Toolbar({
     suggestingMode,
     suggestingForced,
     onSuggestingModeChange,
-    onToast,
+    onToast: _onToast,
     leftPaneState,
     rightPaneState,
     leftPaneTab,
@@ -57,7 +56,6 @@ export function Toolbar({
     onToggleRightPane,
 }: ToolbarProps) {
     const { t } = useTranslation('editor');
-    const perms = ROLE_PERMISSIONS[user.role];
 
     const setLink = () => {
         const prev = editor.getAttributes('link').href as string | undefined;
@@ -80,23 +78,12 @@ export function Toolbar({
                     <PanelLeft size={14} />
                     <span>{leftPaneTab}</span>
                 </button>
-                {/* Zone 1 — Mode toggle (hidden for roles with no access) */}
-                {!hasNoAccess(user) && (
-                    <>
-                        <ModeToggle
-                            suggestingMode={suggestingMode}
-                            suggestingForced={suggestingForced}
-                            onSuggestingModeChange={onSuggestingModeChange}
-                        />
-                        <Divider />
-                    </>
-                )}
 
-                {/* Zone 2 — Block style */}
+                {/* Zone 1 — Block style */}
                 <StyleDropdown editor={editor} />
                 <Divider />
 
-                {/* Zone 3 — Inline formatting */}
+                {/* Zone 2 — Inline formatting */}
                 <div className="tb-group">
                     <TbBtn active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()} label={t('toolbar.bold')} shortcut={`${M}B`}><Bold size={14} /></TbBtn>
                     <TbBtn active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()} label={t('toolbar.italic')} shortcut={`${M}I`}><Italic size={14} /></TbBtn>
@@ -125,9 +112,18 @@ export function Toolbar({
                     <TbBtn active={false} onClick={() => editor.chain().focus().redo().run()} label={t('toolbar.redo')} shortcut={`${M}⇧Z`}><Redo2 size={14} /></TbBtn>
                 </div>
 
-                {/* Far right — File menu */}
+                {/* Far right — Mode toggle */}
                 <div className="tb-spacer" />
-                <FileMenu editor={editor} perms={perms} onToast={onToast} />
+                {!hasNoAccess(user) && (
+                    <>
+                        <ModeToggle
+                            suggestingMode={suggestingMode}
+                            suggestingForced={suggestingForced}
+                            onSuggestingModeChange={onSuggestingModeChange}
+                        />
+                        <Divider />
+                    </>
+                )}
                 <button
                     type="button"
                     className={`tb-pane-btn tb-pane-btn--right${rightPaneState === PaneState.Expanded ? ' is-active' : ''}`}
