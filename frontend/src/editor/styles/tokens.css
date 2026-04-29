@@ -178,14 +178,8 @@ body,
 #root {
   height: 100%;
   margin: 0;
-  font-family: var(--font-ui);
-  font-size: var(--fs-base);
-  color: var(--text);
-  background: var(--bg);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: 'kern', 'liga', 'calt';
 }
+
 
 button {
   font: inherit;
@@ -202,6 +196,10 @@ button {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-ui);
+  font-size: var(--fs-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'kern', 'liga', 'calt';
 }
 .editor-host-loading {
   background: var(--bg);
