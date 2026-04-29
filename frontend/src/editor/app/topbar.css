@@ -56,8 +56,7 @@
 .topbar-book-title {
     font-family: var(--font-display);
     font-size: 16px;
-    font-weight: var(--fw-normal);
-    font-style: italic;
+    font-weight: var(--fw-medium);
     color: var(--text);
     white-space: nowrap;
     overflow: hidden;
