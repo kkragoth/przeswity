@@ -13,7 +13,6 @@
 }
 .editor-host.pane-left-rail   { --left-effective: var(--rail-w); }
 .editor-host.pane-left-hidden { --left-effective: 0px; }
-.editor-host.pane-right-rail   { --right-effective: var(--rail-w); }
 .editor-host.pane-right-hidden { --right-effective: 0px; }
 
 /* ---------- Main grid ----------
@@ -128,15 +127,53 @@
 
 /* When pane is in rail mode, hide labels and tighten width. */
 .editor-host.pane-left-rail .left-pane .vrail-btn-label,
-.editor-host.pane-left-rail .left-pane .pane-body,
-.editor-host.pane-right-rail .right-pane .vrail-btn-label,
-.editor-host.pane-right-rail .right-pane .pane-body { display: none; }
-.editor-host.pane-left-rail .left-pane .vrail-btn,
-.editor-host.pane-right-rail .right-pane .vrail-btn { justify-content: center; padding: var(--sp-3) 0; }
-.editor-host.pane-left-rail .left-pane,
-.editor-host.pane-right-rail .right-pane {
-  width: var(--rail-w);
+.editor-host.pane-left-rail .left-pane .pane-body { display: none; }
+.editor-host.pane-left-rail .left-pane .vrail-btn { justify-content: center; padding: var(--sp-3) 0; }
+.editor-host.pane-left-rail .left-pane { width: var(--rail-w); }
+
+/* ---------- Horizontal tab bar (right pane) ---------- */
+.pane-tabs {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border-soft);
+  flex-shrink: 0;
+  padding: 0 var(--sp-1);
 }
+.pane-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: var(--sp-2) var(--sp-3);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: color var(--d-fast), border-color var(--d-fast);
+  margin-bottom: -1px;
+}
+.pane-tab:hover { color: var(--text); }
+.pane-tab.is-active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+.pane-tabs-spacer { flex: 1 1 auto; }
+.pane-tab-close {
+  background: transparent;
+  border: none;
+  border-radius: var(--r-2);
+  padding: var(--sp-1) var(--sp-2);
+  color: var(--text-subtle);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--d-fast), color var(--d-fast);
+}
+.pane-tab-close:hover { background: var(--bg-tint); color: var(--text); }
 
 /* Pane body (scrollable region under the tab strip).
    overscroll-behavior: contain — pane scroll never leaks to the document. */
@@ -178,8 +215,7 @@
   justify-content: center;
 }
 .pane-collapse:hover { background: var(--bg-tint); color: var(--text); }
-.editor-host.pane-left-rail .left-pane .pane-header,
-.editor-host.pane-right-rail .right-pane .pane-header { display: none; }
+.editor-host.pane-left-rail .left-pane .pane-header { display: none; }
 
 /* ---------- Pane empty state ---------- */
 .pane-empty {
@@ -244,8 +280,7 @@
   .left-pane  { left: 0; }
   .editor-host.pane-left-open  .left-pane  { transform: translateX(0); display: flex; }
   .editor-host.pane-right-open .right-pane { transform: translateX(0); display: flex; }
-  .editor-host.pane-left-rail .left-pane,
-  .editor-host.pane-right-rail .right-pane {
+  .editor-host.pane-left-rail .left-pane {
     width: var(--rail-w);
     box-shadow: none;
     transform: translateX(0);

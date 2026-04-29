@@ -190,9 +190,7 @@ function EditorSession({ bookId, bookTitle, user, collab }: SessionProps) {
                 <RightPane
                     tab={rightTab}
                     onTabChange={setRightTab}
-                    paneState={rightPane.state}
                     onExpand={rightPane.expand}
-                    onRail={rightPane.rail}
                     onHide={rightPane.hide}
                     doc={collab.doc}
                     editor={editor}
