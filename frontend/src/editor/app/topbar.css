@@ -82,82 +82,12 @@ button.topbar-book-title:hover { color: var(--accent); }
     flex: 1 1 auto;
 }
 
-/* ---------- Sync status ---------- */
-.topbar-sync {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--sp-1);
-    font-size: var(--fs-xs);
-    padding: var(--sp-1) var(--sp-2);
-    border-radius: var(--r-2);
-    border: none;
-    background: transparent;
-    cursor: default;
-    white-space: nowrap;
-    flex-shrink: 0;
-    font-family: var(--font-ui);
-}
-.topbar-sync--online {
-    color: var(--success);
-}
-.topbar-sync--connecting {
-    color: var(--warning);
-}
-.topbar-sync--offline {
-    color: var(--danger);
-    cursor: pointer;
-    background: var(--danger-soft);
-}
-.topbar-sync--offline:hover {
-    background: var(--danger-soft);
-    filter: brightness(0.95);
-}
-
-@keyframes topbar-pulse {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.45; }
-}
-.topbar-sync--connecting .topbar-sync-icon {
-    animation: topbar-pulse 1.2s ease-in-out infinite;
-}
-
 /* ---------- Right cluster ---------- */
 .topbar-right {
     display: flex;
     align-items: center;
     gap: var(--sp-1);
     flex-shrink: 0;
-}
-
-/* ---------- Peers ---------- */
-.topbar-peers {
-    display: flex;
-    align-items: center;
-    gap: -4px; /* avatars overlap */
-}
-.topbar-peers .avatar {
-    margin-left: -4px;
-}
-.topbar-peers .avatar:first-child {
-    margin-left: 0;
-}
-
-/* ---------- Icon buttons (bell, shortcuts) ---------- */
-.topbar-icon-btn {
-    background: transparent;
-    border: none;
-    border-radius: var(--r-2);
-    padding: var(--sp-1) var(--sp-2);
-    color: var(--text-muted);
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: background var(--d-fast) var(--ease-out), color var(--d-fast);
-}
-.topbar-icon-btn:hover {
-    background: var(--bg-tint);
-    color: var(--text);
 }
 
 /* ---------- Avatar dropdown trigger ---------- */
