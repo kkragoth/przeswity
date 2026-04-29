@@ -33,7 +33,8 @@ function BookDetail() {
         return <div className="p-8 text-sm text-stone-500">{t('bookDetail.notFound')}</div>;
     }
 
-    const myRoles = (assignmentsQ.data ?? []).filter((a: any) => a.userId === u.id).map((a: any) => a.role);
+    const assignments = Array.isArray(assignmentsQ.data) ? assignmentsQ.data : [];
+    const myRoles = assignments.filter((a: any) => a.userId === u.id).map((a: any) => a.role);
     const isOwner = bookQ.data.createdById === u.id;
     const role = (myRoles[0] ?? 'editor') as string;
 
