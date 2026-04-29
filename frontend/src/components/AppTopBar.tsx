@@ -1,10 +1,10 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { LogOut, Settings, BookOpen } from 'lucide-react';
-import { useNavigate } from '@tanstack/react-router';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import { authClient } from '@/auth/client';
 import { LanguageSwitcher } from '@/i18n/LanguageSwitcher';
+import { SystemRole } from '@/auth/types';
 import type { SessionUser } from '@/auth/types';
 
 interface AppTopBarProps {
@@ -86,10 +86,10 @@ export function AppTopBar({ user }: AppTopBarProps) {
             </Link>
             <nav className="topbar-breadcrumb" aria-label="Main navigation">
                 <Link to="/books" className="topbar-breadcrumb-link">{t('nav.books')}</Link>
-                {(user.systemRole === 'admin' || user.systemRole === 'project_manager') && (
+                {(user.systemRole === SystemRole.Admin || user.systemRole === SystemRole.ProjectManager) && (
                     <Link to="/coordinator" className="topbar-breadcrumb-link">{t('nav.coordinator')}</Link>
                 )}
-                {user.systemRole === 'admin' && (
+                {user.systemRole === SystemRole.Admin && (
                     <Link to="/admin" className="topbar-breadcrumb-link">{t('nav.admin')}</Link>
                 )}
                 <Link to="/settings" className="topbar-breadcrumb-link">{t('nav.settings')}</Link>
