@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { ChevronDown, ChevronRight, BookOpen, Settings, LogOut } from 'lucide-react';
+import { ChevronDown, ChevronRight, BookOpen, Settings, LogOut, FileText } from 'lucide-react';
 import mammoth from 'mammoth';
 import { marked } from 'marked';
 import { saveAs } from 'file-saver';
@@ -100,46 +100,56 @@ function BookTitleMenu({ bookTitle, editor, perms, onToast }: BookTitleMenuProps
                 </DropdownMenuPrimitive.Trigger>
                 <DropdownMenuPrimitive.Portal>
                     <DropdownMenuPrimitive.Content align="start" sideOffset={6} className="topbar-dropdown-content">
-                        {perms.canEdit && (
-                            <>
-                                <div className="topbar-dropdown-label">{t('toolbar.import')}</div>
-                                <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => startImport('docx')}>
-                                    DOCX (.docx)
-                                </DropdownMenuPrimitive.Item>
-                                <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => startImport('md')}>
-                                    Markdown (.md)
-                                </DropdownMenuPrimitive.Item>
-                            </>
-                        )}
-                        {perms.canEdit && perms.canExport && <div className="topbar-dropdown-sep" />}
-                        {perms.canExport && (
-                            <>
-                                <div className="topbar-dropdown-label">{t('toolbar.export')}</div>
-                                <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => {
-                                    const md = editorToMarkdown(editor);
-                                    saveAs(new Blob([md], { type: 'text/markdown;charset=utf-8' }), 'document.md');
-                                }}>
-                                    Markdown (.md)
-                                </DropdownMenuPrimitive.Item>
-                                <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => void editorToDocxBlob(editor, { acceptSuggestions: true }).then((blob) => saveAs(blob, 'document-clean.docx'))}>
-                                    DOCX — clean
-                                </DropdownMenuPrimitive.Item>
-                                <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => void editorToDocxBlob(editor, { acceptSuggestions: false }).then((blob) => saveAs(blob, 'document-with-tracks.docx'))}>
-                                    DOCX — with track changes
-                                </DropdownMenuPrimitive.Item>
-                            </>
-                        )}
-                        {perms.canEdit && (
-                            <>
-                                <div className="topbar-dropdown-sep" />
-                                <div className="topbar-dropdown-label">{t('toolbar.templates')}</div>
-                                {TEMPLATES.map((tmpl) => (
-                                    <DropdownMenuPrimitive.Item key={tmpl.id} className="topbar-dropdown-item" onSelect={() => applyTemplate(tmpl.id)}>
-                                        {tmpl.name}
-                                    </DropdownMenuPrimitive.Item>
-                                ))}
-                            </>
-                        )}
+                        <DropdownMenuPrimitive.Sub>
+                            <DropdownMenuPrimitive.SubTrigger className="topbar-dropdown-item topbar-dropdown-subtrigger">
+                                <FileText size={14} />{t('toolbar.fileMenu')}
+                                <ChevronRight size={12} className="topbar-dropdown-subtrigger-chevron" aria-hidden="true" />
+                            </DropdownMenuPrimitive.SubTrigger>
+                            <DropdownMenuPrimitive.Portal>
+                                <DropdownMenuPrimitive.SubContent className="topbar-dropdown-content" sideOffset={4}>
+                                    {perms.canEdit && (
+                                        <>
+                                            <div className="topbar-dropdown-label">{t('toolbar.import')}</div>
+                                            <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => startImport('docx')}>
+                                                DOCX (.docx)
+                                            </DropdownMenuPrimitive.Item>
+                                            <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => startImport('md')}>
+                                                Markdown (.md)
+                                            </DropdownMenuPrimitive.Item>
+                                        </>
+                                    )}
+                                    {perms.canEdit && perms.canExport && <div className="topbar-dropdown-sep" />}
+                                    {perms.canExport && (
+                                        <>
+                                            <div className="topbar-dropdown-label">{t('toolbar.export')}</div>
+                                            <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => {
+                                                const md = editorToMarkdown(editor);
+                                                saveAs(new Blob([md], { type: 'text/markdown;charset=utf-8' }), 'document.md');
+                                            }}>
+                                                Markdown (.md)
+                                            </DropdownMenuPrimitive.Item>
+                                            <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => void editorToDocxBlob(editor, { acceptSuggestions: true }).then((blob) => saveAs(blob, 'document-clean.docx'))}>
+                                                DOCX — clean
+                                            </DropdownMenuPrimitive.Item>
+                                            <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => void editorToDocxBlob(editor, { acceptSuggestions: false }).then((blob) => saveAs(blob, 'document-with-tracks.docx'))}>
+                                                DOCX — with track changes
+                                            </DropdownMenuPrimitive.Item>
+                                        </>
+                                    )}
+                                    {perms.canEdit && (
+                                        <>
+                                            <div className="topbar-dropdown-sep" />
+                                            <div className="topbar-dropdown-label">{t('toolbar.templates')}</div>
+                                            {TEMPLATES.map((tmpl) => (
+                                                <DropdownMenuPrimitive.Item key={tmpl.id} className="topbar-dropdown-item" onSelect={() => applyTemplate(tmpl.id)}>
+                                                    {tmpl.name}
+                                                </DropdownMenuPrimitive.Item>
+                                            ))}
+                                        </>
+                                    )}
+                                </DropdownMenuPrimitive.SubContent>
+                            </DropdownMenuPrimitive.Portal>
+                        </DropdownMenuPrimitive.Sub>
                     </DropdownMenuPrimitive.Content>
                 </DropdownMenuPrimitive.Portal>
             </DropdownMenuPrimitive.Root>
@@ -169,8 +179,8 @@ function UserMenu({ user }: { user: User }) {
         <DropdownMenuPrimitive.Root>
             <DropdownMenuPrimitive.Trigger asChild>
                 <button type="button" className="topbar-avatar-trigger" aria-label={user.name}>
-                    <Avatar name={user.name} color={user.color} size="sm" />
                     <RoleBadge role={user.role} />
+                    <Avatar name={user.name} color={user.color} size="sm" />
                 </button>
             </DropdownMenuPrimitive.Trigger>
             <DropdownMenuPrimitive.Portal>

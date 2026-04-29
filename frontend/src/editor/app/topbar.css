@@ -165,6 +165,13 @@ button.topbar-book-title:hover { color: var(--accent); }
     background: var(--border-soft);
     margin: var(--sp-1) 0;
 }
+.topbar-dropdown-subtrigger {
+    justify-content: flex-start;
+}
+.topbar-dropdown-subtrigger-chevron {
+    margin-left: auto;
+    color: var(--text-subtle);
+}
 .topbar-dropdown-label {
     padding: var(--sp-1) var(--sp-2);
     font-size: var(--fs-xs);
