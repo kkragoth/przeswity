@@ -4,9 +4,10 @@ import { WebSocketServer } from 'ws';
 import { buildApp, devAuthEnabled } from './app.js';
 import { hocuspocus } from './collab/server.js';
 import { env } from './env.js';
+import { log } from './lib/log.js';
 
 const app = await buildApp();
-console.log(`dev-auth: ${devAuthEnabled ? 'enabled' : 'disabled'}`);
+log.info(`dev-auth: ${devAuthEnabled ? 'enabled' : 'disabled'}`);
 
 const server = createServer(app);
 const wss = new WebSocketServer({ noServer: true });
@@ -17,11 +18,11 @@ server.on('upgrade', (req, socket, head) => {
         socket.destroy();
         return;
     }
-    wss.handleUpgrade(req, socket, head, (ws) => {
+    wss.handleUpgrade(req, socket, head, (ws: any) => {
         hocuspocus.handleConnection(ws, req);
     });
 });
 
 server.listen(env.PORT, () => {
-    console.log(`backend listening on :${env.PORT} (collab: ${env.COLLAB_PATH})`);
+    log.info(`backend listening on :${env.PORT} (collab: ${env.COLLAB_PATH})`);
 });

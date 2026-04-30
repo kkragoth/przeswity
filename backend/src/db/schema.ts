@@ -1,6 +1,7 @@
 import { pgTable, text, boolean, timestamp, uuid, primaryKey, index, customType, jsonb, integer } from 'drizzle-orm/pg-core';
 export { user, session, account, verification } from './auth-schema.js';
 import { user } from './auth-schema.js';
+import type { BookStage, ProgressMode } from '../modules/books/workflow.js';
 
 const bytea = customType<{ data: Uint8Array }>({ dataType: () => 'bytea' });
 
@@ -10,9 +11,11 @@ export const book = pgTable('book', {
     description: text('description').notNull().default(''),
     createdById: text('created_by_id').notNull().references(() => user.id),
     initialMarkdown: text('initial_markdown').notNull().default(''),
-    stage: text('stage').notNull().default('editing'),
+    // Constrained at the DB layer by 0003_constraints_and_indexes.sql; the typed column
+    // here keeps invalid stage strings out of TS reads/writes too.
+    stage: text('stage').$type<BookStage>().notNull().default('editing'),
     progress: integer('progress').notNull().default(0),
-    progressMode: text('progress_mode').notNull().default('manual'),
+    progressMode: text('progress_mode').$type<ProgressMode>().notNull().default('manual'),
     stageChangedAt: timestamp('stage_changed_at').notNull().defaultNow(),
     stageDueAt: timestamp('stage_due_at'),
     stageNote: text('stage_note').notNull().default(''),

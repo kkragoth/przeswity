@@ -11,7 +11,8 @@ const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 25 * 1024 * 1024 },
     fileFilter: (_req, file, cb) => {
-        cb(null, file.mimetype === 'application/pdf');
+        if (file.mimetype === 'application/pdf') return cb(null, true);
+        cb(new AppError('errors.pdf.unsupportedMediaType', 415, 'pdf only'));
     },
 });
 

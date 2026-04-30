@@ -1,3 +1,7 @@
+// INVARIANT: this backend must run as a SINGLE PROCESS. Presence (collab/presence.ts) and
+// the Hocuspocus document store are process-local. Multi-process deployments must set
+// PRESENCE_API_ENABLED=false and accept that collab presence/cursors are partial per pod
+// until a Redis-backed store lands.
 import { Hocuspocus } from '@hocuspocus/server';
 import { authenticate } from './auth.js';
 import { persistence } from './persistence.js';

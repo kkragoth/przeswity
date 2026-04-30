@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { auth } from './betterAuth.js';
 import { fromNodeHeaders } from 'better-auth/node';
 import { SystemRole } from '../db/auth-schema.js';
+import { AppError } from '../lib/errors.js';
 
 export type AuthUser = {
     id: string;
@@ -69,4 +70,11 @@ export async function requireSession(req: Request, res: Response, next: NextFunc
         if (err) return next(err);
         requireAuth(req, res, next);
     });
+}
+
+// After `requireSession` middleware runs, `req.user` is guaranteed non-null. Express's
+// type system can't express that — `mustUser` asserts it explicitly so handlers stay typed.
+export function mustUser(req: Request): AuthUser {
+    if (!req.user) throw new AppError('errors.auth.unauthenticated', 401, 'unauthenticated');
+    return req.user;
 }

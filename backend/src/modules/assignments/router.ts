@@ -2,10 +2,10 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { eq, and, inArray } from 'drizzle-orm';
 import { db } from '../../db/client.js';
-import { book, assignment, user } from '../../db/schema.js';
+import { assignment, user } from '../../db/schema.js';
 import { requireSession } from '../../auth/session.js';
 import { asyncHandler, AppError } from '../../lib/errors.js';
-import { isAdmin } from '../../lib/permissions.js';
+import { loadBookAccess, requireBookAccess } from '../../lib/access.js';
 import { registry } from '../../openapi/registry.js';
 import {
     AssignmentDto,
@@ -14,6 +14,8 @@ import {
     BulkCreateAssignmentsBody,
     BulkAssignmentResponse,
 } from './schemas.js';
+import { toIsoOrThrow } from '../../lib/dto.js';
+import { userPublicCols } from '../../db/projections.js';
 
 export const assignmentsRouter = Router();
 
@@ -46,48 +48,26 @@ const projectAssignment = (a: any) => ({
     bookId: a.bookId,
     userId: a.userId,
     role: a.role,
-    createdAt: new Date(a.createdAt).toISOString(),
+    createdAt: toIsoOrThrow(a.createdAt),
 });
-
-async function loadBook(bookId: string) {
-    const [b] = await db.select().from(book).where(eq(book.id, bookId));
-    if (!b) throw new AppError('errors.book.notFound', 404, 'book not found');
-    return b;
-}
-
-async function isVisibleToUser(bookId: string, me: any) {
-    if (isAdmin(me.systemRole)) return true;
-    const [b] = await db.select().from(book).where(eq(book.id, bookId));
-    if (!b) return false;
-    if (b.createdById === me.id) return true;
-    const rows = await db.select().from(assignment).where(and(eq(assignment.bookId, bookId), eq(assignment.userId, me.id)));
-    return rows.length > 0;
-}
-
-async function canManage(bookId: string, me: any) {
-    if (isAdmin(me.systemRole)) return true;
-    const [b] = await db.select().from(book).where(eq(book.id, bookId));
-    if (!b) return false;
-    return b.createdById === me.id;
-}
 
 assignmentsRouter.get('/api/books/:bookId/assignments', requireSession, asyncHandler(async (req: any, res) => {
     const me = req.user;
-    if (!(await isVisibleToUser(req.params.bookId, me))) {
-        throw new AppError('errors.book.forbidden', 403, 'no access');
-    }
-    await loadBook(req.params.bookId);
+    const access = await loadBookAccess(req.params.bookId, me);
+    requireBookAccess(access);
     const rows = await db.select({
         a: assignment,
-        u: { id: user.id, email: user.email, name: user.name, color: user.color, image: user.image },
+        u: userPublicCols,
     }).from(assignment).innerJoin(user, eq(user.id, assignment.userId))
         .where(eq(assignment.bookId, req.params.bookId));
-    res.json(rows.map((r: any) => ({ ...projectAssignment(r.a), user: r.u })));
+    res.json(rows.map((r) => ({ ...projectAssignment(r.a), user: r.u })));
 }));
 
 assignmentsRouter.post('/api/books/:bookId/assignments', requireSession, asyncHandler(async (req: any, res) => {
     const me = req.user;
-    if (!(await canManage(req.params.bookId, me))) throw new AppError('errors.book.forbidden', 403, 'forbidden');
+    const access = await loadBookAccess(req.params.bookId, me);
+    requireBookAccess(access);
+    if (!access.permissions.canManagePeople) throw new AppError('errors.book.forbidden', 403, 'forbidden');
     const body = CreateAssignmentBody.parse(req.body);
     const [u] = await db.select().from(user).where(eq(user.id, body.userId));
     if (!u) throw new AppError('errors.assignment.unknownUsers', 422, 'unknown user');
@@ -106,7 +86,9 @@ assignmentsRouter.post('/api/books/:bookId/assignments', requireSession, asyncHa
 
 assignmentsRouter.post('/api/books/:bookId/assignments/bulk', requireSession, asyncHandler(async (req: any, res) => {
     const me = req.user;
-    if (!(await canManage(req.params.bookId, me))) throw new AppError('errors.book.forbidden', 403, 'forbidden');
+    const access = await loadBookAccess(req.params.bookId, me);
+    requireBookAccess(access);
+    if (!access.permissions.canManagePeople) throw new AppError('errors.book.forbidden', 403, 'forbidden');
     const body = BulkCreateAssignmentsBody.parse(req.body);
 
     // Dedup payload by (userId, role)
@@ -155,7 +137,9 @@ assignmentsRouter.post('/api/books/:bookId/assignments/bulk', requireSession, as
 
 assignmentsRouter.delete('/api/books/:bookId/assignments/:userId/:role', requireSession, asyncHandler(async (req: any, res) => {
     const me = req.user;
-    if (!(await canManage(req.params.bookId, me))) throw new AppError('errors.book.forbidden', 403, 'forbidden');
+    const access = await loadBookAccess(req.params.bookId, me);
+    requireBookAccess(access);
+    if (!access.permissions.canManagePeople) throw new AppError('errors.book.forbidden', 403, 'forbidden');
     const deleted = await db.delete(assignment).where(and(
         eq(assignment.bookId, req.params.bookId),
         eq(assignment.userId, req.params.userId),

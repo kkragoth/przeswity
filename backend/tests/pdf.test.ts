@@ -29,4 +29,15 @@ describe('PDF extract stub', () => {
         const { cookie } = await signIn('pdf@test.com');
         await request(app).post('/api/pdf/extract').set('Cookie', cookie).expect(400);
     });
+
+    it('415 when uploading a non-pdf', async () => {
+        await createUser('pdf2@test.com');
+        const { cookie } = await signIn('pdf2@test.com');
+        const r = await request(app)
+            .post('/api/pdf/extract')
+            .set('Cookie', cookie)
+            .attach('file', Buffer.from('not a pdf'), { filename: 'note.txt', contentType: 'text/plain' });
+        expect(r.status).toBe(415);
+        expect(r.body.error?.code).toBe('errors.pdf.unsupportedMediaType');
+    });
 });

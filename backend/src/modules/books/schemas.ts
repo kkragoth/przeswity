@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { registry } from '../../openapi/registry.js';
 import { BOOK_STAGES, PROGRESS_MODES } from './workflow.js';
+import { BookRoleEnum } from '../../lib/permissions.js';
 
 export const BookDto = z.object({
     id: z.string(),
@@ -30,7 +31,7 @@ export const CreateBookBody = z.object({
     initialMarkdown: z.string().max(500_000).default(''),
     initialAssignments: z.array(z.object({
         userId: z.string(),
-        role: z.enum(['translator', 'author', 'editor', 'proofreader', 'typesetter', 'coordinator']),
+        role: BookRoleEnum,
     })).max(50).default([]),
 }).openapi('CreateBookBody');
 

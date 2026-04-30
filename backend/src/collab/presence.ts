@@ -1,3 +1,6 @@
+// INVARIANT: this Map is process-local. Reads via getPresence reflect only THIS process's
+// connections. Multi-process deployments must gate the HTTP presence endpoint behind
+// env.PRESENCE_API_ENABLED=false. See collab/server.ts.
 type Conn = { userId: string; name: string; color: string; connectedAt: number };
 const presence = new Map<string, Map<string, Conn>>();
 const STALE_MS = 60_000;

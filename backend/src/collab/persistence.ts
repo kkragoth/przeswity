@@ -3,6 +3,7 @@ import { db } from '../db/client.js';
 import { bookYjsState, book } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
 import { lastEditorByBook } from './lastEditor.js';
+import { asByteaInput } from '../lib/bytes.js';
 
 export const persistence = new Database({
     fetch: async ({ documentName }) => {
@@ -14,11 +15,12 @@ export const persistence = new Database({
         const bookId = documentName.replace(/^book:/, '');
         const editorId = lastEditorByBook.get(bookId) ?? null;
         const now = new Date();
+        const bytes = asByteaInput(state);
         await db.transaction(async (tx) => {
-            await tx.insert(bookYjsState).values({ bookId, state: Buffer.from(state) as unknown as Uint8Array })
+            await tx.insert(bookYjsState).values({ bookId, state: bytes })
                 .onConflictDoUpdate({
                     target: bookYjsState.bookId,
-                    set: { state: Buffer.from(state) as unknown as Uint8Array, updatedAt: now },
+                    set: { state: bytes, updatedAt: now },
                 });
             if (editorId) {
                 await tx.update(book).set({ updatedById: editorId, lastEditAt: now, updatedAt: now })

@@ -1,4 +1,4 @@
-import { AppError } from '../../lib/errors.js';
+// Pure predicates only. HTTP errors live in the router layer.
 
 export const BOOK_STAGES = [
     'translation',
@@ -36,18 +36,6 @@ export function canTransitionStage(from: BookStage, to: BookStage): boolean {
     return ALLOWED_NEXT[from].includes(to);
 }
 
-export function requireStageTransitionAllowed(fromRaw: string, toRaw: string) {
-    if (!isBookStage(fromRaw) || !isBookStage(toRaw)) {
-        throw new AppError('errors.book.stage.invalid', 422, 'invalid stage');
-    }
-    if (!canTransitionStage(fromRaw, toRaw)) {
-        throw new AppError('errors.book.stage.transitionForbidden', 422, `cannot transition from ${fromRaw} to ${toRaw}`);
-    }
+export function isValidProgress(value: number): boolean {
+    return Number.isInteger(value) && value >= 0 && value <= 100;
 }
-
-export function validateProgress(value: number) {
-    if (!Number.isInteger(value) || value < 0 || value > 100) {
-        throw new AppError('errors.book.progress.invalid', 422, 'progress must be integer in range 0..100');
-    }
-}
-

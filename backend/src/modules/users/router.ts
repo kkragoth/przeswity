@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from '../../db/client.js';
 import { user, assignment } from '../../db/schema.js';
 import { auth } from '../../auth/betterAuth.js';
@@ -60,12 +60,22 @@ const projectUser = (u: typeof user.$inferSelect) => ({
 async function buildMeResponse(userId: string) {
     const [full] = await db.select().from(user).where(eq(user.id, userId));
     if (!full) throw new AppError('errors.user.notFound', 404, 'user not found');
-    const rows = await db.select({ bookId: assignment.bookId, role: assignment.role })
+    // visibleBookCount comes back from SQL; role counts still need each row, but a single
+    // query keeps round-trips at one. Distinct vs non-distinct: book_id can repeat across
+    // role rows for the same book, so DISTINCT matters here.
+    const [counts] = await db.select({
+        visibleBookCount: sql<number>`COUNT(DISTINCT ${assignment.bookId})`,
+    }).from(assignment).where(eq(assignment.userId, userId));
+    const rows = await db.select({ role: assignment.role })
         .from(assignment).where(eq(assignment.userId, userId));
-    const visibleBookCount = new Set(rows.map((r) => r.bookId)).size;
     const assignmentRoleCounts: Record<string, number> = {};
     for (const r of rows) assignmentRoleCounts[r.role] = (assignmentRoleCounts[r.role] ?? 0) + 1;
-    return { ...projectUser(full), visibleBookCount, assignmentRoleCounts, onboardingDismissedAt: full.onboardingDismissedAt ?? '' };
+    return {
+        ...projectUser(full),
+        visibleBookCount: Number(counts?.visibleBookCount ?? 0),
+        assignmentRoleCounts,
+        onboardingDismissedAt: full.onboardingDismissedAt ?? '',
+    };
 }
 
 usersRouter.get('/api/users', requireSession, requireProjectManager, asyncHandler(async (_req: any, res: any) => {

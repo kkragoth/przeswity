@@ -1,8 +1,9 @@
 import { z } from 'zod';
+import { BookRoleEnum } from '../../lib/permissions.js';
 
 const Mentions = z.object({
     userIds: z.array(z.string()).default([]),
-    roles: z.array(z.enum(['translator', 'author', 'editor', 'proofreader', 'typesetter', 'coordinator'])).default([]),
+    roles: z.array(BookRoleEnum).default([]),
 });
 
 export const CommentAuthor = z.object({
@@ -58,6 +59,6 @@ export const ResolveBody = z.object({ resolved: z.boolean() }).openapi('ResolveB
 export const CommentsListQuery = z.object({
     status: z.enum(['active', 'resolved', 'all', 'detached']).default('active'),
     author: z.string().optional(),
-    mentionsRole: z.enum(['translator', 'author', 'editor', 'proofreader', 'typesetter', 'coordinator']).optional(),
+    mentionsRole: BookRoleEnum.optional(),
     mentionsMe: z.coerce.boolean().optional(),
 });

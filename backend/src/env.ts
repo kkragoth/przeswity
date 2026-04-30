@@ -15,6 +15,9 @@ const Schema = z.object({
     PUBLIC_API_URL: z.string().url(),
     COLLAB_PATH: z.string().default('/collaboration'),
     ENABLE_DEV_AUTH: z.string().default('false').transform((s) => s.toLowerCase() === 'true'),
+    // Presence API exposes a process-local Map. In multi-process deployments set to 'false'
+    // and the endpoint returns 501. See INVARIANT in collab/server.ts.
+    PRESENCE_API_ENABLED: z.string().default('true').transform((s) => s.toLowerCase() === 'true'),
 });
 
 export const env = Schema.parse(process.env);

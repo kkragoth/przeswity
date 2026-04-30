@@ -1,8 +1,13 @@
+import { z } from 'zod';
 import { SystemRole } from '../db/auth-schema.js';
 
-export type BookRole = 'editor' | 'proofreader' | 'translator' | 'author' | 'typesetter' | 'coordinator';
+export const ROLES = ['editor', 'proofreader', 'translator', 'author', 'typesetter', 'coordinator'] as const;
+export type BookRole = typeof ROLES[number];
 export type Role = BookRole;
-export const ROLES: BookRole[] = ['editor', 'proofreader', 'translator', 'author', 'typesetter', 'coordinator'];
+
+// Single source of truth for role enums in zod schemas. Anywhere a request body or query
+// param refers to a book role, use this enum — never inline the literal list.
+export const BookRoleEnum = z.enum(ROLES);
 
 export type Permissions = {
     canEdit: boolean;
@@ -54,7 +59,9 @@ export function permissionsForUser(
         return { canEdit: true, canSuggest: true, canComment: true, canResolve: true, canManagePeople: true, canDeleteBook: true };
     }
     if (user.isOwner) {
-        return { ...base, canManagePeople: true };
+        // Owners get full collaborative permissions + people management. canDeleteBook
+        // stays false: book deletion is an explicit admin-only policy at the route level.
+        return { canEdit: true, canSuggest: true, canComment: true, canResolve: true, canManagePeople: true, canDeleteBook: false };
     }
     return base;
 }

@@ -1,10 +1,7 @@
 import { auth } from '../auth/betterAuth.js';
-import { db } from '../db/client.js';
-import { assignment, book } from '../db/schema.js';
-import { and, eq } from 'drizzle-orm';
 import type { Role } from '../lib/permissions.js';
-import { mergePermissions, isAdmin } from '../lib/permissions.js';
 import { env } from '../env.js';
+import { getBookAccessByUserId } from '../lib/access.js';
 
 export interface CollabContext {
     user: any;
@@ -30,13 +27,14 @@ export async function authenticate(data: {
 
     if (!data.documentName.startsWith('book:')) throw new Error('bad document name');
     const bookId = data.documentName.slice('book:'.length);
-    const [b] = await db.select().from(book).where(eq(book.id, bookId));
-    if (!b) throw new Error('book not found');
 
     if (!u) {
         if (env.ENABLE_DEV_AUTH && env.NODE_ENV !== 'production') {
             // Dev-only fallback: some WS clients/browsers may omit auth cookies.
             // Allow collaboration so seeded books/cursors are still testable locally.
+            // Verify the book exists so this still 404s on unknown ids.
+            const probe = await getBookAccessByUserId(bookId, null, null);
+            if (probe.kind === 'notFound') throw new Error('book not found');
             return {
                 user: { id: 'dev-ws-anon', name: 'Dev WS User', systemRole: 'admin' },
                 roles: ['editor'],
@@ -46,16 +44,15 @@ export async function authenticate(data: {
         throw new Error('unauthenticated');
     }
 
-    if (isAdmin(u.systemRole) || b.createdById === u.id) {
+    const access = await getBookAccessByUserId(bookId, u.id, u.systemRole ?? null);
+    if (access.kind === 'notFound') throw new Error('book not found');
+    if (access.kind === 'forbidden') throw new Error('forbidden');
+
+    // Admin and owner act as editors regardless of declared roles.
+    if (access.isAdmin || access.isOwner) {
         return { user: u, roles: ['editor'], readOnly: false };
     }
-
-    const rows = await db.select().from(assignment)
-        .where(and(eq(assignment.bookId, bookId), eq(assignment.userId, u.id)));
-    if (rows.length === 0) throw new Error('forbidden');
-
-    const roles = rows.map((r) => r.role as Role);
-    const merged = mergePermissions(roles);
-    const readOnly = !merged.canEdit && !merged.canSuggest;
+    const { permissions, roles } = access;
+    const readOnly = !permissions.canEdit && !permissions.canSuggest;
     return { user: u, roles, readOnly };
 }

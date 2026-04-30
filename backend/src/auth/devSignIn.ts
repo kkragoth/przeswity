@@ -1,10 +1,15 @@
 import express, { Router, type Request, type Response } from 'express';
 import { eq } from 'drizzle-orm';
+import { z } from 'zod';
 import { auth } from './betterAuth.js';
 import { db } from '../db/client.js';
 import { user } from '../db/auth-schema.js';
 import { env } from '../env.js';
 import { DEV_PASSWORD } from '../seed/devPassword.js';
+
+const DevSignInBody = z
+    .object({ userId: z.string().optional(), email: z.string().email().optional() })
+    .refine((b) => !!(b.userId || b.email), { message: 'userId or email required' });
 
 export const devAuthEnabled = env.ENABLE_DEV_AUTH && env.NODE_ENV !== 'production';
 
@@ -34,14 +39,19 @@ if (devAuthEnabled) {
     });
 
     devAuthRouter.post('/api/auth/dev/sign-in', async (req: Request, res: Response) => {
-        const body = req.body as { userId?: string; email?: string };
+        const parsed = DevSignInBody.safeParse(req.body);
+        if (!parsed.success) {
+            res.status(400).json({ error: { code: 'errors.validation', message: parsed.error.message, issues: parsed.error.issues } });
+            return;
+        }
+        const body = parsed.data;
         let email = body.email;
         if (!email && body.userId) {
             const found = await db.select({ email: user.email }).from(user).where(eq(user.id, body.userId)).limit(1);
             email = found[0]?.email;
         }
         if (!email) {
-            res.status(400).json({ error: { code: 'errors.validation', message: 'userId or email required' } });
+            res.status(404).json({ error: { code: 'errors.user.notFound', message: 'user not found' } });
             return;
         }
         const result = await auth.api.signInEmail({
