@@ -1,23 +1,29 @@
 import { createFileRoute, redirect, Outlet, useRouterState } from '@tanstack/react-router';
 import { authClient } from '@/auth/client';
-import { useSessionPing } from '@/auth/useSessionPing';
-import { AppTopBar } from '@/components/AppTopBar';
+import { useSessionPing } from '@/hooks/api/useSessionPing';
+import { AppTopBar } from '@/components/layout/AppTopBar';
 import type { Session, SessionUser } from '@/auth/types';
+import { isImmersiveRoute } from '@/lib/routes';
 
 export const Route = createFileRoute('/_app')({
     async beforeLoad({ location }) {
-        const { data } = await authClient.getSession();
-        if (!data) {
-            throw redirect({ to: '/login', search: { next: location.href } as never });
+        try {
+            const { data } = await authClient.getSession();
+            if (!data) {
+                throw redirect({ to: '/login', search: { next: location.href } as never });
+            }
+            return { session: data as unknown as Session };
+        } catch (error) {
+            // Network/backend failures should not crash router matching.
+            console.warn('Session lookup failed, redirecting to login.', error);
+            throw redirect({
+                to: '/login',
+                search: { next: location.href, reason: 'session-unavailable' } as never,
+            });
         }
-        return { session: data as unknown as Session };
     },
     component: AppLayout,
 });
-
-function isImmersiveRoute(pathname: string): boolean {
-    return /^\/books\/[^/]+$/.test(pathname);
-}
 
 function AppLayout() {
     const { session } = Route.useRouteContext();

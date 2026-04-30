@@ -149,6 +149,8 @@
         "role": "role: {{role}}",
         "mode": "mode: {{mode}}",
         "usersOnline_one": "{{count}} user online",
+        "usersOnline_few": "{{count}} users online",
+        "usersOnline_many": "{{count}} users online",
         "usersOnline_other": "{{count}} users online"
     },
     "modes": {

@@ -1,4 +1,5 @@
 import type { Editor } from '@tiptap/react';
+import { makeId } from '@/editor/utils';
 
 export interface AiAuthor {
   id: string
@@ -13,10 +14,6 @@ const DEFAULT_AI: AiAuthor = {
 };
 
 const META_SKIP = 'suggestionMode/skip';
-
-function makeId(): string {
-    return `ai-${Math.random().toString(36).slice(2, 10)}`;
-}
 
 // Mock AI rephrase. Replace with a real Anthropic / OpenAI call later.
 async function fakeRephrase(text: string): Promise<string> {
@@ -89,7 +86,7 @@ function applyAiSuggestion(
     if (!insertionType || !deletionType)
         return { ok: false, message: 'Track-change marks not configured.' };
 
-    const id = makeId();
+    const id = `ai-${makeId()}`;
     const attrs = {
         suggestionId: id,
         authorId: author.id,

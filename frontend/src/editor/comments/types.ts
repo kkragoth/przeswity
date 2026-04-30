@@ -1,4 +1,4 @@
-import type { Role } from '../identity/types';
+import type { Role } from '@/editor/identity/types';
 
 export interface CommentThread {
   id: string

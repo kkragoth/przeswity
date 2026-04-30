@@ -11,3 +11,4 @@ deploy/certbot/conf/
 deploy/certbot/www/
 .vscode/
 .worktrees/
+.superpowers/

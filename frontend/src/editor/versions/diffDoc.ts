@@ -1,10 +1,5 @@
-export interface JSONNode {
-  type: string
-  attrs?: Record<string, unknown>
-  content?: JSONNode[]
-  marks?: { type: string; attrs?: Record<string, unknown> }[]
-  text?: string
-}
+import type { JSONNode } from '@/editor/types';
+export type { JSONNode } from '@/editor/types';
 
 interface TextOp {
   type: 'eq' | 'ins' | 'del'

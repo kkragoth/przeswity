@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { bookAssignmentDelete, bookAssignmentsList } from '@/api/generated/services.gen';
 import type { AssignmentWithUser } from '@/api/generated/types.gen';
 import { Button } from '@/components/ui/button';
-import { RoleBadge } from '@/components/RoleBadge';
-import { EmptyState } from '@/components/EmptyState';
+import { RoleBadge } from '@/components/badges/RoleBadge';
+import { EmptyState } from '@/components/feedback/EmptyState';
 
 export function AssignmentList({ bookId }: { bookId: string }) {
     const { t } = useTranslation('common');

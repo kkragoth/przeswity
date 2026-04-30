@@ -1,12 +1,19 @@
 import type { Editor } from '@tiptap/react';
+import type { JSONNode } from '@/editor/types';
 
-interface JSONNode {
-  type: string
-  attrs?: Record<string, unknown>
-  content?: JSONNode[]
-  marks?: { type: string; attrs?: Record<string, unknown> }[]
-  text?: string
-}
+export const MAMMOTH_STYLE_MAP = [
+    "p[style-name='Heading 1'] => h1:fresh",
+    "p[style-name='Heading 2'] => h2:fresh",
+    "p[style-name='Heading 3'] => h3:fresh",
+    "p[style-name='Heading 4'] => h4:fresh",
+    "p[style-name='Quote'] => blockquote > p:fresh",
+    "p[style-name='Intense Quote'] => blockquote > p:fresh",
+    "p[style-name='List Bullet'] => ul > li:fresh",
+    "p[style-name='List Number'] => ol > li:fresh",
+    "b => strong",
+    "i => em",
+    "u => u",
+];
 
 function escapeText(s: string): string {
     return s.replace(/([*_`\\[\]()])/g, '\\$1');

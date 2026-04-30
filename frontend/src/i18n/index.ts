@@ -2,26 +2,26 @@ import i18n from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import { initReactI18next } from 'react-i18next';
 
-import plCommon from '../locales/pl/common.json';
-import plAuth from '../locales/pl/auth.json';
-import plAdmin from '../locales/pl/admin.json';
-import plCoordinator from '../locales/pl/coordinator.json';
-import plEditor from '../locales/pl/editor.json';
-import plErrors from '../locales/pl/errors.json';
+import plCommon from '@/locales/pl/common.json';
+import plAuth from '@/locales/pl/auth.json';
+import plAdmin from '@/locales/pl/admin.json';
+import plCoordinator from '@/locales/pl/coordinator.json';
+import plEditor from '@/locales/pl/editor.json';
+import plErrors from '@/locales/pl/errors.json';
 
-import enCommon from '../locales/en/common.json';
-import enAuth from '../locales/en/auth.json';
-import enAdmin from '../locales/en/admin.json';
-import enCoordinator from '../locales/en/coordinator.json';
-import enEditor from '../locales/en/editor.json';
-import enErrors from '../locales/en/errors.json';
+import enCommon from '@/locales/en/common.json';
+import enAuth from '@/locales/en/auth.json';
+import enAdmin from '@/locales/en/admin.json';
+import enCoordinator from '@/locales/en/coordinator.json';
+import enEditor from '@/locales/en/editor.json';
+import enErrors from '@/locales/en/errors.json';
 
-import uaCommon from '../locales/ua/common.json';
-import uaAuth from '../locales/ua/auth.json';
-import uaAdmin from '../locales/ua/admin.json';
-import uaCoordinator from '../locales/ua/coordinator.json';
-import uaEditor from '../locales/ua/editor.json';
-import uaErrors from '../locales/ua/errors.json';
+import uaCommon from '@/locales/ua/common.json';
+import uaAuth from '@/locales/ua/auth.json';
+import uaAdmin from '@/locales/ua/admin.json';
+import uaCoordinator from '@/locales/ua/coordinator.json';
+import uaEditor from '@/locales/ua/editor.json';
+import uaErrors from '@/locales/ua/errors.json';
 
 export const SUPPORTED = ['pl', 'en', 'ua'] as const;
 export type Locale = (typeof SUPPORTED)[number];
