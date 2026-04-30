@@ -8,6 +8,7 @@ import { BooksList } from '@/containers/coordinator/components/BooksList';
 import { BooksTimeline } from '@/containers/coordinator/components/BooksTimeline';
 import { FilterChip } from '@/containers/coordinator/components/FilterChip';
 import { KpiCard } from '@/containers/coordinator/components/KpiCard';
+import { DashboardView, QuickFilter } from '@/containers/coordinator/hooks/booksDashboardSelectors';
 import { useBooksDashboard } from '@/hooks/api/useBooksDashboard';
 
 export function CoordinatorDashboard({ me }: { me: SessionUser }) {
@@ -25,22 +26,22 @@ export function CoordinatorDashboard({ me }: { me: SessionUser }) {
                 <Button className="gap-2" onClick={() => navigate({ to: '/coordinator/books/new' })}><Plus className="h-4 w-4" />{t('newBook')}</Button>
             </div>
             <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <KpiCard label={t('dashboard.kpi.attention')} value={d.kpis.attention} icon={CircleAlert} tone="danger" onClick={() => d.setFilter.setQuickFilter('attention')} />
-                <KpiCard label={t('dashboard.kpi.recent')} value={d.kpis.recent} icon={MessageSquareText} tone="primary" onClick={() => d.setFilter.setQuickFilter('recent')} />
-                <KpiCard label={t('dashboard.kpi.activeWeek')} value={d.kpis.activeWeek} icon={CalendarClock} onClick={() => d.setFilter.setQuickFilter('all')} />
-                <KpiCard label={t('dashboard.kpi.unassigned')} value={d.kpis.unassigned} icon={Users} onClick={() => d.setFilter.setQuickFilter('unassigned')} />
+                <KpiCard label={t('dashboard.kpi.attention')} value={d.kpis.attention} icon={CircleAlert} tone="danger" onClick={() => d.setFilter.setQuickFilter(QuickFilter.Attention)} />
+                <KpiCard label={t('dashboard.kpi.recent')} value={d.kpis.recent} icon={MessageSquareText} tone="primary" onClick={() => d.setFilter.setQuickFilter(QuickFilter.Recent)} />
+                <KpiCard label={t('dashboard.kpi.activeWeek')} value={d.kpis.activeWeek} icon={CalendarClock} onClick={() => d.setFilter.setQuickFilter(QuickFilter.All)} />
+                <KpiCard label={t('dashboard.kpi.unassigned')} value={d.kpis.unassigned} icon={Users} onClick={() => d.setFilter.setQuickFilter(QuickFilter.Unassigned)} />
             </div>
             <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
                 <FilterChip active={d.filters.showOnlyMine} onClick={() => d.setFilter.setShowOnlyMine(true)}>{t('books.filterMine')}</FilterChip>
                 <FilterChip active={!d.filters.showOnlyMine} onClick={() => d.setFilter.setShowOnlyMine(false)}>{t('books.filterAll')}</FilterChip>
                 <div className="mx-1 h-5 w-px bg-border" />
-                <FilterChip active={d.filters.view === 'list'} onClick={() => d.setFilter.setView('list')}>{t('dashboard.view.list')}</FilterChip>
-                <FilterChip active={d.filters.view === 'timeline'} onClick={() => d.setFilter.setView('timeline')}>{t('dashboard.view.timeline')}</FilterChip>
+                <FilterChip active={d.filters.view === DashboardView.List} onClick={() => d.setFilter.setView(DashboardView.List)}>{t('dashboard.view.list')}</FilterChip>
+                <FilterChip active={d.filters.view === DashboardView.Timeline} onClick={() => d.setFilter.setView(DashboardView.Timeline)}>{t('dashboard.view.timeline')}</FilterChip>
                 <div className="mx-1 h-5 w-px bg-border" />
-                <FilterChip active={d.filters.quickFilter === 'all'} onClick={() => d.setFilter.setQuickFilter('all')}>{t('dashboard.quick.all')}</FilterChip>
-                <FilterChip active={d.filters.quickFilter === 'attention'} onClick={() => d.setFilter.setQuickFilter('attention')}>{t('dashboard.quick.attention')}</FilterChip>
-                <FilterChip active={d.filters.quickFilter === 'recent'} onClick={() => d.setFilter.setQuickFilter('recent')}>{t('dashboard.quick.recent')}</FilterChip>
-                <FilterChip active={d.filters.quickFilter === 'unassigned'} onClick={() => d.setFilter.setQuickFilter('unassigned')}>{t('dashboard.quick.unassigned')}</FilterChip>
+                <FilterChip active={d.filters.quickFilter === QuickFilter.All} onClick={() => d.setFilter.setQuickFilter(QuickFilter.All)}>{t('dashboard.quick.all')}</FilterChip>
+                <FilterChip active={d.filters.quickFilter === QuickFilter.Attention} onClick={() => d.setFilter.setQuickFilter(QuickFilter.Attention)}>{t('dashboard.quick.attention')}</FilterChip>
+                <FilterChip active={d.filters.quickFilter === QuickFilter.Recent} onClick={() => d.setFilter.setQuickFilter(QuickFilter.Recent)}>{t('dashboard.quick.recent')}</FilterChip>
+                <FilterChip active={d.filters.quickFilter === QuickFilter.Unassigned} onClick={() => d.setFilter.setQuickFilter(QuickFilter.Unassigned)}>{t('dashboard.quick.unassigned')}</FilterChip>
             </div>
             {d.roleOptions.length > 0 ? (
                 <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -50,7 +51,7 @@ export function CoordinatorDashboard({ me }: { me: SessionUser }) {
                 </div>
             ) : null}
             <p className="mt-3 text-xs text-muted-foreground">{t('dashboard.showing', { visible: d.visible.length, total: d.scoped.length })}</p>
-            {d.filters.view === 'list' ? <BooksList books={d.visible} me={me} loading={d.isLoading} /> : <BooksTimeline books={d.visible} loading={d.isLoading} />}
+            {d.filters.view === DashboardView.List ? <BooksList books={d.visible} me={me} loading={d.isLoading} /> : <BooksTimeline books={d.visible} loading={d.isLoading} />}
         </div>
     );
 }

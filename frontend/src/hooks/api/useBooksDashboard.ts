@@ -3,12 +3,12 @@ import { useCallback, useMemo, useState } from 'react';
 import { booksListOptions } from '@/api/generated/@tanstack/react-query.gen';
 import type { SessionUser } from '@/auth/types';
 import { isAttentionBook, isRecentBook } from '@/lib/status';
-import { filterBooks, type DashboardView, type QuickFilter, isActiveWithinDays } from '@/containers/coordinator/hooks/booksDashboardSelectors';
+import { DashboardView, QuickFilter, filterBooks, isActiveWithinDays } from '@/containers/coordinator/hooks/booksDashboardSelectors';
 
 export function useBooksDashboard(me: SessionUser) {
     const [showOnlyMine, setShowOnlyMine] = useState(true);
-    const [view, setView] = useState<DashboardView>('list');
-    const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
+    const [view, setView] = useState<DashboardView>(DashboardView.List);
+    const [quickFilter, setQuickFilter] = useState<QuickFilter>(QuickFilter.All);
     const [roleFilter, setRoleFilter] = useState<string>('all');
     const onSetShowOnlyMine = useCallback((next: boolean) => setShowOnlyMine(next), []);
     const onSetView = useCallback((next: DashboardView) => setView(next), []);

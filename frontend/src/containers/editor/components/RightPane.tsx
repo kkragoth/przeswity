@@ -8,7 +8,10 @@ import { SuggestionsSidebar } from '@/containers/editor/components/suggestions/S
 import type { User } from '@/editor/identity/types';
 import type { Peer } from '@/containers/editor/hooks/usePeers';
 
-export type RightTab = 'comments' | 'suggestions'
+export enum RightTab {
+    Comments = 'comments',
+    Suggestions = 'suggestions',
+}
 
 interface RightPaneProps {
     tab: RightTab
@@ -28,8 +31,8 @@ interface RightPaneProps {
 type RightTabTKey = 'pane.comments' | 'pane.suggestions'
 
 const TABS: { id: RightTab; icon: typeof MessageSquare; labelKey: RightTabTKey }[] = [
-    { id: 'comments',    icon: MessageSquare,       labelKey: 'pane.comments' },
-    { id: 'suggestions', icon: GitPullRequestArrow, labelKey: 'pane.suggestions' },
+    { id: RightTab.Comments,    icon: MessageSquare,       labelKey: 'pane.comments' },
+    { id: RightTab.Suggestions, icon: GitPullRequestArrow, labelKey: 'pane.suggestions' },
 ];
 
 export function RightPane({
@@ -81,7 +84,7 @@ export function RightPane({
             </div>
 
             <div className="pane-body">
-                {tab === 'comments' ? (
+                {tab === RightTab.Comments ? (
                     <CommentsSidebar
                         doc={doc}
                         editor={editor}

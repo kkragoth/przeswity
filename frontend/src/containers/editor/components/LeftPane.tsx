@@ -19,7 +19,13 @@ import type { User } from '@/editor/identity/types';
 import type { PaneState } from '@/containers/editor/hooks/usePaneState';
 import { EmptyState } from '@/containers/editor/components/EmptyState';
 
-export type LeftTab = 'outline' | 'versions' | 'glossary' | 'meta' | 'files'
+export enum LeftTab {
+    Outline = 'outline',
+    Versions = 'versions',
+    Glossary = 'glossary',
+    Meta = 'meta',
+    Files = 'files',
+}
 
 interface LeftPaneProps {
     tab: LeftTab
@@ -42,19 +48,19 @@ type TabTKey =
     | 'pane.files'
 
 const TABS: { id: LeftTab; icon: typeof ListTree; labelKey: TabTKey }[] = [
-    { id: 'outline',  icon: ListTree,  labelKey: 'pane.outline' },
-    { id: 'versions', icon: History,   labelKey: 'pane.versions' },
-    { id: 'glossary', icon: BookOpen,  labelKey: 'pane.glossary' },
-    { id: 'meta',     icon: FileText,  labelKey: 'pane.meta' },
-    { id: 'files',    icon: Folder,    labelKey: 'pane.files' },
+    { id: LeftTab.Outline,  icon: ListTree,  labelKey: 'pane.outline' },
+    { id: LeftTab.Versions, icon: History,   labelKey: 'pane.versions' },
+    { id: LeftTab.Glossary, icon: BookOpen,  labelKey: 'pane.glossary' },
+    { id: LeftTab.Meta,     icon: FileText,  labelKey: 'pane.meta' },
+    { id: LeftTab.Files,    icon: Folder,    labelKey: 'pane.files' },
 ];
 
 const TAB_TITLE: Record<LeftTab, TabTKey> = {
-    outline:  'pane.outline',
-    versions: 'pane.versions',
-    glossary: 'pane.glossary',
-    meta:     'pane.meta',
-    files:    'pane.files',
+    [LeftTab.Outline]:  'pane.outline',
+    [LeftTab.Versions]: 'pane.versions',
+    [LeftTab.Glossary]: 'pane.glossary',
+    [LeftTab.Meta]:     'pane.meta',
+    [LeftTab.Files]:    'pane.files',
 };
 
 function OutlineGhostIcon() {
@@ -140,7 +146,7 @@ export function LeftPane({
             </div>
 
             <div className="pane-body">
-                {tab === 'outline' && (
+                {tab === LeftTab.Outline && (
                     <>
                         {!hasHeadings && editor ? (
                             <EmptyState
@@ -157,12 +163,12 @@ export function LeftPane({
                         )}
                     </>
                 )}
-                {tab === 'versions' && (
+                {tab === LeftTab.Versions && (
                     <VersionsPanel doc={doc} user={user} editor={editor} onToast={onToast} />
                 )}
-                {tab === 'glossary' && <GlossaryPanel doc={doc} />}
-                {tab === 'meta' && <MetaPanel doc={doc} />}
-                {tab === 'files' && (
+                {tab === LeftTab.Glossary && <GlossaryPanel doc={doc} />}
+                {tab === LeftTab.Meta && <MetaPanel doc={doc} />}
+                {tab === LeftTab.Files && (
                     <EmptyState
                         icon={<Folder size={32} strokeWidth={1.25} />}
                         title={t('filesPlaceholder')}
