@@ -97,14 +97,44 @@ export function EditorView({
         if (editor) onEditorReady(editor);
     }, [editor, onEditorReady]);
 
-    // Awareness: keep our user info in sync with provider
+    // Awareness: keep our user info in sync with provider, and bump
+    // lastActiveAt on selection/text activity so peers can fade out our label.
     useEffect(() => {
         if (!editor) return;
-        collab.provider.awareness?.setLocalStateField('user', {
-            name: user.name,
-            color: user.color,
-        });
-    }, [collab.provider, editor, user.name, user.color]);
+        const awareness = collab.provider.awareness;
+        if (!awareness) return;
+
+        const setUser = (lastActiveAt: number) => {
+            awareness.setLocalStateField('user', {
+                name: user.name,
+                color: user.color,
+                userId: user.id,
+                lastActiveAt,
+            });
+        };
+
+        setUser(Date.now());
+
+        let pendingTimer: ReturnType<typeof setTimeout> | null = null;
+        const ACTIVITY_THROTTLE_MS = 250;
+        const onActivity = () => {
+            if (pendingTimer !== null) return;
+            pendingTimer = setTimeout(() => {
+                pendingTimer = null;
+                setUser(Date.now());
+            }, ACTIVITY_THROTTLE_MS);
+        };
+        editor.on('selectionUpdate', onActivity);
+        editor.on('update', onActivity);
+        return () => {
+            editor.off('selectionUpdate', onActivity);
+            editor.off('update', onActivity);
+            if (pendingTimer !== null) {
+                clearTimeout(pendingTimer);
+                pendingTimer = null;
+            }
+        };
+    }, [collab.provider, editor, user.id, user.name, user.color]);
 
     // Block-handle hover state + drag-over indicator — both install once editor is ready
     const hoveredBlock = useBlockHover(editor);
