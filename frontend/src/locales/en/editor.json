@@ -1,4 +1,7 @@
 {
+    "global": {
+        "cancel": "Cancel"
+    },
     "topbar": {
         "saving": "Saving...",
         "saved": "Saved",
@@ -92,6 +95,7 @@
     },
     "comments": {
         "tabs": {
+            "comments": "Comments",
             "active": "Active",
             "resolved": "Resolved",
             "detached": "Detached"
@@ -151,7 +155,20 @@
         "usersOnline_one": "{{count}} user online",
         "usersOnline_few": "{{count}} users online",
         "usersOnline_many": "{{count}} users online",
-        "usersOnline_other": "{{count}} users online"
+        "usersOnline_other": "{{count}} users online",
+        "soloOnline": "only you"
+    },
+    "peers": {
+        "activeNow": "active now",
+        "idleFor_one": "idle {{count}} min",
+        "idleFor_few": "idle {{count}} min",
+        "idleFor_many": "idle {{count}} min",
+        "idleFor_other": "idle {{count}} min",
+        "morePeers": "{{count}} more",
+        "stackLabel_one": "{{count}} collaborator online",
+        "stackLabel_few": "{{count}} collaborators online",
+        "stackLabel_many": "{{count}} collaborators online",
+        "stackLabel_other": "{{count}} collaborators online"
     },
     "modes": {
         "zen": "Focus mode",
@@ -164,7 +181,8 @@
         "translator": "Translator",
         "author": "Author",
         "typesetter": "Typesetter",
-        "coordinator": "Coordinator"
+        "coordinator": "Coordinator",
+        "admin": "Admin"
     },
     "blockMenu": {
         "moveUp": "Move up",

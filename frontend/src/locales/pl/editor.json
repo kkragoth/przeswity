@@ -1,4 +1,7 @@
 {
+    "global": {
+        "cancel": "Anuluj"
+    },
     "topbar": {
         "saving": "Zapisywanie...",
         "saved": "Zapisano",
@@ -92,6 +95,7 @@
     },
     "comments": {
         "tabs": {
+            "comments": "Komentarze",
             "active": "Aktywne",
             "resolved": "Rozwiązane",
             "detached": "Odłączone"
@@ -151,7 +155,20 @@
         "usersOnline_one": "{{count}} użytkownik online",
         "usersOnline_few": "{{count}} użytkownicy online",
         "usersOnline_many": "{{count}} użytkowników online",
-        "usersOnline_other": "{{count}} użytkowników online"
+        "usersOnline_other": "{{count}} użytkowników online",
+        "soloOnline": "tylko Ty"
+    },
+    "peers": {
+        "activeNow": "aktywny teraz",
+        "idleFor_one": "nieaktywny {{count}} min",
+        "idleFor_few": "nieaktywny {{count}} min",
+        "idleFor_many": "nieaktywny {{count}} min",
+        "idleFor_other": "nieaktywny {{count}} min",
+        "morePeers": "i {{count}} więcej",
+        "stackLabel_one": "{{count}} współpracownik online",
+        "stackLabel_few": "{{count}} współpracowników online",
+        "stackLabel_many": "{{count}} współpracowników online",
+        "stackLabel_other": "{{count}} współpracowników online"
     },
     "modes": {
         "zen": "Tryb skupienia",
@@ -164,7 +181,8 @@
         "translator": "Tłumacz",
         "author": "Autor",
         "typesetter": "Skład",
-        "coordinator": "Koordynator"
+        "coordinator": "Koordynator",
+        "admin": "Administrator"
     },
     "blockMenu": {
         "moveUp": "Przesuń w górę",

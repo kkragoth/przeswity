@@ -1,4 +1,7 @@
 {
+    "global": {
+        "cancel": "Скасувати"
+    },
     "topbar": {
         "saving": "Збереження...",
         "saved": "Збережено",
@@ -92,6 +95,7 @@
     },
     "comments": {
         "tabs": {
+            "comments": "Коментарі",
             "active": "Активні",
             "resolved": "Вирішені",
             "detached": "Від'єднані"
@@ -151,7 +155,20 @@
         "usersOnline_one": "{{count}} користувач онлайн",
         "usersOnline_few": "{{count}} користувачі онлайн",
         "usersOnline_many": "{{count}} користувачів онлайн",
-        "usersOnline_other": "{{count}} користувачів онлайн"
+        "usersOnline_other": "{{count}} користувачів онлайн",
+        "soloOnline": "тільки ви"
+    },
+    "peers": {
+        "activeNow": "активний зараз",
+        "idleFor_one": "неактивний {{count}} хв",
+        "idleFor_few": "неактивний {{count}} хв",
+        "idleFor_many": "неактивний {{count}} хв",
+        "idleFor_other": "неактивний {{count}} хв",
+        "morePeers": "ще {{count}}",
+        "stackLabel_one": "{{count}} учасник онлайн",
+        "stackLabel_few": "{{count}} учасники онлайн",
+        "stackLabel_many": "{{count}} учасників онлайн",
+        "stackLabel_other": "{{count}} учасників онлайн"
     },
     "modes": {
         "zen": "Режим зосередження",
@@ -164,7 +181,8 @@
         "translator": "Перекладач",
         "author": "Автор",
         "typesetter": "Верстальник",
-        "coordinator": "Координатор"
+        "coordinator": "Координатор",
+        "admin": "Адміністратор"
     },
     "blockMenu": {
         "moveUp": "Перемістити вгору",
