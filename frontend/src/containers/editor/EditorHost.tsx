@@ -14,8 +14,8 @@ import { Toolbar } from '@/editor/tiptap/Toolbar';
 import { useGlossary } from '@/containers/editor/components/glossary/GlossaryPanel';
 import { ShortcutsModal } from '@/containers/editor/components/workflow/ShortcutsModal';
 import { TopBar } from '@/containers/editor/components/TopBar';
-import { LeftPane, type LeftTab } from '@/containers/editor/components/LeftPane';
-import { RightPane, type RightTab } from '@/containers/editor/components/RightPane';
+import { LeftPane, LeftTab } from '@/containers/editor/components/LeftPane';
+import { RightPane, RightTab } from '@/containers/editor/components/RightPane';
 import { StatusBar } from '@/containers/editor/components/StatusBar';
 import { usePeers } from '@/containers/editor/hooks/usePeers';
 import { useConnectionStatus } from '@/containers/editor/hooks/useConnectionStatus';
@@ -26,7 +26,9 @@ import { useSuggestingMode } from '@/containers/editor/hooks/useSuggestingMode';
 import { usePaneState, PaneState } from '@/containers/editor/hooks/usePaneState';
 import { useCollabSession } from '@/containers/editor/hooks/useCollabSession';
 import { useFontsReady } from '@/containers/editor/hooks/useFontsReady';
+import { useInitialSync } from '@/containers/editor/hooks/useInitialSync';
 import { EditorLayout } from '@/containers/editor/EditorLayout';
+import { EditorSkeleton } from '@/containers/editor/components/EditorSkeleton';
 
 interface EditorHostProps {
     bookId: string;
@@ -45,8 +47,8 @@ function EditorSession({ bookId, bookTitle, user, collab }: {
     const [editor, setEditor] = useState<Editor | null>(null);
     const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
     const [pendingNew, setPendingNew] = useState<{ id: string; quote: string } | null>(null);
-    const [rightTab, setRightTab] = useState<RightTab>('comments');
-    const [leftTab, setLeftTab] = useState<LeftTab>('outline');
+    const [rightTab, setRightTab] = useState<RightTab>(RightTab.Comments);
+    const [leftTab, setLeftTab] = useState<LeftTab>(LeftTab.Outline);
     const [findOpen, setFindOpen] = useState(false);
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
@@ -68,22 +70,22 @@ function EditorSession({ bookId, bookTitle, user, collab }: {
     const charCount = editor?.storage.characterCount?.characters() ?? 0;
     const wordCount = editor?.storage.characterCount?.words() ?? 0;
     const leftTabLabels: Record<LeftTab, string> = {
-        outline: t('pane.outline'),
-        versions: t('pane.versions'),
-        glossary: t('pane.glossary'),
-        meta: t('pane.meta'),
-        files: t('pane.files'),
+        [LeftTab.Outline]: t('pane.outline'),
+        [LeftTab.Versions]: t('pane.versions'),
+        [LeftTab.Glossary]: t('pane.glossary'),
+        [LeftTab.Meta]: t('pane.meta'),
+        [LeftTab.Files]: t('pane.files'),
     };
     const rightTabLabels: Record<RightTab, string> = {
-        comments: t('pane.comments'),
-        suggestions: t('pane.suggestions'),
+        [RightTab.Comments]: t('pane.comments'),
+        [RightTab.Suggestions]: t('pane.suggestions'),
     };
 
     return (
         <EditorLayout
             paneState={{ left: leftPane.state, right: rightPane.state }}
             topBar={<TopBar user={user} bookTitle={bookTitle} editor={editor} perms={ROLE_PERMISSIONS[user.role]} onToast={toast.show} />}
-            leftPane={<LeftPane tab={leftTab} onTabChange={setLeftTab} paneState={leftPane.state} onExpand={leftPane.expand} onRail={leftPane.rail} onHide={leftPane.hide} doc={collab.doc} user={user} editor={editor} onToast={toast.show} />}
+            leftPane={<LeftPane tab={leftTab} onTabChange={setLeftTab} paneState={leftPane.state} onExpand={leftPane.expand} onRail={leftPane.rail} onHide={leftPane.hide} doc={collab.doc} user={user} editor={editor} bookId={bookId} onToast={toast.show} />}
             leftHandle={leftPane.isHidden ? <button type="button" className="pane-handle pane-handle-left" title={t('pane.expand')} onClick={leftPane.expand}><ChevronRight size={14} /></button> : null}
             content={
                 <>
@@ -113,11 +115,11 @@ function EditorSession({ bookId, bookTitle, user, collab }: {
                         glossaryEntries={glossaryEntries}
                         onActiveCommentChange={(id) => {
                             setActiveCommentId(id);
-                            if (id) { setRightTab('comments'); rightPane.expand(); }
+                            if (id) { setRightTab(RightTab.Comments); rightPane.expand(); }
                         }}
                         onCreateComment={(id, quote) => {
                             setPendingNew({ id, quote });
-                            setRightTab('comments');
+                            setRightTab(RightTab.Comments);
                             rightPane.expand();
                         }}
                         onEditorReady={setEditor}
@@ -134,7 +136,8 @@ function EditorSession({ bookId, bookTitle, user, collab }: {
                     targetWords={targetWords}
                     user={user}
                     suggestingMode={suggesting.effective}
-                    peerCount={peers.length}
+                    peers={peers}
+                    editor={editor}
                     connStatus={conn.status}
                     onReconnect={conn.reconnect}
                 />
@@ -149,11 +152,12 @@ function EditorSession({ bookId, bookTitle, user, collab }: {
 function EditorHostInner({ bookId, user: userProp, bookTitle }: EditorHostProps) {
     const { collab } = useCollabSession({ bookId });
     const fontsReady = useFontsReady(FONT_VARIANTS);
+    const initialSyncDone = useInitialSync(collab);
     const user: User = useMemo(
         () => ({ id: userProp.id, name: userProp.name, color: userProp.color, role: userProp.role as Role }),
         [userProp.id, userProp.name, userProp.color, userProp.role],
     );
-    if (!collab || !fontsReady) return <div className="editor-host editor-host-loading" />;
+    if (!collab || !fontsReady || !initialSyncDone) return <EditorSkeleton bookTitle={bookTitle} />;
     return <EditorSession key={collab.id} bookId={bookId} bookTitle={bookTitle} user={user} collab={collab} />;
 }
 

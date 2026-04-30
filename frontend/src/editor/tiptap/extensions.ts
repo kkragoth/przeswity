@@ -1,5 +1,6 @@
 import { Extension, type AnyExtension } from '@tiptap/core';
-import { yCursorPlugin, defaultCursorBuilder, defaultSelectionBuilder } from '@tiptap/y-tiptap';
+import { yCursorPlugin } from '@tiptap/y-tiptap';
+import { peerCursorBuilder, peerSelectionBuilder } from '@/editor/collab/peerCursor';
 import StarterKit from '@tiptap/starter-kit';
 import CharacterCount from '@tiptap/extension-character-count';
 import TextAlign from '@tiptap/extension-text-align';
@@ -16,6 +17,7 @@ import type { HeaderClickEvent, FooterClickEvent } from 'tiptap-pagination-plus'
 
 import { Comment } from '@/editor/comments/Comment';
 import { Insertion, Deletion } from '@/editor/suggestions/TrackChange';
+import { DiffBlockAttr } from '@/editor/suggestions/DiffBlockAttr';
 import { SuggestionMode } from '@/editor/suggestions/SuggestionMode';
 import { SmartPaste } from './formatting/SmartPaste';
 import { SmartTypography } from './formatting/SmartTypography';
@@ -77,13 +79,19 @@ export function buildExtensions(config: ExtensionsConfig): AnyExtension[] {
             addProseMirrorPlugins() {
                 // awareness is always defined — we never pass awareness:null to HocuspocusProvider
                 const awareness = collab.provider.awareness!;
-                awareness.setLocalStateField('user', { name: user.name, color: user.color });
-                return [yCursorPlugin(awareness, { cursorBuilder: defaultCursorBuilder, selectionBuilder: defaultSelectionBuilder })];
+                awareness.setLocalStateField('user', {
+                    name: user.name,
+                    color: user.color,
+                    userId: user.id,
+                    lastActiveAt: Date.now(),
+                });
+                return [yCursorPlugin(awareness, { cursorBuilder: peerCursorBuilder, selectionBuilder: peerSelectionBuilder })];
             },
         }),
         Comment.configure({ onCommentClick: config.onCommentClick }),
         Insertion,
         Deletion,
+        DiffBlockAttr,
         SmartPaste,
         FindReplace,
         Footnote,

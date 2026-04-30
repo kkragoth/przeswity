@@ -1,15 +1,9 @@
+import '@/editor/styles.css';
 import { createFileRoute } from '@tanstack/react-router';
 import { lazy, Suspense } from 'react';
+import { EditorSkeleton } from '@/containers/editor/components/EditorSkeleton';
 
 const BookEditorPage = lazy(async () => import('@/containers/books/BookEditorPage').then((m) => ({ default: m.BookEditorPage })));
-
-function EditorSkeleton() {
-    return (
-        <div className="p-8 text-sm text-stone-500" role="status" aria-live="polite">
-            Loading editor...
-        </div>
-    );
-}
 
 export const Route = createFileRoute('/_app/books/$bookId')({
     component: BookDetailRoute,

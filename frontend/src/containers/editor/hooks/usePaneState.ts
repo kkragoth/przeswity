@@ -9,11 +9,15 @@ export type PaneSide = 'left' | 'right'
 
 const storageKey = (side: PaneSide) => `editor.pane.${side}`;
 
-function readInitial(side: PaneSide, fallback: PaneState): PaneState {
+export function readPaneState(side: PaneSide, fallback: PaneState = PaneState.Expanded): PaneState {
     if (typeof window === 'undefined') return fallback;
     const raw = window.localStorage.getItem(storageKey(side));
     if (raw === PaneState.Expanded || raw === PaneState.Rail || raw === PaneState.Hidden) return raw as PaneState;
     return fallback;
+}
+
+function readInitial(side: PaneSide, fallback: PaneState): PaneState {
+    return readPaneState(side, fallback);
 }
 
 export interface PaneStateApi {

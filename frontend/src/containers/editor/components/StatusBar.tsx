@@ -1,10 +1,14 @@
 import { Cloud, CloudOff, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import type { Editor } from '@tiptap/react';
 import type { User } from '@/editor/identity/types';
 import { ROLE_PERMISSIONS } from '@/editor/identity/types';
 import { formatReadingMinutes } from '@/editor/app/readingStats';
+import { wordTargetFillColor, wordTargetPercentClamped, wordTargetPercentRounded } from '@/lib/wordTarget';
 import type { ReadingStatsSummary } from '@/containers/editor/hooks/useReadingStats';
 import type { ConnectionStatus } from '@/containers/editor/hooks/useConnectionStatus';
+import type { Peer } from '@/containers/editor/hooks/usePeers';
+import { PeerAvatarStack } from '@/containers/editor/components/peers/PeerAvatarStack';
 
 interface StatusBarProps {
     wordCount: number
@@ -13,15 +17,10 @@ interface StatusBarProps {
     targetWords: number | undefined
     user: User
     suggestingMode: boolean
-    peerCount: number
+    peers: Peer[]
+    editor: Editor | null
     connStatus: ConnectionStatus
     onReconnect: () => void
-}
-
-function targetFillColor(words: number, target: number): string {
-    if (words >= target) return '#16a34a';
-    if (words >= target * 0.8) return '#eab308';
-    return 'var(--accent)';
 }
 
 function SyncMini({ status, onReconnect }: { status: ConnectionStatus; onReconnect: () => void }) {
@@ -59,7 +58,8 @@ export function StatusBar({
     targetWords,
     user,
     suggestingMode,
-    peerCount,
+    peers,
+    editor,
     connStatus,
     onReconnect,
 }: StatusBarProps) {
@@ -75,13 +75,13 @@ export function StatusBar({
                         <span
                             className="word-target-fill"
                             style={{
-                                width: `${Math.min(100, (wordCount / targetWords) * 100)}%`,
-                                background: targetFillColor(wordCount, targetWords),
+                                width: `${wordTargetPercentClamped(wordCount, targetWords)}%`,
+                                background: wordTargetFillColor(wordCount, targetWords),
                             }}
                         />
                     </span>
                     <span className="word-target-text">
-                        {t('statusbar.targetProgress', { percent: Math.round((wordCount / targetWords) * 100), target: targetWords.toLocaleString() })}
+                        {t('statusbar.targetProgress', { percent: wordTargetPercentRounded(wordCount, targetWords), target: targetWords.toLocaleString() })}
                     </span>
                 </span>
             )}
@@ -97,9 +97,14 @@ export function StatusBar({
             <span>{t('statusbar.role', { role: user.role })}</span>
             <span>·</span>
             <span>{t('statusbar.mode', { mode })}</span>
-            <span>·</span>
-            <span>{t('statusbar.usersOnline', { count: peerCount })}</span>
+            {peers.length === 0 ? (
+                <>
+                    <span>·</span>
+                    <span>{t('statusbar.soloOnline')}</span>
+                </>
+            ) : null}
             <span className="statusbar-spacer" />
+            <PeerAvatarStack peers={peers} editor={editor} />
             <SyncMini status={connStatus} onReconnect={onReconnect} />
         </footer>
     );

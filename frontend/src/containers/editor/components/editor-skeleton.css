@@ -1,0 +1,193 @@
+/* ==========================================================================
+   Editor skeleton — shown while collab connects, fonts load, or auth resolves
+   Mirrors the real editor shell so the layout doesn't shift in on mount.
+   ========================================================================== */
+
+.editor-skeleton {
+    --skel-base: color-mix(in srgb, var(--text) 8%, transparent);
+    --skel-hi: color-mix(in srgb, var(--text) 16%, transparent);
+}
+
+.editor-skeleton-bar,
+.editor-skeleton-logo,
+.editor-skeleton-avatar,
+.editor-skeleton-tool,
+.editor-skeleton-tool-wide {
+    display: inline-block;
+    background: linear-gradient(
+        90deg,
+        var(--skel-base) 0%,
+        var(--skel-hi) 50%,
+        var(--skel-base) 100%
+    );
+    background-size: 200% 100%;
+    background-repeat: no-repeat;
+    border-radius: var(--r-1);
+    animation: editor-skeleton-shimmer 1.4s linear infinite;
+}
+
+@keyframes editor-skeleton-shimmer {
+    0%   { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .editor-skeleton-bar,
+    .editor-skeleton-logo,
+    .editor-skeleton-avatar,
+    .editor-skeleton-tool,
+    .editor-skeleton-tool-wide {
+        animation: none;
+        background: var(--skel-base);
+    }
+}
+
+/* ---------- Topbar ---------- */
+.editor-skeleton-topbar {
+    gap: var(--sp-3);
+}
+.editor-skeleton-logo {
+    width: 20px;
+    height: 20px;
+    border-radius: var(--r-1);
+}
+.editor-skeleton-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+}
+.editor-skeleton-bar-crumb {
+    width: 56px;
+    height: 12px;
+}
+.editor-skeleton-bar-title {
+    width: 180px;
+    height: 14px;
+}
+.editor-skeleton-title-text {
+    color: var(--text);
+    font-weight: var(--fw-medium);
+    font-size: var(--fs-base);
+}
+.editor-skeleton-sep {
+    color: var(--text-subtle);
+    opacity: 0.6;
+    margin: 0 var(--sp-1);
+}
+
+/* ---------- Side panes ---------- */
+.editor-skeleton-pane {
+    padding: 0;
+}
+.editor-skeleton-pane-header {
+    padding: var(--sp-3);
+    border-bottom: 1px solid var(--border-soft);
+}
+.editor-skeleton-bar-pane-title {
+    width: 80px;
+    height: 10px;
+}
+.editor-skeleton-pane-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    padding: var(--sp-4) var(--sp-3);
+}
+.editor-skeleton-pane-body .editor-skeleton-bar {
+    height: 10px;
+}
+
+/* ---------- Center: toolbar ---------- */
+.editor-skeleton-center {
+    background: var(--bg);
+}
+.editor-skeleton-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-4);
+    border-bottom: 1px solid var(--border-soft);
+    background: var(--bg-elev);
+    flex: 0 0 auto;
+}
+.editor-skeleton-tool {
+    width: 24px;
+    height: 24px;
+    border-radius: var(--r-2);
+}
+.editor-skeleton-tool-wide {
+    width: 80px;
+    height: 24px;
+    border-radius: var(--r-2);
+}
+.editor-skeleton-tool-sep {
+    width: 1px;
+    height: 18px;
+    background: var(--border);
+    opacity: 0.6;
+}
+
+/* ---------- Center: page ---------- */
+.editor-skeleton-canvas {
+    flex: 1 1 auto;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    padding: var(--sp-6) var(--sp-4);
+    background: var(--bg);
+}
+.editor-skeleton-page {
+    width: 100%;
+    max-width: var(--editor-measure);
+    background: var(--bg-paper);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--r-2);
+    box-shadow: var(--shadow-paper-1);
+    padding: var(--page-margin-y) var(--page-margin-x);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+}
+.editor-skeleton-line {
+    height: 12px;
+}
+.editor-skeleton-heading {
+    height: 26px;
+    width: 60%;
+    margin-top: var(--sp-2);
+    margin-bottom: var(--sp-3);
+}
+.editor-skeleton-heading-sub {
+    height: 20px;
+    width: 45%;
+    margin-top: var(--sp-5);
+}
+
+/* ---------- Status bar ---------- */
+.editor-skeleton-status {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: var(--sp-2) var(--sp-4);
+    border-top: 1px solid var(--border-soft);
+    background: var(--bg-elev);
+    flex: 0 0 auto;
+}
+.editor-skeleton-status-item {
+    width: 60px;
+    height: 10px;
+}
+.editor-skeleton-status-spacer {
+    flex: 1 1 auto;
+}
+
+/* Skeleton renders before fonts load — hide on tiny viewports' side panes */
+@media (max-width: 900px) {
+    .editor-skeleton .left-pane,
+    .editor-skeleton .right-pane {
+        display: none;
+    }
+    .editor-skeleton-page {
+        padding: var(--sp-6) var(--sp-4);
+    }
+}

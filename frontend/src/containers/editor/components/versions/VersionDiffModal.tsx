@@ -7,9 +7,12 @@ import TextAlign from '@tiptap/extension-text-align';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import { Insertion, Deletion } from '@/editor/suggestions/TrackChange';
+import { DiffBlockAttr } from '@/editor/suggestions/DiffBlockAttr';
 import { Comment } from '@/editor/comments/Comment';
 import { Highlight } from '@/editor/tiptap/formatting/Highlight';
 import { diffStats, type JSONNode } from '@/editor/versions/diffDoc';
+import { nodeToMarkdown } from '@/editor/io/markdown';
+import { MarkdownInlineDiff, MarkdownSideBySide } from '@/containers/editor/components/versions/MarkdownDiffView';
 
 const READ_ONLY_EXTENSIONS = [
     StarterKit.configure({ undoRedo: false }),
@@ -21,8 +24,19 @@ const READ_ONLY_EXTENSIONS = [
     Comment,
     Insertion,
     Deletion,
+    DiffBlockAttr,
     Highlight,
 ];
+
+const enum ViewMode {
+  Rich = 'rich',
+  Markdown = 'md',
+}
+
+const enum LayoutMode {
+  Inline = 'inline',
+  Sbs = 'sbs',
+}
 
 interface Props {
   diffJson: JSONNode
@@ -40,6 +54,7 @@ function ReadOnlyEditor({ json }: { json: JSONNode }) {
             extensions: READ_ONLY_EXTENSIONS,
             editable: false,
             content: json,
+            editorProps: { attributes: { class: 'prose-editor' } },
         },
         [json],
     );
@@ -55,9 +70,11 @@ export function VersionDiffModal({
     onClose,
     onRestore,
 }: Props) {
-    const [mode, setMode] = useState<'inline' | 'sbs'>('inline');
+    const [view, setView] = useState<ViewMode>(ViewMode.Rich);
+    const [layout, setLayout] = useState<LayoutMode>(LayoutMode.Inline);
     const stats = diffStats(diffJson);
     const sbsAvailable = !!olderJson && !!newerJson;
+    const useSbs = layout === LayoutMode.Sbs && sbsAvailable;
 
     return (
         <div className="modal-backdrop" onMouseDown={onClose}>
@@ -72,31 +89,47 @@ export function VersionDiffModal({
                         </div>
                     </div>
                     <div className="modal-actions">
+                        <div className="sbs-toggle">
+                            <button
+                                type="button"
+                                className={view === ViewMode.Rich ? 'is-active' : ''}
+                                onClick={() => setView(ViewMode.Rich)}
+                            >
+                                Rich
+                            </button>
+                            <button
+                                type="button"
+                                className={view === ViewMode.Markdown ? 'is-active' : ''}
+                                onClick={() => setView(ViewMode.Markdown)}
+                            >
+                                Markdown
+                            </button>
+                        </div>
                         {sbsAvailable && (
                             <div className="sbs-toggle">
                                 <button
                                     type="button"
-                                    className={mode === 'inline' ? 'is-active' : ''}
-                                    onClick={() => setMode('inline')}
+                                    className={layout === LayoutMode.Inline ? 'is-active' : ''}
+                                    onClick={() => setLayout(LayoutMode.Inline)}
                                 >
-                  Inline
+                                    Inline
                                 </button>
                                 <button
                                     type="button"
-                                    className={mode === 'sbs' ? 'is-active' : ''}
-                                    onClick={() => setMode('sbs')}
+                                    className={layout === LayoutMode.Sbs ? 'is-active' : ''}
+                                    onClick={() => setLayout(LayoutMode.Sbs)}
                                 >
-                  Side by side
+                                    Side by side
                                 </button>
                             </div>
                         )}
                         {onRestore && (
                             <button type="button" className="btn-primary" onClick={onRestore}>
-                Restore older
+                                Restore older
                             </button>
                         )}
                         <button type="button" onClick={onClose}>
-              Close
+                            Close
                         </button>
                     </div>
                 </header>
@@ -109,25 +142,38 @@ export function VersionDiffModal({
                     </span>
                 </div>
                 <div className="modal-body">
-                    {mode === 'inline' || !sbsAvailable ? (
-                        <div className="editor-page diff-page">
-                            <ReadOnlyEditor json={diffJson} />
-                        </div>
+                    {view === ViewMode.Rich ? (
+                        useSbs ? (
+                            <div className="diff-sbs">
+                                <div className="diff-sbs-col">
+                                    <div className="diff-sbs-label">{olderLabel}</div>
+                                    <div className="editor-page diff-page diff-page-older">
+                                        <ReadOnlyEditor json={olderJson!} />
+                                    </div>
+                                </div>
+                                <div className="diff-sbs-col">
+                                    <div className="diff-sbs-label">{newerLabel}</div>
+                                    <div className="editor-page diff-page diff-page-newer">
+                                        <ReadOnlyEditor json={newerJson!} />
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="editor-page diff-page">
+                                <ReadOnlyEditor json={diffJson} />
+                            </div>
+                        )
+                    ) : useSbs ? (
+                        <MarkdownSideBySide
+                            olderJson={olderJson!}
+                            newerJson={newerJson!}
+                            olderLabel={olderLabel}
+                            newerLabel={newerLabel}
+                        />
+                    ) : sbsAvailable ? (
+                        <MarkdownInlineDiff olderJson={olderJson!} newerJson={newerJson!} />
                     ) : (
-                        <div className="diff-sbs">
-                            <div className="diff-sbs-col">
-                                <div className="diff-sbs-label">{olderLabel}</div>
-                                <div className="editor-page diff-page diff-page-older">
-                                    <ReadOnlyEditor json={olderJson!} />
-                                </div>
-                            </div>
-                            <div className="diff-sbs-col">
-                                <div className="diff-sbs-label">{newerLabel}</div>
-                                <div className="editor-page diff-page diff-page-newer">
-                                    <ReadOnlyEditor json={newerJson!} />
-                                </div>
-                            </div>
-                        </div>
+                        <pre className="md-diff md-diff-sbs">{nodeToMarkdown(diffJson)}</pre>
                     )}
                 </div>
             </div>

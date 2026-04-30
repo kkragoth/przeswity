@@ -106,7 +106,10 @@ function blockToMd(node: JSONNode, depth = 0): string {
     }
 }
 
-export function editorToMarkdown(editor: Editor): string {
-    const json = editor.getJSON() as JSONNode;
+export function nodeToMarkdown(json: JSONNode): string {
     return blockToMd(json).replace(/\n{3,}/g, '\n\n').trim() + '\n';
+}
+
+export function editorToMarkdown(editor: Editor): string {
+    return nodeToMarkdown(editor.getJSON() as JSONNode);
 }

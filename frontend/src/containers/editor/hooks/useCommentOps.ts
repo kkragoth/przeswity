@@ -23,24 +23,31 @@ export function createCommentOps(doc: Y.Doc, currentUser: User) {
         remove(threadId: string) {
             map().delete(threadId);
         },
-        addReaction(threadId: string, emoji: string) {
+        toggleReaction(threadId: string, emoji: string) {
             const thread = get(threadId);
             if (!thread) return;
             const next = { ...(thread.reactions ?? {}) };
             const ids = new Set(next[emoji] ?? []);
-            ids.add(currentUser.id);
-            next[emoji] = [...ids];
-            map().set(threadId, { ...thread, reactions: next });
-        },
-        removeReaction(threadId: string, emoji: string) {
-            const thread = get(threadId);
-            if (!thread) return;
-            const next = { ...(thread.reactions ?? {}) };
-            const ids = new Set(next[emoji] ?? []);
-            ids.delete(currentUser.id);
+            if (ids.has(currentUser.id)) ids.delete(currentUser.id);
+            else ids.add(currentUser.id);
             if (ids.size === 0) delete next[emoji];
             else next[emoji] = [...ids];
             map().set(threadId, { ...thread, reactions: next });
+        },
+        toggleReplyReaction(threadId: string, replyId: string, emoji: string) {
+            const thread = get(threadId);
+            if (!thread) return;
+            const replies = thread.replies.map((reply) => {
+                if (reply.id !== replyId) return reply;
+                const next = { ...(reply.reactions ?? {}) };
+                const ids = new Set(next[emoji] ?? []);
+                if (ids.has(currentUser.id)) ids.delete(currentUser.id);
+                else ids.add(currentUser.id);
+                if (ids.size === 0) delete next[emoji];
+                else next[emoji] = [...ids];
+                return { ...reply, reactions: next };
+            });
+            map().set(threadId, { ...thread, replies });
         },
         addReply(threadId: string, body: string): string {
             const thread = get(threadId);
@@ -57,6 +64,16 @@ export function createCommentOps(doc: Y.Doc, currentUser: User) {
             };
             map().set(threadId, { ...thread, replies: [...thread.replies, reply] });
             return replyId;
+        },
+        editThread(threadId: string, body: string) {
+            const thread = get(threadId);
+            if (!thread) return;
+            map().set(threadId, { ...thread, body: body.trim(), edited: Date.now() });
+        },
+        setThreadBody(threadId: string, body: string) {
+            const thread = get(threadId);
+            if (!thread) return;
+            map().set(threadId, { ...thread, body: body.trim() });
         },
         editReply(threadId: string, replyId: string, body: string) {
             const thread = get(threadId);

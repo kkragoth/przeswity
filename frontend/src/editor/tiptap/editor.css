@@ -37,6 +37,15 @@
     max-width: 100%;
 }
 
+/* Paper sheet — PaginationPlus styles the inter-page gap; the page itself
+   (the [data-rm-pagination] editor) needs the paper background. */
+.rm-with-pagination {
+    background: var(--bg-paper);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--r-2);
+    box-shadow: var(--shadow-paper-1);
+}
+
 /* ---------- Content typography ----------
    PaginationPlus controls .prose-editor sizing — no width/height/margin overrides here.
 */

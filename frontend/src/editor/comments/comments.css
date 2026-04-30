@@ -154,6 +154,14 @@
 }
 .reaction-add {
   color: var(--text-subtle);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.thread-message:hover .reaction-add,
+.thread-reply:hover .reaction-add,
+.reactions.is-picker-open .reaction-add,
+.reaction-add:focus-visible {
+  opacity: 1;
 }
 .reaction-emoji {
   font-size: 13px;
@@ -604,6 +612,10 @@
   display: flex;
   align-items: flex-end;
   gap: 6px;
+}
+.thread-compose-row .mention-textarea {
+  flex: 1;
+  min-width: 0;
 }
 .thread-compose-footer {
   display: flex;

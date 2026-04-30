@@ -146,3 +146,97 @@
   border-color: var(--warning-soft);
 }
 
+/* Markdown diff view (GitHub-inspired) */
+.md-diff {
+  --diff-ins-bg: rgba(46, 160, 67, 0.10);
+  --diff-ins-strong: rgba(46, 160, 67, 0.35);
+  --diff-del-bg: rgba(248, 81, 73, 0.10);
+  --diff-del-strong: rgba(248, 81, 73, 0.35);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12px;
+  line-height: 1.6;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 0;
+  padding: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text);
+  overflow: auto;
+  max-height: 100%;
+}
+.md-diff-inline,
+.md-diff-sbs {
+  min-height: 400px;
+}
+.md-diff-line {
+  display: flex;
+  align-items: baseline;
+}
+.md-diff-lineno {
+  flex: 0 0 36px;
+  text-align: right;
+  padding: 0 8px 0 0;
+  color: rgba(15, 23, 42, 0.35);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  border-right: 1px solid rgba(15, 23, 42, 0.05);
+}
+.md-diff-gutter {
+  flex: 0 0 18px;
+  color: rgba(15, 23, 42, 0.35);
+  user-select: none;
+  text-align: center;
+  padding: 0 4px;
+}
+.md-diff-text {
+  flex: 1;
+  white-space: pre-wrap;
+  padding-right: 12px;
+}
+.md-diff-ins {
+  background: var(--diff-ins-bg);
+}
+.md-diff-ins .md-diff-gutter,
+.md-diff-ins .md-diff-lineno {
+  color: rgb(46, 160, 67);
+  background: rgba(46, 160, 67, 0.15);
+}
+.md-diff-del {
+  background: var(--diff-del-bg);
+}
+.md-diff-del .md-diff-gutter,
+.md-diff-del .md-diff-lineno {
+  color: rgb(207, 34, 46);
+  background: rgba(248, 81, 73, 0.15);
+}
+.md-diff-blank {
+  background: rgba(15, 23, 42, 0.02);
+}
+.md-diff-blank .md-diff-lineno {
+  background: rgba(15, 23, 42, 0.02);
+}
+.md-diff-span-ins {
+  background: var(--diff-ins-strong);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+.md-diff-span-del {
+  background: var(--diff-del-strong);
+  border-radius: 2px;
+  padding: 0 1px;
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+/* Sticky column headers in SBS markdown view */
+.diff-sbs .diff-sbs-label {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 1;
+  margin-bottom: 4px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+

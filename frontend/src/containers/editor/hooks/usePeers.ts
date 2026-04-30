@@ -2,8 +2,18 @@ import { useEffect, useState } from 'react';
 import type { HocuspocusProvider } from '@hocuspocus/provider';
 
 export interface Peer {
-  name: string
-  color: string
+    name: string
+    color: string
+    userId: string
+    clientId: number
+    lastActiveAt: number
+}
+
+interface AwarenessUser {
+    name?: string
+    color?: string
+    userId?: string
+    lastActiveAt?: number
 }
 
 export function usePeers(provider: HocuspocusProvider): Peer[] {
@@ -15,13 +25,20 @@ export function usePeers(provider: HocuspocusProvider): Peer[] {
             const out: Peer[] = [];
             const seen = new Set<string>();
             const localClientId = awareness.clientID;
-            for (const [clientId, state] of awareness.getStates() as Map<number, { user?: Peer }>) {
+            for (const [clientId, state] of awareness.getStates() as Map<number, { user?: AwarenessUser }>) {
                 if (clientId === localClientId) continue;
-                if (!state.user?.name) continue;
-                const dedupeKey = `${state.user.name}::${state.user.color}`;
-                if (seen.has(dedupeKey)) continue;
-                seen.add(dedupeKey);
-                out.push({ name: state.user.name, color: state.user.color });
+                const u = state.user;
+                if (!u?.name) continue;
+                const dedupe = u.userId ?? `${u.name}::${u.color}`;
+                if (seen.has(dedupe)) continue;
+                seen.add(dedupe);
+                out.push({
+                    name: u.name,
+                    color: u.color ?? 'var(--text-muted)',
+                    userId: u.userId ?? dedupe,
+                    clientId,
+                    lastActiveAt: u.lastActiveAt ?? 0,
+                });
             }
             setPeers(out);
         };

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { EditorHost } from '@/containers/editor/EditorHost';
+import { EditorSkeleton } from '@/containers/editor/components/EditorSkeleton';
 import { useBookContext } from '@/hooks/api/useBookContext';
 
 export function BookEditorPage({ bookId }: { bookId: string }) {
@@ -7,7 +8,7 @@ export function BookEditorPage({ bookId }: { bookId: string }) {
     const ctx = useBookContext(bookId);
 
     if (!ctx.me) return null;
-    if (ctx.isLoading) return <div className="p-8 text-sm text-stone-500">{t('states.loading')}</div>;
+    if (ctx.isLoading) return <EditorSkeleton />;
     if (!ctx.book) return <div className="p-8 text-sm text-stone-500">{t('bookDetail.notFound')}</div>;
 
     const role = ctx.primaryRole ?? 'editor';

@@ -13,7 +13,7 @@ export function Reactions({ reactions, myUserId, onToggle }: ReactionsProps) {
     const entries = Object.entries(reactions ?? {}).filter(([, ids]) => ids.length > 0);
 
     return (
-        <div className="reactions" onClick={(e) => e.stopPropagation()}>
+        <div className={`reactions${pickerOpen ? ' is-picker-open' : ''}`} onClick={(e) => e.stopPropagation()}>
             {entries.map(([emoji, ids]) => {
                 const mine = ids.includes(myUserId);
                 return (

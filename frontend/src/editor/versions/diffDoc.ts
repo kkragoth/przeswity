@@ -1,168 +1,108 @@
+import { Node, type Schema } from 'prosemirror-model';
+import { StepMap, Transform } from 'prosemirror-transform';
+import { ChangeSet } from 'prosemirror-changeset';
+
 import type { JSONNode } from '@/editor/types';
+import { DIFF_BLOCK_TYPES } from '@/editor/suggestions/DiffBlockAttr';
 export type { JSONNode } from '@/editor/types';
 
-interface TextOp {
-  type: 'eq' | 'ins' | 'del'
-  text: string
+const BLOCK_TYPES = new Set<string>(DIFF_BLOCK_TYPES);
+
+const DIFF_AUTHOR_NEWER = { id: 'diff', name: 'newer', color: '#15803d' };
+const DIFF_AUTHOR_OLDER = { id: 'diff', name: 'older', color: '#9ca3af' };
+
+function trackMark(schema: Schema, kind: 'insertion' | 'deletion') {
+    const type = schema.marks[kind];
+    if (!type) return null;
+    const author = kind === 'insertion' ? DIFF_AUTHOR_NEWER : DIFF_AUTHOR_OLDER;
+    return type.create({
+        suggestionId: 'diff',
+        authorId: author.id,
+        authorName: author.name,
+        authorColor: author.color,
+        timestamp: 0,
+    });
 }
 
-const LCS_CAP = 5_000_000;
+/**
+ * Build an inline diff doc by computing a ProseMirror changeset between two
+ * snapshots and folding both insertions (marked) and the deleted slices
+ * (re-inserted with the deletion mark) into one document.
+ *
+ * Reverse-iterating the changes keeps positions stable: each transform step
+ * only shifts positions ≥ its insertion point, and earlier changes have
+ * smaller positions that aren't touched by the later ones we already applied.
+ */
+export function buildDiffDoc(schema: Schema, a: JSONNode, b: JSONNode): JSONNode {
+    const oldDoc = Node.fromJSON(schema, a);
+    const newDoc = Node.fromJSON(schema, b);
 
-const insMark = () => ({
-    type: 'insertion',
-    attrs: {
-        suggestionId: 'diff',
-        authorId: 'diff',
-        authorName: 'newer',
-        authorColor: '#15803d',
-        timestamp: 0,
-    },
-});
+    const stepMap = new StepMap([0, oldDoc.content.size, newDoc.content.size]);
+    const cs = ChangeSet.create(oldDoc).addSteps(newDoc, [stepMap], null);
 
-const delMark = () => ({
-    type: 'deletion',
-    attrs: {
-        suggestionId: 'diff',
-        authorId: 'diff',
-        authorName: 'older',
-        authorColor: '#9ca3af',
-        timestamp: 0,
-    },
-});
+    const insMark = trackMark(schema, 'insertion');
+    const delMark = trackMark(schema, 'deletion');
+    if (!insMark || !delMark) return b;
 
-function tokenize(s: string): string[] {
-    return s.match(/\S+|\s+/g) ?? [];
-}
-
-function lcsDiff(a: string[], b: string[]): TextOp[] {
-    const n = a.length;
-    const m = b.length;
-
-    if (n === 0 && m === 0) return [];
-    if (n === 0) return [{ type: 'ins', text: b.join('') }];
-    if (m === 0) return [{ type: 'del', text: a.join('') }];
-    if (n * m > LCS_CAP) {
-        return [
-            { type: 'del', text: a.join('') },
-            { type: 'ins', text: b.join('') },
-        ];
-    }
-
-    const dp: Uint32Array[] = [];
-    for (let i = 0; i <= n; i++) dp.push(new Uint32Array(m + 1));
-    for (let i = 1; i <= n; i++) {
-        for (let j = 1; j <= m; j++) {
-            if (a[i - 1] === b[j - 1]) dp[i][j] = dp[i - 1][j - 1] + 1;
-            else dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+    const out = new Transform(newDoc);
+    for (let i = cs.changes.length - 1; i >= 0; i--) {
+        const change = cs.changes[i];
+        if (change.fromB < change.toB) {
+            out.addMark(change.fromB, change.toB, insMark);
+        }
+        if (change.fromA < change.toA) {
+            try {
+                const slice = oldDoc.slice(change.fromA, change.toA);
+                const before = out.doc.content.size;
+                out.replace(change.fromB, change.fromB, slice);
+                const inserted = out.doc.content.size - before;
+                if (inserted > 0) {
+                    out.addMark(change.fromB, change.fromB + inserted, delMark);
+                }
+            } catch (err) {
+                console.warn('buildDiffDoc: could not inline deleted slice', err);
+            }
         }
     }
 
-    const out: TextOp[] = [];
-    let i = n;
-    let j = m;
-    while (i > 0 && j > 0) {
-        if (a[i - 1] === b[j - 1]) {
-            out.push({ type: 'eq', text: a[i - 1] });
-            i--;
-            j--;
-        } else if (dp[i - 1][j] >= dp[i][j - 1]) {
-            out.push({ type: 'del', text: a[i - 1] });
-            i--;
-        } else {
-            out.push({ type: 'ins', text: b[j - 1] });
-            j--;
+    const json = out.doc.toJSON() as JSONNode;
+    annotateWhollyChangedBlocks(json);
+    return json;
+}
+
+type BlockKind = 'ins' | 'del' | 'mixed' | 'none';
+
+/** Returns the single mark kind covering all text descendants of this node, or
+ *  'mixed' (multiple kinds present) / 'none' (no track-change marks at all). */
+function blockChangeKind(node: JSONNode): BlockKind {
+    const samples: BlockKind[] = [];
+    const visit = (n: JSONNode) => {
+        if (n.type === 'text') {
+            const marks = n.marks ?? [];
+            const hasIns = marks.some((m) => m.type === 'insertion');
+            const hasDel = marks.some((m) => m.type === 'deletion');
+            if (hasIns && hasDel) samples.push('mixed');
+            else if (hasIns) samples.push('ins');
+            else if (hasDel) samples.push('del');
+            else if ((n.text ?? '').trim() !== '') samples.push('mixed');
+            return;
+        }
+        (n.content ?? []).forEach(visit);
+    };
+    visit(node);
+    if (samples.length === 0) return 'none';
+    const first = samples[0];
+    return samples.every((s) => s === first) ? first : 'mixed';
+}
+
+function annotateWhollyChangedBlocks(node: JSONNode): void {
+    if (BLOCK_TYPES.has(node.type)) {
+        const kind = blockChangeKind(node);
+        if (kind === 'ins' || kind === 'del') {
+            node.attrs = { ...(node.attrs ?? {}), diffBlock: kind };
         }
     }
-    while (i > 0) {
-        out.push({ type: 'del', text: a[i - 1] });
-        i--;
-    }
-    while (j > 0) {
-        out.push({ type: 'ins', text: b[j - 1] });
-        j--;
-    }
-    return out.reverse();
-}
-
-function compact(ops: TextOp[]): TextOp[] {
-    const out: TextOp[] = [];
-    for (const op of ops) {
-        const last = out[out.length - 1];
-        if (last && last.type === op.type) last.text += op.text;
-        else out.push({ ...op });
-    }
-    return out;
-}
-
-function blockText(node: JSONNode): string {
-    if (node.type === 'text') return node.text ?? '';
-    return (node.content ?? []).map(blockText).join('');
-}
-
-function inlineDiffContent(aText: string, bText: string): JSONNode[] {
-    if (aText === '' && bText === '') return [];
-    if (aText === bText) return [{ type: 'text', text: aText }];
-    const ops = compact(lcsDiff(tokenize(aText), tokenize(bText)));
-    const result: JSONNode[] = [];
-    for (const op of ops) {
-        if (!op.text) continue;
-        if (op.type === 'eq') result.push({ type: 'text', text: op.text });
-        else if (op.type === 'ins') result.push({ type: 'text', text: op.text, marks: [insMark()] });
-        else result.push({ type: 'text', text: op.text, marks: [delMark()] });
-    }
-    return result;
-}
-
-function wrapAllText(node: JSONNode, mark: ReturnType<typeof insMark>): JSONNode {
-    if (node.type === 'text') {
-        const next = { ...node, marks: [...(node.marks ?? []), mark] };
-        return next;
-    }
-    if (!node.content) return node;
-    return { ...node, content: node.content.map((c) => wrapAllText(c, mark)) };
-}
-
-function diffBlock(a: JSONNode | null, b: JSONNode | null): JSONNode[] {
-    if (!a && !b) return [];
-    if (!a) return [wrapAllText(b!, insMark())];
-    if (!b) return [wrapAllText(a, delMark())];
-
-    const sameType = a.type === b.type;
-    const inlineable = sameType && (a.type === 'paragraph' || a.type === 'heading');
-
-    if (inlineable) {
-        const aText = blockText(a);
-        const bText = blockText(b);
-        const content = inlineDiffContent(aText, bText);
-        return [
-            {
-                type: b.type,
-                attrs: b.attrs,
-                ...(content.length ? { content } : {}),
-            },
-        ];
-    }
-
-    if (sameType) {
-        const aText = blockText(a);
-        const bText = blockText(b);
-        if (aText === bText) return [b];
-        return [wrapAllText(a, delMark()), wrapAllText(b, insMark())];
-    }
-
-    return [wrapAllText(a, delMark()), wrapAllText(b, insMark())];
-}
-
-export function buildDiffDoc(a: JSONNode, b: JSONNode): JSONNode {
-    const aBlocks = a.content ?? [];
-    const bBlocks = b.content ?? [];
-    const max = Math.max(aBlocks.length, bBlocks.length);
-    const merged: JSONNode[] = [];
-    for (let i = 0; i < max; i++) {
-        merged.push(...diffBlock(aBlocks[i] ?? null, bBlocks[i] ?? null));
-    }
-    if (merged.length === 0) merged.push({ type: 'paragraph' });
-    return { type: 'doc', content: merged };
+    (node.content ?? []).forEach(annotateWhollyChangedBlocks);
 }
 
 export function diffStats(diff: JSONNode): { ins: number; del: number } {
@@ -170,10 +110,10 @@ export function diffStats(diff: JSONNode): { ins: number; del: number } {
     let del = 0;
     const visit = (n: JSONNode) => {
         if (n.type === 'text') {
-            const m = n.marks ?? [];
             const len = (n.text ?? '').length;
-            if (m.some((mk) => mk.type === 'insertion')) ins += len;
-            if (m.some((mk) => mk.type === 'deletion')) del += len;
+            const marks = n.marks ?? [];
+            if (marks.some((m) => m.type === 'insertion')) ins += len;
+            if (marks.some((m) => m.type === 'deletion')) del += len;
         }
         ;(n.content ?? []).forEach(visit);
     };

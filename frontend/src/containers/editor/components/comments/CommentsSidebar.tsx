@@ -1,19 +1,19 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { formatRelativeTime } from '@/lib/dates';
 import type { Editor } from '@tiptap/react';
 import * as Y from 'yjs';
 
 import { useThreads } from '@/editor/comments/useThreads';
-import type { User } from '@/editor/identity/types';
+import { ROLE_PERMISSIONS, type User } from '@/editor/identity/types';
 import type { Peer } from '@/containers/editor/hooks/usePeers';
 import { buildCandidates } from '@/containers/editor/components/comments/MentionTextarea';
 import { CommentFilters } from '@/containers/editor/components/comments/CommentFilters';
-import { CommentReply } from '@/containers/editor/components/comments/CommentReply';
-import { CommentThreadCard } from '@/containers/editor/components/comments/CommentThreadCard';
-import { CommentThreadForm } from '@/containers/editor/components/comments/CommentThreadForm';
+import { CommentThreadCard, type ThreadCallbacks } from '@/containers/editor/components/comments/CommentThreadCard';
+import { ResolvedThreadCard } from '@/containers/editor/components/comments/ResolvedThreadCard';
 import { useCommentDrafts } from '@/containers/editor/hooks/useCommentDrafts';
 import { useCommentOps } from '@/containers/editor/hooks/useCommentOps';
-import { useCommentThreads } from '@/containers/editor/hooks/useCommentThreads';
+import { useCommentThreads, CommentStatusFilter } from '@/containers/editor/hooks/useCommentThreads';
 
 interface CommentsSidebarProps {
     doc: Y.Doc;
@@ -30,100 +30,168 @@ export function CommentsSidebar(props: CommentsSidebarProps) {
     const { t, i18n } = useTranslation('editor');
     const threads = useThreads(props.doc);
     const ops = useCommentOps(props.doc, props.user);
-    const { visible, filter, setFilter } = useCommentThreads(threads, props.user);
+    const { visible, filter, setStatus, setAuthor, setRole, allAuthors } = useCommentThreads(threads, props.user);
     const drafts = useCommentDrafts();
+    const cardsRef = useRef<Record<string, HTMLDivElement | null>>({});
+
     const candidates = useMemo(
         () => buildCandidates(props.peers, props.user.name),
         [props.peers, props.user.name],
     );
+    const perms = ROLE_PERMISSIONS[props.user.role];
     const openCount = threads.filter((thread) => thread.status === 'open').length;
-    const active = visible.find((thread) => thread.id === props.activeCommentId) ?? null;
 
-    const selectThread = (id: string) => {
-        props.onActiveCommentChange(id);
+    useEffect(() => {
+        if (!props.pendingNew) return;
+        ops.createThread(props.pendingNew, '');
+        props.onActiveCommentChange(props.pendingNew.id);
+        props.onPendingHandled();
+    }, [props.pendingNew, ops, props]);
+
+    useEffect(() => {
+        if (!props.activeCommentId) return;
+        const el = cardsRef.current[props.activeCommentId];
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, [props.activeCommentId]);
+
+    const closeThread = () => {
+        props.onActiveCommentChange(null);
         drafts.cancelEdit();
     };
 
-    const postThread = () => {
-        if (!props.pendingNew || !drafts.draft.trim()) return;
-        const threadId = ops.createThread(props.pendingNew, drafts.draft);
-        drafts.setDraft('');
-        props.onPendingHandled();
-        props.onActiveCommentChange(threadId);
+    const removeThread = (id: string) => {
+        ops.remove(id);
+        if (props.editor) props.editor.chain().focus().unsetComment(id).run();
+        if (props.activeCommentId === id) closeThread();
     };
 
-    const postReply = () => {
-        if (!active) return;
-        const body = drafts.replyDrafts[active.id] ?? '';
-        if (!body.trim()) return;
-        ops.addReply(active.id, body);
-        drafts.clearReplyDraft(active.id);
+    const resolveThread = (id: string) => {
+        ops.resolve(id);
+        if (props.editor) props.editor.chain().focus().unsetComment(id).run();
+        closeThread();
+    };
+
+    const submitInitialBody = (id: string) => {
+        const text = drafts.draft.trim();
+        if (!text) return;
+        ops.setThreadBody(id, text);
+        drafts.setDraft('');
+    };
+
+    const submitReply = (id: string) => {
+        const text = (drafts.replyDrafts[id] ?? '').trim();
+        if (!text) return;
+        ops.addReply(id, text);
+        drafts.clearReplyDraft(id);
     };
 
     const submitEdit = () => {
-        if (!drafts.editBuffer || drafts.editBuffer.kind !== 'reply' || !drafts.draft.trim()) return;
-        ops.editReply(drafts.editBuffer.threadId, drafts.editBuffer.replyId, drafts.draft);
-        drafts.setDraft('');
+        if (!drafts.editTarget || !drafts.editText.trim()) return;
+        if (drafts.editTarget.kind === 'thread') {
+            ops.editThread(drafts.editTarget.threadId, drafts.editText);
+        } else {
+            ops.editReply(drafts.editTarget.threadId, drafts.editTarget.replyId, drafts.editText);
+        }
         drafts.cancelEdit();
     };
 
+    const open = visible.filter((thread) => thread.status === 'open');
+    const resolved = visible.filter((thread) => thread.status === 'resolved');
+    const showResolved = filter.status !== CommentStatusFilter.Open && resolved.length > 0;
+    const showOpen = filter.status !== CommentStatusFilter.Resolved;
+
+    const buildCallbacks = (id: string): ThreadCallbacks => ({
+        onSelect: () => {
+            props.onActiveCommentChange(id);
+            drafts.cancelEdit();
+        },
+        onClose: closeThread,
+        onResolve: () => resolveThread(id),
+        onRemove: () => removeThread(id),
+        onSubmitInitialBody: () => submitInitialBody(id),
+        onSubmitReply: () => submitReply(id),
+        onEditThreadStart: () => {
+            const thread = threads.find((th) => th.id === id);
+            if (thread) drafts.beginEdit({ kind: 'thread', threadId: id }, thread.body);
+        },
+        onEditReplyStart: (replyId) => {
+            const thread = threads.find((th) => th.id === id);
+            const reply = thread?.replies.find((r) => r.id === replyId);
+            if (reply) drafts.beginEdit({ kind: 'reply', threadId: id, replyId }, reply.body);
+        },
+        onEditCancel: drafts.cancelEdit,
+        onEditSubmit: submitEdit,
+        onToggleThreadReaction: (emoji) => ops.toggleReaction(id, emoji),
+        onToggleReplyReaction: (replyId, emoji) => ops.toggleReplyReaction(id, replyId, emoji),
+    });
+
     return (
-        <section className="comments-sidebar">
-            <CommentFilters filter={filter} setFilter={setFilter} totalOpen={openCount} />
-            {!props.pendingNew && visible.length === 0 ? (
-                <div className="comments-empty">{t(filter === 'open' ? 'comments.empty' : 'comments.noMatch')}</div>
+        <div className={`sidebar comments-sidebar${props.activeCommentId ? ' has-active' : ''}`}>
+            <div className="comments-header">
+                <span className="sidebar-title sidebar-title-inline">
+                    {t('comments.tabs.comments')}{' '}
+                    <span className="comment-count-pill">{openCount}</span>
+                </span>
+            </div>
+            <CommentFilters
+                filter={filter}
+                setStatus={setStatus}
+                setAuthor={setAuthor}
+                setRole={setRole}
+                totalOpen={openCount}
+                allAuthors={allAuthors}
+            />
+            {visible.length === 0 ? (
+                <div className="sidebar-empty">
+                    {threads.length === 0 ? t('comments.empty') : t('comments.noMatch')}
+                </div>
             ) : null}
-
-            {props.pendingNew ? (
-                <CommentThreadForm
-                    value={drafts.draft}
-                    onChange={drafts.setDraft}
-                    onSubmit={postThread}
-                    candidates={candidates}
-                    placeholderKey="comments.writeComment"
-                />
+            {showOpen
+                ? open.map((thread) => (
+                    <div
+                        key={thread.id}
+                        ref={(el) => {
+                            cardsRef.current[thread.id] = el;
+                        }}
+                    >
+                        <CommentThreadCard
+                            thread={thread}
+                            isActive={thread.id === props.activeCommentId}
+                            timeLabel={formatRelativeTime(thread.createdAt, i18n.language, t)}
+                            replyTimeLabel={(ts) => formatRelativeTime(ts, i18n.language, t)}
+                            canResolve={perms.canResolveComment}
+                            canComment={perms.canComment}
+                            currentUserId={props.user.id}
+                            candidates={candidates}
+                            initialDraft={drafts.draft}
+                            onInitialDraftChange={drafts.setDraft}
+                            replyDraft={drafts.replyDrafts[thread.id] ?? ''}
+                            onReplyDraftChange={(v) => drafts.setReplyDraft(thread.id, v)}
+                            editTarget={drafts.editTarget}
+                            editText={drafts.editText}
+                            onEditTextChange={drafts.setEditText}
+                            callbacks={buildCallbacks(thread.id)}
+                        />
+                    </div>
+                ))
+                : null}
+            {showResolved ? (
+                <>
+                    <div className="sidebar-title sidebar-title-resolved">
+                        {t('comments.filter.resolved')} ({resolved.length})
+                    </div>
+                    {resolved.map((thread) => (
+                        <ResolvedThreadCard
+                            key={thread.id}
+                            thread={thread}
+                            timeLabel={thread.resolvedAt ? formatRelativeTime(thread.resolvedAt, i18n.language, t) : ''}
+                            canDelete={perms.canResolveComment}
+                            onReopen={() => ops.reopen(thread.id)}
+                            onDelete={() => removeThread(thread.id)}
+                        />
+                    ))}
+                </>
             ) : null}
-
-            {visible.map((thread) => (
-                <article key={thread.id} className="thread-block">
-                    <CommentThreadCard
-                        thread={thread}
-                        isActive={thread.id === props.activeCommentId}
-                        timeLabel={new Date(thread.createdAt).toLocaleString(i18n.language)}
-                        onSelect={() => selectThread(thread.id)}
-                    />
-
-                    {thread.id === props.activeCommentId ? (
-                        <div className="thread-expanded">
-                            {thread.replies.map((reply) => (
-                                <CommentReply
-                                    key={reply.id}
-                                    reply={reply}
-                                    timeLabel={new Date(reply.createdAt).toLocaleString(i18n.language)}
-                                    canEdit={reply.authorId === props.user.id}
-                                    onEdit={() => {
-                                        drafts.beginEdit({ kind: 'reply', threadId: thread.id, replyId: reply.id });
-                                        drafts.setDraft(reply.body);
-                                    }}
-                                    reactionsUserId={props.user.id}
-                                    onToggleReaction={() => {}}
-                                />
-                            ))}
-
-                            <CommentThreadForm
-                                value={drafts.editBuffer ? drafts.draft : (drafts.replyDrafts[thread.id] ?? '')}
-                                onChange={(value) => {
-                                    if (drafts.editBuffer) drafts.setDraft(value);
-                                    else drafts.setReplyDraft(thread.id, value);
-                                }}
-                                onSubmit={drafts.editBuffer ? submitEdit : postReply}
-                                candidates={candidates}
-                                placeholderKey={drafts.editBuffer ? 'comments.editReply' : 'comments.writeReply'}
-                            />
-                        </div>
-                    ) : null}
-                </article>
-            ))}
-        </section>
+        </div>
     );
 }
