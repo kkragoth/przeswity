@@ -7,12 +7,16 @@ import type { User } from '@/editor/identity/types';
 import type { VersionSnapshot } from '@/editor/versions/types';
 import { buildDiffDoc, type JSONNode } from '@/editor/versions/diffDoc';
 
-const STORAGE_KEY = 'editor-poc.versions';
+const STORAGE_PREFIX = 'przeswity.versions';
 const AUTO_KEEP = 8;
 
-function loadVersions(): VersionSnapshot[] {
+function storageKey(bookId: string): string {
+    return `${STORAGE_PREFIX}:${bookId}`;
+}
+
+function loadVersions(bookId: string): VersionSnapshot[] {
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(storageKey(bookId));
         if (!raw) return [];
         return JSON.parse(raw) as VersionSnapshot[];
     } catch {
@@ -28,13 +32,17 @@ function jsonFromSnapshot(snapshot: VersionSnapshot): JSONNode {
     return json;
 }
 
-export function useVersions(doc: Y.Doc, user: User, editor: Editor | null) {
-    const [versions, setVersions] = useState<VersionSnapshot[]>(loadVersions);
+export function useVersions(doc: Y.Doc, user: User, editor: Editor | null, bookId: string) {
+    const [versions, setVersions] = useState<VersionSnapshot[]>(() => loadVersions(bookId));
     const [label, setLabel] = useState('');
 
     useEffect(() => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(versions));
-    }, [versions]);
+        setVersions(loadVersions(bookId));
+    }, [bookId]);
+
+    useEffect(() => {
+        localStorage.setItem(storageKey(bookId), JSON.stringify(versions));
+    }, [bookId, versions]);
 
     const snapshot = (auto = false, customLabel?: string) => {
         const state = Y.encodeStateAsUpdate(doc);
@@ -71,7 +79,7 @@ export function useVersions(doc: Y.Doc, user: User, editor: Editor | null) {
         const olderJson = jsonFromSnapshot(snapshot);
         const newerJson = editor.getJSON() as JSONNode;
         return {
-            diffJson: buildDiffDoc(olderJson, newerJson),
+            diffJson: buildDiffDoc(editor.schema, olderJson, newerJson),
             olderJson,
             newerJson,
             olderLabel: snapshot.label,
@@ -81,11 +89,12 @@ export function useVersions(doc: Y.Doc, user: User, editor: Editor | null) {
     };
 
     const diffBetween = (a: VersionSnapshot, b: VersionSnapshot) => {
+        if (!editor) return null;
         const [older, newer] = a.createdAt <= b.createdAt ? [a, b] : [b, a];
         const olderJson = jsonFromSnapshot(older);
         const newerJson = jsonFromSnapshot(newer);
         return {
-            diffJson: buildDiffDoc(olderJson, newerJson),
+            diffJson: buildDiffDoc(editor.schema, olderJson, newerJson),
             olderJson,
             newerJson,
             olderLabel: older.label,

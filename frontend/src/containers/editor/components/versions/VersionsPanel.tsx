@@ -14,11 +14,12 @@ interface VersionsPanelProps {
     doc: Y.Doc;
     user: User;
     editor: Editor | null;
+    bookId: string;
     onToast?: (msg: string, kind?: 'info' | 'success' | 'error') => void;
 }
 
-export function VersionsPanel({ doc, user, editor, onToast }: VersionsPanelProps) {
-    const versionsApi = useVersions(doc, user, editor);
+export function VersionsPanel({ doc, user, editor, bookId, onToast }: VersionsPanelProps) {
+    const versionsApi = useVersions(doc, user, editor, bookId);
     const [compareSourceId, setCompareSourceId] = useState<string | null>(null);
     const [diffState, setDiffState] = useState<{
         diffJson: JSONNode;

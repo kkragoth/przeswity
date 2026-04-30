@@ -37,6 +37,7 @@ interface LeftPaneProps {
     doc: Y.Doc
     user: User
     editor: Editor | null
+    bookId: string
     onToast: (msg: string, kind?: 'info' | 'success' | 'error') => void
 }
 
@@ -102,6 +103,7 @@ export function LeftPane({
     editor,
     doc,
     user,
+    bookId,
     onToast,
 }: LeftPaneProps) {
     const { t } = useTranslation('editor');
@@ -164,7 +166,7 @@ export function LeftPane({
                     </>
                 )}
                 {tab === LeftTab.Versions && (
-                    <VersionsPanel doc={doc} user={user} editor={editor} onToast={onToast} />
+                    <VersionsPanel doc={doc} user={user} editor={editor} bookId={bookId} onToast={onToast} />
                 )}
                 {tab === LeftTab.Glossary && <GlossaryPanel doc={doc} />}
                 {tab === LeftTab.Meta && <MetaPanel doc={doc} />}
