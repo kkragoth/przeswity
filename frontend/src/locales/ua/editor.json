@@ -124,7 +124,18 @@
         "reopen": "Відкрити знову",
         "deleteConfirm": "Видалити цей вąток коментарів?",
         "deleteResolvedConfirm": "Видалити цей вирішений вąток?",
-        "close": "Закрити вąток"
+        "close": "Закрити вąток",
+        "editTooltip": "Редагувати",
+        "editedSuffix": "відредаговано",
+        "repliesCount_one": "{{count}} відповідь",
+        "repliesCount_few": "{{count}} відповіді",
+        "repliesCount_many": "{{count}} відповідей",
+        "repliesCount_other": "{{count}} відповідей",
+        "time": {
+            "justNow": "щойно",
+            "minutesAgo": "{{count}} хв тому",
+            "hoursAgo": "{{count}} год тому"
+        }
     },
     "suggestions": {
         "acceptAll": "Прийняти всі",
@@ -205,5 +216,19 @@
         "markdown": "Markdown (.md)",
         "docxClean": "DOCX — чистий (пропозиції прийнято)",
         "docxTracks": "DOCX — зі відстеженням змін"
+    },
+    "fileMenu": {
+        "importDocx": "DOCX (.docx)",
+        "importMarkdown": "Markdown (.md)",
+        "exportMarkdown": "Markdown (.md)",
+        "exportDocxClean": "DOCX — чистий",
+        "exportDocxTracks": "DOCX — зі змінами",
+        "confirmReplaceImport": "Імпорт \"{{name}}\" замінить поточний документ.\n\nПродовжити?",
+        "confirmReplaceTemplate": "Застосувати шаблон \"{{name}}\"?\n\nЦе замінить поточний документ.",
+        "importing": "Імпортування…",
+        "imported": "Імпортовано {{name}}",
+        "importFailed": "Помилка імпорту: {{error}}",
+        "templateLoaded": "Завантажено шаблон: {{name}}",
+        "linkPrompt": "URL посилання"
     }
 }

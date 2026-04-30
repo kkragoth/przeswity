@@ -52,9 +52,9 @@ export function FileMenu({ editor, perms, onToast }: FileMenuProps) {
         const file = e.target.files?.[0];
         e.target.value = '';
         if (!file) return;
-        if (!window.confirm(`Importing "${file.name}" will replace the current document.\n\nProceed?`)) return;
+        if (!window.confirm(t('fileMenu.confirmReplaceImport', { name: file.name }))) return;
         try {
-            onToast(t('toolbar.importing', 'Importing…'), 'info');
+            onToast(t('fileMenu.importing'), 'info');
             let html: string;
             if (/\.docx$/i.test(file.name)) {
                 const buf = await file.arrayBuffer();
@@ -64,18 +64,18 @@ export function FileMenu({ editor, perms, onToast }: FileMenuProps) {
                 html = await marked.parse(await file.text());
             }
             editor.commands.setContent(html, { emitUpdate: true });
-            onToast(`Imported ${file.name}`, 'success');
+            onToast(t('fileMenu.imported', { name: file.name }), 'success');
         } catch (err) {
-            onToast(`Import failed: ${(err as Error).message}`, 'error');
+            onToast(t('fileMenu.importFailed', { error: (err as Error).message }), 'error');
         }
     };
 
     const applyTemplate = (id: string) => {
         const tmpl = TEMPLATES.find((x) => x.id === id);
         if (!tmpl) return;
-        if (!window.confirm(`Apply template "${tmpl.name}"?\n\nThis replaces the current document.`)) return;
+        if (!window.confirm(t('fileMenu.confirmReplaceTemplate', { name: tmpl.name }))) return;
         editor.commands.setContent(tmpl.content as never, { emitUpdate: true });
-        onToast(`Loaded template: ${tmpl.name}`, 'success');
+        onToast(t('fileMenu.templateLoaded', { name: tmpl.name }), 'success');
     };
 
     const showAny = perms.canEdit || perms.canExport;
@@ -96,10 +96,10 @@ export function FileMenu({ editor, perms, onToast }: FileMenuProps) {
                         <>
                             <DropdownMenuLabel>{t('toolbar.import')}</DropdownMenuLabel>
                             <DropdownMenuItem onSelect={() => startImport('docx')}>
-                                DOCX (.docx)
+                                {t('fileMenu.importDocx')}
                             </DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => startImport('md')}>
-                                Markdown (.md)
+                                {t('fileMenu.importMarkdown')}
                             </DropdownMenuItem>
                         </>
                     )}
@@ -111,19 +111,19 @@ export function FileMenu({ editor, perms, onToast }: FileMenuProps) {
                                 const md = editorToMarkdown(editor);
                                 saveAs(new Blob([md], { type: 'text/markdown;charset=utf-8' }), 'document.md');
                             }}>
-                                Markdown (.md)
+                                {t('fileMenu.exportMarkdown')}
                             </DropdownMenuItem>
                             <DropdownMenuItem onSelect={async () => {
                                 const blob = await editorToDocxBlob(editor, { acceptSuggestions: true });
                                 saveAs(blob, 'document-clean.docx');
                             }}>
-                                DOCX — clean
+                                {t('fileMenu.exportDocxClean')}
                             </DropdownMenuItem>
                             <DropdownMenuItem onSelect={async () => {
                                 const blob = await editorToDocxBlob(editor, { acceptSuggestions: false });
                                 saveAs(blob, 'document-with-tracks.docx');
                             }}>
-                                DOCX — with track changes
+                                {t('fileMenu.exportDocxTracks')}
                             </DropdownMenuItem>
                         </>
                     )}

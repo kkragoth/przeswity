@@ -124,7 +124,18 @@
         "reopen": "Reopen",
         "deleteConfirm": "Delete this comment thread?",
         "deleteResolvedConfirm": "Delete this resolved thread?",
-        "close": "Close thread"
+        "close": "Close thread",
+        "editTooltip": "Edit",
+        "editedSuffix": "edited",
+        "repliesCount_one": "{{count}} reply",
+        "repliesCount_few": "{{count}} replies",
+        "repliesCount_many": "{{count}} replies",
+        "repliesCount_other": "{{count}} replies",
+        "time": {
+            "justNow": "just now",
+            "minutesAgo": "{{count}}m ago",
+            "hoursAgo": "{{count}}h ago"
+        }
     },
     "suggestions": {
         "acceptAll": "Accept all",
@@ -205,5 +216,19 @@
         "markdown": "Markdown (.md)",
         "docxClean": "DOCX — clean (suggestions accepted)",
         "docxTracks": "DOCX — with track-change colors"
+    },
+    "fileMenu": {
+        "importDocx": "DOCX (.docx)",
+        "importMarkdown": "Markdown (.md)",
+        "exportMarkdown": "Markdown (.md)",
+        "exportDocxClean": "DOCX — clean",
+        "exportDocxTracks": "DOCX — with track changes",
+        "confirmReplaceImport": "Importing \"{{name}}\" will replace the current document.\n\nProceed?",
+        "confirmReplaceTemplate": "Apply template \"{{name}}\"?\n\nThis replaces the current document.",
+        "importing": "Importing…",
+        "imported": "Imported {{name}}",
+        "importFailed": "Import failed: {{error}}",
+        "templateLoaded": "Loaded template: {{name}}",
+        "linkPrompt": "Link URL"
     }
 }

@@ -59,7 +59,7 @@ export function Toolbar({
 
     const setLink = () => {
         const prev = editor.getAttributes('link').href as string | undefined;
-        const url = window.prompt('Link URL', prev ?? 'https://');
+        const url = window.prompt(t('fileMenu.linkPrompt'), prev ?? 'https://');
         if (url === null) return;
         if (url === '') { editor.chain().focus().unsetLink().run(); return; }
         editor.chain().focus().setLink({ href: url }).run();

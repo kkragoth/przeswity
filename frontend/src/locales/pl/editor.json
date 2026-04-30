@@ -124,7 +124,18 @@
         "reopen": "Otwórz ponownie",
         "deleteConfirm": "Usunąć ten wątek komentarzy?",
         "deleteResolvedConfirm": "Usunąć ten rozwiązany wątek?",
-        "close": "Zamknij wątek"
+        "close": "Zamknij wątek",
+        "editTooltip": "Edytuj",
+        "editedSuffix": "edytowano",
+        "repliesCount_one": "{{count}} odpowiedź",
+        "repliesCount_few": "{{count}} odpowiedzi",
+        "repliesCount_many": "{{count}} odpowiedzi",
+        "repliesCount_other": "{{count}} odpowiedzi",
+        "time": {
+            "justNow": "przed chwilą",
+            "minutesAgo": "{{count}} min temu",
+            "hoursAgo": "{{count}} godz. temu"
+        }
     },
     "suggestions": {
         "acceptAll": "Akceptuj wszystkie",
@@ -205,5 +216,19 @@
         "markdown": "Markdown (.md)",
         "docxClean": "DOCX — czysty (sugestie zaakceptowane)",
         "docxTracks": "DOCX — ze śledzeniem zmian"
+    },
+    "fileMenu": {
+        "importDocx": "DOCX (.docx)",
+        "importMarkdown": "Markdown (.md)",
+        "exportMarkdown": "Markdown (.md)",
+        "exportDocxClean": "DOCX — czysty",
+        "exportDocxTracks": "DOCX — ze śledzeniem zmian",
+        "confirmReplaceImport": "Importowanie \"{{name}}\" zastąpi bieżący dokument.\n\nKontynuować?",
+        "confirmReplaceTemplate": "Zastosować szablon \"{{name}}\"?\n\nTo zastąpi bieżący dokument.",
+        "importing": "Importowanie…",
+        "imported": "Zaimportowano {{name}}",
+        "importFailed": "Import nie powiódł się: {{error}}",
+        "templateLoaded": "Załadowano szablon: {{name}}",
+        "linkPrompt": "Adres URL"
     }
 }
