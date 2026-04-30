@@ -1,6 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { bookPatchProgress, bookPatchStage } from '@/api/generated/services.gen';
+import {
+    bookPatchProgressMutation,
+    bookPatchStageMutation,
+    booksListQueryKey,
+} from '@/api/generated/@tanstack/react-query.gen';
 import type { Book } from '@/api/generated/types.gen';
 
 export function shouldCommitStage(current: Book['stage'], draft: Book['stage'] | undefined): boolean {
@@ -20,15 +24,15 @@ export function useBookActions(initialBooks: Array<{ id: string; stage: Book['st
     const byId = new Map(initialBooks.map((b) => [b.id, b]));
 
     const stageMutation = useMutation({
-        mutationFn: ({ id, stage }: { id: string; stage: Book['stage'] }) => bookPatchStage({ path: { id }, body: { stage } }),
+        ...bookPatchStageMutation(),
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['books'] });
+            await queryClient.invalidateQueries({ queryKey: booksListQueryKey() });
         },
     });
     const progressMutation = useMutation({
-        mutationFn: ({ id, progress }: { id: string; progress: number }) => bookPatchProgress({ path: { id }, body: { progress, mode: 'manual' } }),
+        ...bookPatchProgressMutation(),
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['books'] });
+            await queryClient.invalidateQueries({ queryKey: booksListQueryKey() });
         },
     });
 
@@ -36,14 +40,14 @@ export function useBookActions(initialBooks: Array<{ id: string; stage: Book['st
         const base = byId.get(bookId);
         const next = stageDraft[bookId];
         if (!base || !shouldCommitStage(base.stage, next)) return;
-        await stageMutation.mutateAsync({ id: bookId, stage: next });
+        await stageMutation.mutateAsync({ path: { id: bookId }, body: { stage: next } });
     };
 
     const commitProgress = async (bookId: string) => {
         const base = byId.get(bookId);
         const next = progressDraft[bookId];
         if (!base || !shouldCommitProgress(base.progress, next)) return;
-        await progressMutation.mutateAsync({ id: bookId, progress: next });
+        await progressMutation.mutateAsync({ path: { id: bookId }, body: { progress: next, mode: 'manual' } });
     };
 
     return {

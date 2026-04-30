@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { bookAssignmentDelete, bookAssignmentsList } from '@/api/generated/services.gen';
+import {
+    bookAssignmentDeleteMutation,
+    bookAssignmentsListOptions,
+    bookAssignmentsListQueryKey,
+} from '@/api/generated/@tanstack/react-query.gen';
 import type { AssignmentWithUser } from '@/api/generated/types.gen';
 import { Button } from '@/components/ui/button';
 import { RoleBadge } from '@/components/badges/RoleBadge';
@@ -9,18 +13,19 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 export function AssignmentList({ bookId }: { bookId: string }) {
     const { t } = useTranslation('common');
     const qc = useQueryClient();
-    const queryKey = ['bookAssignments', bookId] as const;
+    const listKey = bookAssignmentsListQueryKey({ path: { bookId } });
 
     const { data: assignments = [], isLoading } = useQuery({
-        queryKey,
-        queryFn: async () => (await bookAssignmentsList({ path: { bookId } })).data ?? [],
+        ...bookAssignmentsListOptions({ path: { bookId } }),
     });
 
     const removeMutation = useMutation({
-        mutationFn: (a: AssignmentWithUser) =>
-            bookAssignmentDelete({ path: { bookId, role: a.role, userId: a.userId } }),
-        onSuccess: () => qc.invalidateQueries({ queryKey }),
+        ...bookAssignmentDeleteMutation(),
+        onSuccess: () => qc.invalidateQueries({ queryKey: listKey }),
     });
+
+    const remove = (a: AssignmentWithUser) =>
+        removeMutation.mutate({ path: { bookId, role: a.role, userId: a.userId } });
 
     if (isLoading) return <p className="text-sm text-stone-500">{t('states.loading')}</p>;
     if (assignments.length === 0) {
@@ -46,7 +51,7 @@ export function AssignmentList({ bookId }: { bookId: string }) {
                     <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => removeMutation.mutate(a)}
+                        onClick={() => remove(a)}
                         disabled={removeMutation.isPending}
                     >
                         {t('people.removeAssignment')}

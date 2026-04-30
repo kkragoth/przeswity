@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
-import { booksList } from '@/api/generated/services.gen';
+import { booksListOptions } from '@/api/generated/@tanstack/react-query.gen';
 import type { SessionUser } from '@/auth/types';
 import { isAttentionBook, isRecentBook } from '@/lib/status';
 import { filterBooks, type DashboardView, type QuickFilter, isActiveWithinDays } from '@/containers/coordinator/hooks/booksDashboardSelectors';
@@ -16,8 +16,7 @@ export function useBooksDashboard(me: SessionUser) {
     const onSetRoleFilter = useCallback((next: string) => setRoleFilter(next), []);
 
     const { data: books = [], isLoading } = useQuery({
-        queryKey: ['books'],
-        queryFn: async () => (await booksList()).data ?? [],
+        ...booksListOptions(),
     });
 
     const scoped = useMemo(() => (showOnlyMine ? books.filter((b) => b.createdById === me.id) : books), [books, me.id, showOnlyMine]);

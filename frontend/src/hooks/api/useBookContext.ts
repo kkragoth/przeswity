@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { authClient } from '@/auth/client';
-import { bookAssignmentsList, bookGet } from '@/api/generated/services.gen';
+import { bookAssignmentsListOptions, bookGetOptions } from '@/api/generated/@tanstack/react-query.gen';
 import type { AssignmentWithUser, Book, role } from '@/api/generated/types.gen';
 import type { SessionUser } from '@/auth/types';
 
@@ -20,12 +20,10 @@ export function useBookContext(bookId: string): {
     const me = (session.data?.user as SessionUser | undefined) ?? null;
 
     const bookQuery = useQuery({
-        queryKey: ['book', bookId],
-        queryFn: async () => (await bookGet({ path: { id: bookId } })).data ?? null,
+        ...bookGetOptions({ path: { id: bookId } }),
     });
     const assignmentsQuery = useQuery({
-        queryKey: ['book-assignments', bookId],
-        queryFn: async () => (await bookAssignmentsList({ path: { bookId } })).data ?? [],
+        ...bookAssignmentsListOptions({ path: { bookId } }),
     });
 
     const assignments = Array.isArray(assignmentsQuery.data) ? assignmentsQuery.data : [];

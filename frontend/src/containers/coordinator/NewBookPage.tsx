@@ -13,8 +13,7 @@ export function NewBookPage() {
     const canSubmit = form.values.title.trim().length > 0 && !form.isSubmitting;
 
     const submit = async () => {
-        const res = await form.submit();
-        const created = res.data;
+        const created = await form.submit();
         if (created) await navigate({ to: '/books/$bookId', params: { bookId: created.id } });
     };
 

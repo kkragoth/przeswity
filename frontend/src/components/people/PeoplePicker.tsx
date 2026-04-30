@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { bookAssignmentsBulkCreate, usersList } from '@/api/generated/services.gen';
+import {
+    bookAssignmentsBulkCreateMutation,
+    bookAssignmentsListQueryKey,
+    usersListOptions,
+} from '@/api/generated/@tanstack/react-query.gen';
 import type { BulkCreateAssignmentsBody, User } from '@/api/generated/types.gen';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,23 +26,21 @@ export function PeoplePicker({ bookId }: { bookId: string }) {
     const state = usePeoplePickerState();
 
     const { data: users = [] } = useQuery({
-        queryKey: ['users'],
-        queryFn: async () => (await usersList()).data ?? [],
+        ...usersListOptions(),
     });
 
     const filtered = users.filter((u) => userMatches(u, state.filter));
 
     const m = useMutation({
-        mutationFn: () =>
-            bookAssignmentsBulkCreate({
-                path: { bookId },
-                body: { assignments: state.drafts as Draft[] },
-            }),
+        ...bookAssignmentsBulkCreateMutation(),
         onSuccess: () => {
             state.closeDialog();
-            void qc.invalidateQueries({ queryKey: ['bookAssignments', bookId] });
+            void qc.invalidateQueries({ queryKey: bookAssignmentsListQueryKey({ path: { bookId } }) });
         },
     });
+
+    const submit = () =>
+        m.mutate({ path: { bookId }, body: { assignments: state.drafts as Draft[] } });
 
     return (
         <Dialog
@@ -77,7 +79,7 @@ export function PeoplePicker({ bookId }: { bookId: string }) {
                     <DraftList users={users} drafts={state.drafts} onRemove={state.removeDraft} />
                 </div>
                 <DialogFooter>
-                    <Button onClick={() => m.mutate()} disabled={state.drafts.length === 0 || m.isPending}>
+                    <Button onClick={submit} disabled={state.drafts.length === 0 || m.isPending}>
                         {m.isPending ? t('states.saving') : t('people.submit')}
                     </Button>
                 </DialogFooter>

@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { booksList } from '@/api/generated/services.gen';
+import { booksListOptions } from '@/api/generated/@tanstack/react-query.gen';
 import type { SessionUser } from '@/auth/types';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { PageLayout } from '@/components/layout/PageLayout';
@@ -13,8 +13,7 @@ export function BooksListPage({ user }: { user: SessionUser }) {
     const { t } = useTranslation('common');
     const canCreate = user.systemRole === 'admin' || user.systemRole === 'project_manager';
     const { data: books = [], isLoading } = useQuery({
-        queryKey: ['books'],
-        queryFn: async () => (await booksList()).data ?? [],
+        ...booksListOptions(),
     });
 
     return (

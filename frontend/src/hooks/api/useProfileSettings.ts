@@ -1,15 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
-import { meGet, mePatch } from '@/api/generated/services.gen';
+import { meGetOptions, meGetQueryKey, mePatchMutation } from '@/api/generated/@tanstack/react-query.gen';
 import type { PatchMeBody } from '@/api/generated/types.gen';
-
-const ME_KEY = ['me'] as const;
 
 export function useProfileSettings() {
     const queryClient = useQueryClient();
     const { data: me } = useQuery({
-        queryKey: ME_KEY,
-        queryFn: async () => (await meGet()).data,
+        ...meGetOptions(),
     });
 
     const [values, setValues] = useState({ name: '', color: '#888888', image: '' });
@@ -19,18 +16,20 @@ export function useProfileSettings() {
     }, [me]);
 
     const mutation = useMutation({
-        mutationFn: () => {
-            const body: PatchMeBody = {
-                name: values.name,
-                color: values.color,
-                image: values.image.length > 0 ? values.image : null,
-            };
-            return mePatch({ body });
-        },
+        ...mePatchMutation(),
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ME_KEY });
+            await queryClient.invalidateQueries({ queryKey: meGetQueryKey() });
         },
     });
+
+    const submit = () => {
+        const body: PatchMeBody = {
+            name: values.name,
+            color: values.color,
+            image: values.image.length > 0 ? values.image : null,
+        };
+        return mutation.mutateAsync({ body });
+    };
 
     const isDirty = useMemo(() => {
         if (!me) return false;
@@ -41,7 +40,7 @@ export function useProfileSettings() {
         me,
         values,
         setField: (name: 'name' | 'color' | 'image', value: string) => setValues((prev) => ({ ...prev, [name]: value })),
-        save: () => mutation.mutateAsync(),
+        save: submit,
         isSaving: mutation.isPending,
         isDirty,
     };

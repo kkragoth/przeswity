@@ -1,21 +1,18 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { usersList } from '@/api/generated/services.gen';
+import { usersListOptions, usersListQueryKey } from '@/api/generated/@tanstack/react-query.gen';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { NewUserDialog } from '@/containers/admin/components/NewUserDialog';
 import { UsersTable } from '@/containers/admin/components/UsersTable';
-
-const USERS_KEY = ['users'] as const;
 
 export function UsersPage() {
     const { t: ta } = useTranslation('admin');
     const { t: tc } = useTranslation('common');
     const qc = useQueryClient();
     const { data: users = [], isLoading } = useQuery({
-        queryKey: USERS_KEY,
-        queryFn: async () => (await usersList()).data ?? [],
+        ...usersListOptions(),
     });
-    const invalidate = () => qc.invalidateQueries({ queryKey: USERS_KEY });
+    const invalidate = () => qc.invalidateQueries({ queryKey: usersListQueryKey() });
 
     return (
         <div className="mx-auto max-w-7xl px-4 py-8">

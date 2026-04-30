@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { userDelete } from '@/api/generated/services.gen';
+import { userDeleteMutation } from '@/api/generated/@tanstack/react-query.gen';
 import { ConfirmDialog } from '@/components/feedback/ConfirmDialog';
 import { Button } from '@/components/ui/button';
 
@@ -10,7 +10,7 @@ export function DeleteUserButton({ id, onDeleted }: { id: string; onDeleted: () 
     const { t: tc } = useTranslation('common');
     const [open, setOpen] = useState(false);
     const mutation = useMutation({
-        mutationFn: () => userDelete({ path: { id } }),
+        ...userDeleteMutation(),
         onSuccess: () => {
             setOpen(false);
             onDeleted();
@@ -24,7 +24,7 @@ export function DeleteUserButton({ id, onDeleted }: { id: string; onDeleted: () 
             title={ta('users.deleteConfirm')}
             destructive
             confirmLabel={tc('actions.delete')}
-            onConfirm={() => mutation.mutate()}
+            onConfirm={() => mutation.mutate({ path: { id } })}
         />
     );
 }
