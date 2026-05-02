@@ -16,7 +16,7 @@ export function UserMenu({ user }: { user: User }) {
 
     const handleLogout = async () => {
         await authClient.signOut();
-        void navigate({ to: '/login', search: {} as never });
+        void navigate({ to: '/login', search: {} });
     };
 
     return (

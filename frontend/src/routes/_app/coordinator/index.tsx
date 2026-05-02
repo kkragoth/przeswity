@@ -1,13 +1,10 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import type { SessionUser } from '@/auth/types';
-import { canAccessCoordinator } from '@/lib/auth';
+import { canAccessCoordinator, requireRole } from '@/lib/auth';
 import { CoordinatorDashboard } from '@/containers/coordinator/CoordinatorDashboard';
 
 export const Route = createFileRoute('/_app/coordinator/')({
-    beforeLoad: ({ context }) => {
-        const user = context.session?.user as SessionUser | undefined;
-        if (!user || !canAccessCoordinator(user)) throw redirect({ to: '/' });
-    },
+    beforeLoad: ({ context }) => { requireRole(context, canAccessCoordinator); },
     component: CoordinatorRoute,
 });
 

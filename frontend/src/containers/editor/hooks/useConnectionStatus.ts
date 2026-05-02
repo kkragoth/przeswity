@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { HocuspocusProvider } from '@hocuspocus/provider';
-import type { HocuspocusProviderRuntime } from '@/editor/yjs/types';
-import { SyncStatus, getProviderSyncStatus } from '@/editor/collab/syncStatus';
+import { SyncStatus, getProviderSyncStatus, asProviderRuntime } from '@/editor/collab/syncStatus';
 
 export { SyncStatus } from '@/editor/collab/syncStatus';
 
@@ -15,8 +14,8 @@ export function useConnectionStatus(provider: HocuspocusProvider): ConnectionSta
 
     const reconnect = useCallback(() => {
         try {
-            const runtime = provider as unknown as HocuspocusProviderRuntime;
-            if (runtime.configuration?.websocketProvider) {
+            const runtime = asProviderRuntime(provider);
+            if (runtime?.configuration?.websocketProvider) {
                 runtime.configuration.websocketProvider.shouldConnect = true;
             }
             void provider.connect();

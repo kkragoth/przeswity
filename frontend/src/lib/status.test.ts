@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { allowedNextStages, bookAttention, BookAttention, isAttentionBook, isRecentBook, isStaleDays } from '@/lib/status';
+import { BOOK_STAGES_ORDER } from '@/lib/stage';
 import type { BookSummary } from '@/api/generated/types.gen';
 
 function book(overrides: Partial<BookSummary>): BookSummary {
@@ -40,5 +41,25 @@ describe('status helpers', () => {
 
     it('keeps stage transitions typed', () => {
         expect(allowedNextStages('translation')).toEqual(['editing']);
+    });
+
+    it('allowedNextStages editing returns authorization and proofreading', () => {
+        expect(allowedNextStages('editing')).toEqual(['authorization', 'proofreading']);
+    });
+
+    it('terminal stage finalization returns empty array', () => {
+        expect(allowedNextStages('finalization')).toEqual([]);
+    });
+
+    it('every BookStage except the first is reachable from some predecessor', () => {
+        const reachable = new Set<string>();
+        for (const stage of BOOK_STAGES_ORDER) {
+            for (const next of allowedNextStages(stage)) {
+                reachable.add(next);
+            }
+        }
+        // Every stage except the very first (translation) must be reachable
+        const unreachable = BOOK_STAGES_ORDER.slice(1).filter(s => !reachable.has(s));
+        expect(unreachable).toEqual([]);
     });
 });

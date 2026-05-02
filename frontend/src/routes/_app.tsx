@@ -10,7 +10,7 @@ export const Route = createFileRoute('/_app')({
         try {
             const { data } = await authClient.getSession();
             if (!data) {
-                throw redirect({ to: '/login', search: { next: location.href } as never });
+                throw redirect({ to: '/login', search: { next: location.href } });
             }
             return { session: data as unknown as Session };
         } catch (error) {
@@ -18,7 +18,7 @@ export const Route = createFileRoute('/_app')({
             console.warn('Session lookup failed, redirecting to login.', error);
             throw redirect({
                 to: '/login',
-                search: { next: location.href, reason: 'session-unavailable' } as never,
+                search: { next: location.href, reason: 'session-unavailable' },
             });
         }
     },

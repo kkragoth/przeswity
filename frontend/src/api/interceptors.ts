@@ -16,34 +16,36 @@ async function tryRefreshSession(): Promise<RefreshResult> {
                 return { ok: false };
             }
         })();
-        void refreshPromise.finally(() => {
-            refreshPromise = null;
-        });
+        void refreshPromise.finally(() => { refreshPromise = null; });
     }
     return refreshPromise;
 }
+
+export function buildLoginRedirectUrl(pathname: string, search: string): string {
+    const next = pathname + search;
+    return `/login?next=${encodeURIComponent(next)}`;
+}
+
+const retried = new WeakSet<Request>();
 
 async function redirectToLogin() {
     if (typeof location === 'undefined') return;
     if (location.pathname.startsWith('/login')) return;
     const next = location.pathname + location.search;
     try {
-        await router.navigate({ to: '/login', search: { next } as never });
+        await router.navigate({ to: '/login', search: { next } });
     } catch {
-        location.href = `/login?next=${encodeURIComponent(next)}`;
+        location.href = buildLoginRedirectUrl(location.pathname, location.search);
     }
 }
 
-type RetryableRequest = Request & { __retried?: boolean };
-
 client.interceptors.response.use(async (response, request) => {
     if (response.status !== 401) return response;
-    const req = request as RetryableRequest;
-    if (req.__retried) return response;
+    if (retried.has(request)) return response;
 
     const result = await tryRefreshSession();
     if (result.ok) {
-        req.__retried = true;
+        retried.add(request);
         return fetch(request);
     }
 

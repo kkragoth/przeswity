@@ -22,13 +22,11 @@ export default [{
         "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
         "no-console": ["warn", { "allow": ["warn", "error"] }],
 
-        // Phase 2 — ban relative cross-directory imports (../ only; same-dir ./ is allowed)
-        // Phase 3 — warn on hardcoded JSX text
-        // NOTE: no-restricted-syntax takes a single severity for all selectors.
-        // Both rules are set to 'warn' here; Phase 24 will promote the import ban to 'error'
-        // once the i18n sweep (phases 5-23) is complete and the JSX-text rule is also promoted.
+        // Ban relative cross-directory imports (../ only; same-dir ./ is allowed)
+        // and ban hardcoded JSX text — all user-visible strings must go through t().
+        // no-restricted-syntax takes a single severity for all selectors; both are 'error'.
         "no-restricted-syntax": [
-            "warn",
+            "error",
             {
                 "selector": "ImportDeclaration[source.value=/^\\.\\.\\//]",
                 "message": "Use @/ alias instead of ../ for cross-directory imports.",
