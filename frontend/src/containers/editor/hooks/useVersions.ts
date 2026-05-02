@@ -41,13 +41,16 @@ export function useVersions(doc: Y.Doc, user: User, editor: Editor | null, bookI
     }, [bookId]);
 
     useEffect(() => {
-        localStorage.setItem(storageKey(bookId), JSON.stringify(versions));
+        const id = window.setTimeout(() => {
+            localStorage.setItem(storageKey(bookId), JSON.stringify(versions));
+        }, 250);
+        return () => window.clearTimeout(id);
     }, [bookId, versions]);
 
     const snapshot = (auto = false, customLabel?: string) => {
         const state = Y.encodeStateAsUpdate(doc);
         const next: VersionSnapshot = {
-            id: Math.random().toString(36).slice(2, 11),
+            id: crypto.randomUUID(),
             label: customLabel ?? (label.trim() || `Snapshot ${new Date().toLocaleString()}`),
             authorName: user.name,
             createdAt: Date.now(),

@@ -1,18 +1,16 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import type { Role } from '@/editor/identity/types';
+import { useMentionDetection, type MentionCandidate } from '@/containers/editor/hooks/useMentionDetection';
 
-export interface MentionCandidate {
-  display: string
-  kind: 'user' | 'role'
-}
+export type { MentionCandidate } from '@/containers/editor/hooks/useMentionDetection';
 
 interface MentionTextareaProps {
-  value: string
-  onChange: (next: string) => void
-  placeholder?: string
-  autoFocus?: boolean
-  candidates: MentionCandidate[]
-  onClick?: (e: React.MouseEvent<HTMLTextAreaElement>) => void
+    value: string
+    onChange: (next: string) => void
+    placeholder?: string
+    autoFocus?: boolean
+    candidates: MentionCandidate[]
+    onClick?: (e: React.MouseEvent<HTMLTextAreaElement>) => void
 }
 
 const ROLES: Role[] = [
@@ -25,10 +23,7 @@ const ROLES: Role[] = [
     'admin',
 ];
 
-export function buildCandidates(
-    peers: { name: string }[],
-    selfName: string,
-): MentionCandidate[] {
+export function buildCandidates(peers: { name: string }[], selfName: string): MentionCandidate[] {
     const namesSeen = new Set<string>();
     const out: MentionCandidate[] = [];
     for (const p of peers) {
@@ -52,7 +47,7 @@ export function renderBodyWithMentions(body: string): React.ReactNode {
         const isRole = ROLES.includes(m[1] as Role);
         parts.push(
             <span key={`m-${i++}`} className={`mention${isRole ? ' mention-role' : ''}`}>
-        @{m[1]}
+                @{m[1]}
             </span>,
         );
         last = m.index + m[0].length;
@@ -70,30 +65,7 @@ export function MentionTextarea({
     onClick,
 }: MentionTextareaProps) {
     const ref = useRef<HTMLTextAreaElement>(null);
-    const [picker, setPicker] = useState<{ from: number; query: string } | null>(null);
-    const [activeIdx, setActiveIdx] = useState(0);
-
-    const filtered = picker
-        ? candidates.filter((c) =>
-            c.display.toLowerCase().startsWith(picker.query.toLowerCase()),
-        )
-        : [];
-
-    const detect = (next: string, caret: number) => {
-        const before = next.slice(0, caret);
-        const m = before.match(/@([\p{L}\p{N}_-]*)$/u);
-        if (m) {
-            const at = caret - m[0].length;
-            // Only trigger if @ is at start or preceded by whitespace
-            const prev = at === 0 ? '' : next[at - 1];
-            if (at === 0 || /\s/.test(prev)) {
-                setPicker({ from: at, query: m[1] });
-                setActiveIdx(0);
-                return;
-            }
-        }
-        if (picker) setPicker(null);
-    };
+    const { picker, filtered, activeIdx, setActiveIdx, detect, closePicker } = useMentionDetection(candidates);
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         onChange(e.target.value);
@@ -105,7 +77,7 @@ export function MentionTextarea({
         const caret = ref.current.selectionStart;
         const next = value.slice(0, picker.from) + '@' + display + ' ' + value.slice(caret);
         onChange(next);
-        setPicker(null);
+        closePicker();
         requestAnimationFrame(() => {
             if (!ref.current) return;
             const newCaret = picker.from + 1 + display.length + 1;
@@ -127,7 +99,7 @@ export function MentionTextarea({
             insertMention(filtered[activeIdx].display);
         } else if (e.key === 'Escape') {
             e.preventDefault();
-            setPicker(null);
+            closePicker();
         }
     };
 

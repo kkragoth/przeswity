@@ -1,15 +1,15 @@
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar } from '@/editor/shell/Avatar';
 import { authorColor } from '@/editor/comments/color';
 import type { CommentThread } from '@/editor/comments/types';
 import { Reactions } from '@/containers/editor/components/comments/Reactions';
 import { CommentReply } from '@/containers/editor/components/comments/CommentReply';
-import {
-    MentionTextarea,
-    renderBodyWithMentions,
-    type MentionCandidate,
-} from '@/containers/editor/components/comments/MentionTextarea';
+import { type MentionCandidate, renderBodyWithMentions } from '@/containers/editor/components/comments/MentionTextarea';
 import type { CommentEditTarget } from '@/containers/editor/hooks/useCommentDrafts';
+import { ThreadComposeForm } from '@/containers/editor/components/comments/thread/ThreadComposeForm';
+import { ThreadReplyCompose } from '@/containers/editor/components/comments/thread/ThreadReplyCompose';
+import { withStop } from '@/utils/react/withStop';
 
 function previewBody(body: string, max = 90): string {
     const single = body.replace(/\s+/g, ' ').trim();
@@ -51,7 +51,7 @@ interface CommentThreadCardProps {
     callbacks: ThreadCallbacks;
 }
 
-export function CommentThreadCard(props: CommentThreadCardProps) {
+export const CommentThreadCard = memo(function CommentThreadCard(props: CommentThreadCardProps) {
     const { t } = useTranslation('editor');
     const { thread, isActive, callbacks: cb } = props;
     const draftEmpty = thread.body === '';
@@ -75,50 +75,26 @@ export function CommentThreadCard(props: CommentThreadCardProps) {
                         </span>
                     ) : null}
                     {props.canResolve && isActive ? (
-                        <button
-                            type="button"
-                            className="btn-resolve"
-                            aria-label={t('comments.resolve')}
-                            onClick={(e) => { e.stopPropagation(); cb.onResolve(); }}
-                        >
+                        <button type="button" className="btn-resolve" aria-label={t('comments.resolve')} onClick={withStop(cb.onResolve)}>
                             ✓ {t('comments.resolve')}
                         </button>
                     ) : null}
                     {isActive ? (
-                        <button
-                            type="button"
-                            className="thread-close-btn"
-                            title={t('comments.close')}
-                            aria-label={t('comments.close')}
-                            onClick={(e) => { e.stopPropagation(); cb.onClose(); }}
-                        >✕</button>
+                        <button type="button" className="thread-close-btn" title={t('comments.close')} aria-label={t('comments.close')} onClick={withStop(cb.onClose)}>✕</button>
                     ) : null}
                 </div>
             </div>
             <div className="thread-quote">"{thread.originalQuote}"</div>
 
             {draftEmpty && isActive ? (
-                <div className="thread-draft">
-                    <MentionTextarea
-                        value={props.initialDraft}
-                        onChange={props.onInitialDraftChange}
-                        placeholder={t('comments.writeComment')}
-                        autoFocus
-                        candidates={props.candidates}
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                    <div className="thread-actions">
-                        <button
-                            type="button"
-                            className="btn-primary"
-                            disabled={!props.initialDraft.trim()}
-                            onClick={(e) => { e.stopPropagation(); cb.onSubmitInitialBody(); }}
-                        >{t('comments.post')}</button>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); cb.onRemove(); }}>
-                            {t('global.cancel')}
-                        </button>
-                    </div>
-                </div>
+                <ThreadComposeForm
+                    value={props.initialDraft}
+                    onChange={props.onInitialDraftChange}
+                    placeholder={t('comments.writeComment')}
+                    onSubmit={cb.onSubmitInitialBody}
+                    onCancel={cb.onRemove}
+                    candidates={props.candidates}
+                />
             ) : (
                 <>
                     {thread.body && !isActive ? (
@@ -128,27 +104,14 @@ export function CommentThreadCard(props: CommentThreadCardProps) {
                         <div className="thread-expandable-inner">
                             <div className="thread-message">
                                 {thread.body && editingThreadBody ? (
-                                    <div className="thread-draft">
-                                        <MentionTextarea
-                                            value={props.editText}
-                                            onChange={props.onEditTextChange}
-                                            placeholder={t('comments.editComment')}
-                                            autoFocus
-                                            candidates={props.candidates}
-                                            onClick={(e) => e.stopPropagation()}
-                                        />
-                                        <div className="thread-actions">
-                                            <button
-                                                type="button"
-                                                className="btn-primary"
-                                                disabled={!props.editText.trim()}
-                                                onClick={(e) => { e.stopPropagation(); cb.onEditSubmit(); }}
-                                            >{t('comments.post')}</button>
-                                            <button type="button" onClick={(e) => { e.stopPropagation(); cb.onEditCancel(); }}>
-                                                {t('global.cancel')}
-                                            </button>
-                                        </div>
-                                    </div>
+                                    <ThreadComposeForm
+                                        value={props.editText}
+                                        onChange={props.onEditTextChange}
+                                        placeholder={t('comments.editComment')}
+                                        onSubmit={cb.onEditSubmit}
+                                        onCancel={cb.onEditCancel}
+                                        candidates={props.candidates}
+                                    />
                                 ) : thread.body ? (
                                     <div className="thread-body">
                                         {renderBodyWithMentions(thread.body)}
@@ -158,22 +121,12 @@ export function CommentThreadCard(props: CommentThreadCardProps) {
                                             </span>
                                         ) : null}
                                         {thread.authorId === props.currentUserId ? (
-                                            <button
-                                                type="button"
-                                                className="thread-edit-btn"
-                                                title={t('comments.editTooltip')}
-                                                onClick={(e) => { e.stopPropagation(); cb.onEditThreadStart(); }}
-                                            >✎</button>
+                                            <button type="button" className="thread-edit-btn" title={t('comments.editTooltip')} onClick={withStop(cb.onEditThreadStart)}>✎</button>
                                         ) : null}
                                     </div>
                                 ) : null}
-
                                 {isActive && thread.body ? (
-                                    <Reactions
-                                        reactions={thread.reactions}
-                                        myUserId={props.currentUserId}
-                                        onToggle={cb.onToggleThreadReaction}
-                                    />
+                                    <Reactions reactions={thread.reactions} myUserId={props.currentUserId} onToggle={cb.onToggleThreadReaction} />
                                 ) : null}
                             </div>
 
@@ -202,39 +155,14 @@ export function CommentThreadCard(props: CommentThreadCardProps) {
                             })}
 
                             {props.canComment && thread.body && isActive ? (
-                                <div className="thread-reply-compose">
-                                    <div className="thread-compose-row">
-                                        <MentionTextarea
-                                            value={props.replyDraft}
-                                            onChange={props.onReplyDraftChange}
-                                            placeholder={t('comments.writeReply')}
-                                            candidates={props.candidates}
-                                            onClick={(e) => e.stopPropagation()}
-                                        />
-                                        <button
-                                            type="button"
-                                            className="btn-send"
-                                            disabled={!props.replyDraft.trim()}
-                                            title={t('comments.reply')}
-                                            aria-label={t('comments.reply')}
-                                            onClick={(e) => { e.stopPropagation(); cb.onSubmitReply(); }}
-                                        >↑</button>
-                                    </div>
-                                    {props.canResolve ? (
-                                        <div className="thread-compose-footer">
-                                            <button
-                                                type="button"
-                                                className="thread-icon-btn thread-remove"
-                                                title={t('comments.deleteThread')}
-                                                aria-label={t('comments.deleteThread')}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    if (window.confirm(t('comments.deleteConfirm'))) cb.onRemove();
-                                                }}
-                                            >🗑</button>
-                                        </div>
-                                    ) : null}
-                                </div>
+                                <ThreadReplyCompose
+                                    replyDraft={props.replyDraft}
+                                    onChange={props.onReplyDraftChange}
+                                    onSubmit={cb.onSubmitReply}
+                                    onRemove={cb.onRemove}
+                                    canResolve={props.canResolve}
+                                    candidates={props.candidates}
+                                />
                             ) : null}
                         </div>
                     </div>
@@ -242,4 +170,4 @@ export function CommentThreadCard(props: CommentThreadCardProps) {
             )}
         </div>
     );
-}
+});

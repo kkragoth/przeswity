@@ -1,6 +1,8 @@
 {
     "global": {
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "close": "Close",
+        "delete": "Delete"
     },
     "topbar": {
         "saving": "Saving...",
@@ -45,7 +47,8 @@
         "comments": "Comments",
         "suggestions": "Suggestions",
         "collapse": "Collapse panel",
-        "expand": "Expand panel"
+        "expand": "Expand panel",
+        "close": "Close panels"
     },
     "outlineEmpty": {
         "title": "Table of contents is empty",
@@ -148,7 +151,28 @@
         "restore": "Restore",
         "compare": "Compare",
         "createSnapshot": "Create snapshot",
-        "label": "Label"
+        "label": "Label",
+        "labelPlaceholder": "Snapshot label (optional)",
+        "empty": "No snapshots yet.",
+        "compareBanner": "Pick a second snapshot to compare against {{label}}",
+        "autoLabel": "Auto · {{time}}",
+        "snapshotSaved": "Snapshot saved: {{label}}",
+        "editorNotReady": "Editor not ready.",
+        "restoreConfirm": "Restore \"{{label}}\"?",
+        "restoreSuccess": "Restored: {{label}}",
+        "compareTitle": "Compare versions",
+        "viewRich": "Rich",
+        "viewMarkdown": "Markdown",
+        "layoutInline": "Inline",
+        "layoutSbs": "Side by side",
+        "restoreOlder": "Restore older",
+        "legendAdded": "added (+{{count}} chars)",
+        "legendRemoved": "removed (−{{count}} chars)",
+        "autoBadge": "auto",
+        "diffWithSelected": "Diff with selected",
+        "diffVsCurrent": "Diff vs current",
+        "compareWith": "Compare ↔",
+        "delete": "Delete"
     },
     "wordCount": {
         "words": "{{count}} words",
@@ -167,7 +191,11 @@
         "usersOnline_few": "{{count}} users online",
         "usersOnline_many": "{{count}} users online",
         "usersOnline_other": "{{count}} users online",
-        "soloOnline": "only you"
+        "soloOnline": "only you",
+        "pageOf": "Page {{current}} of {{total}}",
+        "jumpPageTitle": "Go to page",
+        "jumpPageLabel": "Jump to page",
+        "jumpPageGo": "Go"
     },
     "peers": {
         "activeNow": "active now",

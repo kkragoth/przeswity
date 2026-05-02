@@ -5,6 +5,10 @@ import type { CommentReply, CommentThread } from '@/editor/comments/types';
 import { makeId } from '@/editor/utils';
 import type { User } from '@/editor/identity/types';
 
+export type ReactionTarget =
+    | { kind: 'thread'; threadId: string }
+    | { kind: 'reply'; threadId: string; replyId: string };
+
 export function createCommentOps(doc: Y.Doc, currentUser: User) {
     const map = () => getThreadMap(doc);
     const get = (threadId: string) => map().get(threadId);
@@ -23,31 +27,32 @@ export function createCommentOps(doc: Y.Doc, currentUser: User) {
         remove(threadId: string) {
             map().delete(threadId);
         },
-        toggleReaction(threadId: string, emoji: string) {
-            const thread = get(threadId);
-            if (!thread) return;
-            const next = { ...(thread.reactions ?? {}) };
-            const ids = new Set(next[emoji] ?? []);
-            if (ids.has(currentUser.id)) ids.delete(currentUser.id);
-            else ids.add(currentUser.id);
-            if (ids.size === 0) delete next[emoji];
-            else next[emoji] = [...ids];
-            map().set(threadId, { ...thread, reactions: next });
-        },
-        toggleReplyReaction(threadId: string, replyId: string, emoji: string) {
-            const thread = get(threadId);
-            if (!thread) return;
-            const replies = thread.replies.map((reply) => {
-                if (reply.id !== replyId) return reply;
-                const next = { ...(reply.reactions ?? {}) };
+        toggleReaction(target: ReactionTarget, emoji: string) {
+            if (target.kind === 'thread') {
+                const thread = get(target.threadId);
+                if (!thread) return;
+                const next = { ...(thread.reactions ?? {}) };
                 const ids = new Set(next[emoji] ?? []);
                 if (ids.has(currentUser.id)) ids.delete(currentUser.id);
                 else ids.add(currentUser.id);
                 if (ids.size === 0) delete next[emoji];
                 else next[emoji] = [...ids];
-                return { ...reply, reactions: next };
-            });
-            map().set(threadId, { ...thread, replies });
+                map().set(target.threadId, { ...thread, reactions: next });
+            } else {
+                const thread = get(target.threadId);
+                if (!thread) return;
+                const replies = thread.replies.map((reply) => {
+                    if (reply.id !== target.replyId) return reply;
+                    const next = { ...(reply.reactions ?? {}) };
+                    const ids = new Set(next[emoji] ?? []);
+                    if (ids.has(currentUser.id)) ids.delete(currentUser.id);
+                    else ids.add(currentUser.id);
+                    if (ids.size === 0) delete next[emoji];
+                    else next[emoji] = [...ids];
+                    return { ...reply, reactions: next };
+                });
+                map().set(target.threadId, { ...thread, replies });
+            }
         },
         addReply(threadId: string, body: string): string {
             const thread = get(threadId);

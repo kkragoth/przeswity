@@ -1,5 +1,5 @@
 import '@/editor/styles.css';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -27,6 +27,8 @@ import { usePaneState, PaneState } from '@/containers/editor/hooks/usePaneState'
 import { useCollabSession } from '@/containers/editor/hooks/useCollabSession';
 import { useFontsReady } from '@/containers/editor/hooks/useFontsReady';
 import { useInitialSync } from '@/containers/editor/hooks/useInitialSync';
+import { useNarrowLayout } from '@/containers/editor/hooks/useNarrowLayout';
+import { usePageNavigation } from '@/containers/editor/hooks/usePageNavigation';
 import { EditorLayout } from '@/containers/editor/EditorLayout';
 import { EditorSkeleton } from '@/containers/editor/components/EditorSkeleton';
 
@@ -55,12 +57,28 @@ function EditorSession({ bookId, bookTitle, user, collab }: {
     const suggesting = useSuggestingMode(collab.doc, user.role);
     const leftPane = usePaneState('left', PaneState.Expanded);
     const rightPane = usePaneState('right', PaneState.Expanded);
+    const narrow = useNarrowLayout();
     const glossaryEntries = useGlossary(collab.doc);
     const peers = usePeers(collab.provider);
     const conn = useConnectionStatus(collab.provider);
     const targetWords = useTargetWords(collab.doc);
     const stats = useReadingStats(editor);
+    const pageNav = usePageNavigation(editor);
     useDocumentKeyDown({ findOpen, shortcutsOpen, setFindOpen, setShortcutsOpen });
+
+    const expandLeft = useCallback(() => {
+        leftPane.expand();
+        if (narrow) rightPane.hide();
+    }, [leftPane, rightPane, narrow]);
+    const expandRight = useCallback(() => {
+        rightPane.expand();
+        if (narrow) leftPane.hide();
+    }, [leftPane, rightPane, narrow]);
+    const dismissDrawers = useCallback(() => {
+        leftPane.hide();
+        rightPane.hide();
+    }, [leftPane, rightPane]);
+    const drawerOpen = narrow && (leftPane.isExpanded || rightPane.isExpanded);
 
     useEffect(() => {
         if (!editor) return;
@@ -85,8 +103,8 @@ function EditorSession({ bookId, bookTitle, user, collab }: {
         <EditorLayout
             paneState={{ left: leftPane.state, right: rightPane.state }}
             topBar={<TopBar user={user} bookTitle={bookTitle} editor={editor} perms={ROLE_PERMISSIONS[user.role]} onToast={toast.show} />}
-            leftPane={<LeftPane tab={leftTab} onTabChange={setLeftTab} paneState={leftPane.state} onExpand={leftPane.expand} onRail={leftPane.rail} onHide={leftPane.hide} doc={collab.doc} user={user} editor={editor} bookId={bookId} onToast={toast.show} />}
-            leftHandle={leftPane.isHidden ? <button type="button" className="pane-handle pane-handle-left" title={t('pane.expand')} onClick={leftPane.expand}><ChevronRight size={14} /></button> : null}
+            leftPane={<LeftPane tab={leftTab} onTabChange={setLeftTab} onExpand={expandLeft} onRail={leftPane.rail} doc={collab.doc} user={user} editor={editor} bookId={bookId} onToast={toast.show} />}
+            leftHandle={leftPane.isHidden ? <button type="button" className="pane-handle pane-handle-left" title={t('pane.expand')} onClick={expandLeft}><ChevronRight size={14} /></button> : null}
             content={
                 <>
                     {editor ? (
@@ -101,8 +119,8 @@ function EditorSession({ bookId, bookTitle, user, collab }: {
                             rightPaneState={rightPane.state}
                             leftPaneTab={leftTabLabels[leftTab]}
                             rightPaneTab={rightTabLabels[rightTab]}
-                            onToggleLeftPane={leftPane.cycle}
-                            onToggleRightPane={rightPane.cycle}
+                            onToggleLeftPane={narrow ? (leftPane.isExpanded ? leftPane.hide : expandLeft) : leftPane.cycle}
+                            onToggleRightPane={narrow ? (rightPane.isExpanded ? rightPane.hide : expandRight) : rightPane.cycle}
                         />
                     ) : null}
                     <EditorView
@@ -140,11 +158,24 @@ function EditorSession({ bookId, bookTitle, user, collab }: {
                     editor={editor}
                     connStatus={conn.status}
                     onReconnect={conn.reconnect}
+                    pageNav={pageNav}
                 />
             }
-            rightPane={<RightPane tab={rightTab} onTabChange={setRightTab} onExpand={rightPane.expand} onHide={rightPane.hide} doc={collab.doc} editor={editor} user={user} peers={peers} activeCommentId={activeCommentId} onActiveCommentChange={setActiveCommentId} pendingNew={pendingNew} onPendingHandled={() => setPendingNew(null)} />}
-            rightHandle={rightPane.isHidden ? <button type="button" className="pane-handle pane-handle-right" title={t('pane.expand')} onClick={rightPane.expand}><ChevronLeft size={14} /></button> : null}
-            overlays={shortcutsOpen ? <ShortcutsModal onClose={() => setShortcutsOpen(false)} /> : null}
+            rightPane={<RightPane tab={rightTab} onTabChange={setRightTab} onExpand={expandRight} onHide={rightPane.hide} doc={collab.doc} editor={editor} user={user} peers={peers} activeCommentId={activeCommentId} onActiveCommentChange={setActiveCommentId} pendingNew={pendingNew} onPendingHandled={() => setPendingNew(null)} />}
+            rightHandle={rightPane.isHidden ? <button type="button" className="pane-handle pane-handle-right" title={t('pane.expand')} onClick={expandRight}><ChevronLeft size={14} /></button> : null}
+            overlays={
+                <>
+                    {drawerOpen ? (
+                        <button
+                            type="button"
+                            className="pane-backdrop"
+                            aria-label={t('pane.close')}
+                            onClick={dismissDrawers}
+                        />
+                    ) : null}
+                    {shortcutsOpen ? <ShortcutsModal onClose={() => setShortcutsOpen(false)} /> : null}
+                </>
+            }
         />
     );
 }

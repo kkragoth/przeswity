@@ -14,6 +14,7 @@ import { ResolvedThreadCard } from '@/containers/editor/components/comments/Reso
 import { useCommentDrafts } from '@/containers/editor/hooks/useCommentDrafts';
 import { useCommentOps } from '@/containers/editor/hooks/useCommentOps';
 import { useCommentThreads, CommentStatusFilter } from '@/containers/editor/hooks/useCommentThreads';
+import { useStableCallback } from '@/utils/react/useStableCallback';
 
 interface CommentsSidebarProps {
     doc: Y.Doc;
@@ -30,7 +31,7 @@ export function CommentsSidebar(props: CommentsSidebarProps) {
     const { t, i18n } = useTranslation('editor');
     const threads = useThreads(props.doc);
     const ops = useCommentOps(props.doc, props.user);
-    const { visible, filter, setStatus, setAuthor, setRole, allAuthors } = useCommentThreads(threads, props.user);
+    const { visible, open, resolved, filter, setStatus, setAuthor, setRole, allAuthors } = useCommentThreads(threads, props.user);
     const drafts = useCommentDrafts();
     const cardsRef = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -54,38 +55,12 @@ export function CommentsSidebar(props: CommentsSidebarProps) {
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, [props.activeCommentId]);
 
-    const closeThread = () => {
+    const handleClose = useStableCallback(() => {
         props.onActiveCommentChange(null);
         drafts.cancelEdit();
-    };
-
-    const removeThread = (id: string) => {
-        ops.remove(id);
-        if (props.editor) props.editor.chain().focus().unsetComment(id).run();
-        if (props.activeCommentId === id) closeThread();
-    };
-
-    const resolveThread = (id: string) => {
-        ops.resolve(id);
-        if (props.editor) props.editor.chain().focus().unsetComment(id).run();
-        closeThread();
-    };
-
-    const submitInitialBody = (id: string) => {
-        const text = drafts.draft.trim();
-        if (!text) return;
-        ops.setThreadBody(id, text);
-        drafts.setDraft('');
-    };
-
-    const submitReply = (id: string) => {
-        const text = (drafts.replyDrafts[id] ?? '').trim();
-        if (!text) return;
-        ops.addReply(id, text);
-        drafts.clearReplyDraft(id);
-    };
-
-    const submitEdit = () => {
+    });
+    const handleEditCancel = useStableCallback(() => drafts.cancelEdit());
+    const handleEditSubmit = useStableCallback(() => {
         if (!drafts.editTarget || !drafts.editText.trim()) return;
         if (drafts.editTarget.kind === 'thread') {
             ops.editThread(drafts.editTarget.threadId, drafts.editText);
@@ -93,37 +68,72 @@ export function CommentsSidebar(props: CommentsSidebarProps) {
             ops.editReply(drafts.editTarget.threadId, drafts.editTarget.replyId, drafts.editText);
         }
         drafts.cancelEdit();
-    };
+    });
+    const handleSelect = useStableCallback((id: string) => {
+        props.onActiveCommentChange(id);
+        drafts.cancelEdit();
+    });
+    const handleResolve = useStableCallback((id: string) => {
+        ops.resolve(id);
+        if (props.editor) props.editor.chain().focus().unsetComment(id).run();
+        handleClose();
+    });
+    const handleRemove = useStableCallback((id: string) => {
+        ops.remove(id);
+        if (props.editor) props.editor.chain().focus().unsetComment(id).run();
+        if (props.activeCommentId === id) handleClose();
+    });
+    const handleSubmitBody = useStableCallback((id: string) => {
+        const text = drafts.draft.trim();
+        if (!text) return;
+        ops.setThreadBody(id, text);
+        drafts.setDraft('');
+    });
+    const handleSubmitReply = useStableCallback((id: string) => {
+        const text = (drafts.replyDrafts[id] ?? '').trim();
+        if (!text) return;
+        ops.addReply(id, text);
+        drafts.clearReplyDraft(id);
+    });
+    const handleEditThreadStart = useStableCallback((id: string) => {
+        const thread = threads.find((th) => th.id === id);
+        if (thread) drafts.beginEdit({ kind: 'thread', threadId: id }, thread.body);
+    });
+    const handleEditReplyStart = useStableCallback((id: string, replyId: string) => {
+        const thread = threads.find((th) => th.id === id);
+        const reply = thread?.replies.find((r) => r.id === replyId);
+        if (reply) drafts.beginEdit({ kind: 'reply', threadId: id, replyId }, reply.body);
+    });
+    const handleToggleThreadReaction = useStableCallback((id: string, emoji: string) =>
+        ops.toggleReaction({ kind: 'thread', threadId: id }, emoji),
+    );
+    const handleToggleReplyReaction = useStableCallback((id: string, replyId: string, emoji: string) =>
+        ops.toggleReaction({ kind: 'reply', threadId: id, replyId }, emoji),
+    );
 
-    const open = visible.filter((thread) => thread.status === 'open');
-    const resolved = visible.filter((thread) => thread.status === 'resolved');
+    const threadIds = threads.map((t) => t.id).join(',');
+    const callbacksMap = useMemo(
+        () =>
+            new Map(threads.map((th) => [th.id, {
+                onSelect: () => handleSelect(th.id),
+                onClose: handleClose,
+                onResolve: () => handleResolve(th.id),
+                onRemove: () => handleRemove(th.id),
+                onSubmitInitialBody: () => handleSubmitBody(th.id),
+                onSubmitReply: () => handleSubmitReply(th.id),
+                onEditThreadStart: () => handleEditThreadStart(th.id),
+                onEditReplyStart: (replyId: string) => handleEditReplyStart(th.id, replyId),
+                onEditCancel: handleEditCancel,
+                onEditSubmit: handleEditSubmit,
+                onToggleThreadReaction: (emoji: string) => handleToggleThreadReaction(th.id, emoji),
+                onToggleReplyReaction: (replyId: string, emoji: string) => handleToggleReplyReaction(th.id, replyId, emoji),
+            } satisfies ThreadCallbacks])),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [threadIds],
+    );
+
     const showResolved = filter.status !== CommentStatusFilter.Open && resolved.length > 0;
     const showOpen = filter.status !== CommentStatusFilter.Resolved;
-
-    const buildCallbacks = (id: string): ThreadCallbacks => ({
-        onSelect: () => {
-            props.onActiveCommentChange(id);
-            drafts.cancelEdit();
-        },
-        onClose: closeThread,
-        onResolve: () => resolveThread(id),
-        onRemove: () => removeThread(id),
-        onSubmitInitialBody: () => submitInitialBody(id),
-        onSubmitReply: () => submitReply(id),
-        onEditThreadStart: () => {
-            const thread = threads.find((th) => th.id === id);
-            if (thread) drafts.beginEdit({ kind: 'thread', threadId: id }, thread.body);
-        },
-        onEditReplyStart: (replyId) => {
-            const thread = threads.find((th) => th.id === id);
-            const reply = thread?.replies.find((r) => r.id === replyId);
-            if (reply) drafts.beginEdit({ kind: 'reply', threadId: id, replyId }, reply.body);
-        },
-        onEditCancel: drafts.cancelEdit,
-        onEditSubmit: submitEdit,
-        onToggleThreadReaction: (emoji) => ops.toggleReaction(id, emoji),
-        onToggleReplyReaction: (replyId, emoji) => ops.toggleReplyReaction(id, replyId, emoji),
-    });
 
     return (
         <div className={`sidebar comments-sidebar${props.activeCommentId ? ' has-active' : ''}`}>
@@ -170,7 +180,7 @@ export function CommentsSidebar(props: CommentsSidebarProps) {
                             editTarget={drafts.editTarget}
                             editText={drafts.editText}
                             onEditTextChange={drafts.setEditText}
-                            callbacks={buildCallbacks(thread.id)}
+                            callbacks={callbacksMap.get(thread.id)!}
                         />
                     </div>
                 ))
@@ -187,7 +197,7 @@ export function CommentsSidebar(props: CommentsSidebarProps) {
                             timeLabel={thread.resolvedAt ? formatRelativeTime(thread.resolvedAt, i18n.language, t) : ''}
                             canDelete={perms.canResolveComment}
                             onReopen={() => ops.reopen(thread.id)}
-                            onDelete={() => removeThread(thread.id)}
+                            onDelete={() => handleRemove(thread.id)}
                         />
                     ))}
                 </>

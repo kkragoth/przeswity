@@ -65,12 +65,12 @@ export function CommentReply(props: CommentReplyProps) {
                 ) : (
                     <div className="thread-body">
                         {renderBodyWithMentions(r.body)}
-                        {r.edited ? <span className="thread-edited"> · edited</span> : null}
+                        {r.edited ? <span className="thread-edited">{' '}· {t('comments.editedSuffix')}</span> : null}
                         {props.canEdit ? (
                             <button
                                 type="button"
                                 className="thread-edit-btn"
-                                title="Edit"
+                                title={t('comments.editTooltip')}
                                 onClick={(e) => { e.stopPropagation(); props.onEditStart(); }}
                             >✎</button>
                         ) : null}

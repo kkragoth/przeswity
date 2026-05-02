@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Editor } from '@tiptap/react';
 import * as Y from 'yjs';
 
@@ -19,6 +20,7 @@ interface VersionsPanelProps {
 }
 
 export function VersionsPanel({ doc, user, editor, bookId, onToast }: VersionsPanelProps) {
+    const { t } = useTranslation('editor');
     const versionsApi = useVersions(doc, user, editor, bookId);
     const [compareSourceId, setCompareSourceId] = useState<string | null>(null);
     const [diffState, setDiffState] = useState<{
@@ -33,27 +35,29 @@ export function VersionsPanel({ doc, user, editor, bookId, onToast }: VersionsPa
     useAutoSnapshot(
         doc,
         useCallback(() => {
-            versionsApi.snapshot(true, `Auto · ${new Date().toLocaleString()}`);
-        }, [versionsApi]),
+            versionsApi.snapshot(true, t('versions.autoLabel', { time: new Date().toLocaleString() }));
+        }, [versionsApi, t]),
     );
 
     const confirmRestore = (snapshot: VersionSnapshot) => {
         if (!editor) {
-            onToast?.('Editor not ready.', 'error');
+            onToast?.(t('versions.editorNotReady'), 'error');
             return;
         }
-        if (!window.confirm(`Restore "${snapshot.label}"?`)) return;
-        if (versionsApi.restore(snapshot)) onToast?.(`Restored: ${snapshot.label}`, 'success');
+        if (!window.confirm(t('versions.restoreConfirm', { label: snapshot.label }))) return;
+        if (versionsApi.restore(snapshot)) onToast?.(t('versions.restoreSuccess', { label: snapshot.label }), 'success');
     };
+
+    const compareSourceLabel = versionsApi.versions.find((v) => v.id === compareSourceId)?.label ?? '';
 
     return (
         <>
             <div className="sidebar versions-panel">
-                <div className="sidebar-title">Versions</div>
+                <div className="sidebar-title">{t('pane.versions')}</div>
                 <div className="version-create">
                     <input
                         type="text"
-                        placeholder="Snapshot label (optional)"
+                        placeholder={t('versions.labelPlaceholder')}
                         value={versionsApi.label}
                         onChange={(e) => versionsApi.setLabel(e.target.value)}
                     />
@@ -61,23 +65,22 @@ export function VersionsPanel({ doc, user, editor, bookId, onToast }: VersionsPa
                         type="button"
                         onClick={() => {
                             const saved = versionsApi.snapshot(false);
-                            onToast?.(`Snapshot saved: ${saved.label}`, 'success');
+                            onToast?.(t('versions.snapshotSaved', { label: saved.label }), 'success');
                         }}
                     >
-                        Save snapshot
+                        {t('versions.createSnapshot')}
                     </button>
                 </div>
 
                 {compareSourceId ? (
                     <div className="compare-banner">
-                        Pick a second snapshot to diff against{' '}
-                        <strong>{versionsApi.versions.find((v) => v.id === compareSourceId)?.label}</strong>{' '}
-                        <button type="button" onClick={() => setCompareSourceId(null)}>cancel</button>
+                        {t('versions.compareBanner', { label: compareSourceLabel })}{' '}
+                        <button type="button" onClick={() => setCompareSourceId(null)}>{t('global.cancel')}</button>
                     </div>
                 ) : null}
 
                 {versionsApi.versions.length === 0 ? (
-                    <div className="sidebar-empty">No snapshots yet.</div>
+                    <div className="sidebar-empty">{t('versions.empty')}</div>
                 ) : (
                     <VersionsList
                         versions={versionsApi.versions}

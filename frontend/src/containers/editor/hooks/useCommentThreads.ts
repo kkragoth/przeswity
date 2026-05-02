@@ -52,15 +52,22 @@ export function useCommentThreads(threads: CommentThread[], currentUser: User) {
         return [...set].sort();
     }, [threads]);
 
-    const visible = useMemo(() => {
+    const { visible, open, resolved } = useMemo(() => {
         const sorted = [...threads].sort((a, b) => a.createdAt - b.createdAt);
-        return sorted.filter((thread) => {
+        const v = sorted.filter((thread) => {
             if (!matchesStatus(thread, filter.status, currentUser)) return false;
             if (filter.author && !threadInvolvesAuthor(thread, filter.author)) return false;
             if (filter.role && !threadInvolvesRole(thread, filter.role as Role)) return false;
             return true;
         });
+        const o: CommentThread[] = [];
+        const r: CommentThread[] = [];
+        for (const th of v) {
+            if (th.status === 'open') o.push(th);
+            else r.push(th);
+        }
+        return { visible: v, open: o, resolved: r };
     }, [threads, filter, currentUser]);
 
-    return { visible, filter, setStatus, setAuthor, setRole, allAuthors };
+    return { visible, open, resolved, filter, setStatus, setAuthor, setRole, allAuthors };
 }

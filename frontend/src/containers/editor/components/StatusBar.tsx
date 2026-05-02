@@ -1,4 +1,3 @@
-import { Cloud, CloudOff, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Editor } from '@tiptap/react';
 import type { User } from '@/editor/identity/types';
@@ -6,49 +5,25 @@ import { ROLE_PERMISSIONS } from '@/editor/identity/types';
 import { formatReadingMinutes } from '@/editor/app/readingStats';
 import { wordTargetFillColor, wordTargetPercentClamped, wordTargetPercentRounded } from '@/lib/wordTarget';
 import type { ReadingStatsSummary } from '@/containers/editor/hooks/useReadingStats';
-import type { ConnectionStatus } from '@/containers/editor/hooks/useConnectionStatus';
+import { SyncStatus } from '@/containers/editor/hooks/useConnectionStatus';
 import type { Peer } from '@/containers/editor/hooks/usePeers';
+import type { PageNavigation } from '@/containers/editor/hooks/usePageNavigation';
 import { PeerAvatarStack } from '@/containers/editor/components/peers/PeerAvatarStack';
+import { PageJumper } from '@/containers/editor/components/PageJumper';
+import { SyncMini } from '@/containers/editor/components/status/SyncMini';
 
 interface StatusBarProps {
-    wordCount: number
-    charCount: number
-    stats: ReadingStatsSummary
-    targetWords: number | undefined
-    user: User
-    suggestingMode: boolean
-    peers: Peer[]
-    editor: Editor | null
-    connStatus: ConnectionStatus
-    onReconnect: () => void
-}
-
-function SyncMini({ status, onReconnect }: { status: ConnectionStatus; onReconnect: () => void }) {
-    const { t } = useTranslation('editor');
-    const label = status === 'online'
-        ? t('topbar.synced')
-        : status === 'connecting'
-            ? t('topbar.syncing')
-            : t('topbar.offlineLocal');
-
-    const icon = status === 'online'
-        ? <Cloud size={11} />
-        : status === 'connecting'
-            ? <RefreshCw size={11} className="statusbar-sync-spin" />
-            : <CloudOff size={11} />;
-
-    return (
-        <button
-            type="button"
-            className={`statusbar-sync statusbar-sync--${status}`}
-            onClick={status === 'offline' ? onReconnect : undefined}
-            disabled={status !== 'offline'}
-            title={status === 'offline' ? t('topbar.reconnect') : label}
-        >
-            {icon}
-            <span>{label}</span>
-        </button>
-    );
+    wordCount: number;
+    charCount: number;
+    stats: ReadingStatsSummary;
+    targetWords: number | undefined;
+    user: User;
+    suggestingMode: boolean;
+    peers: Peer[];
+    editor: Editor | null;
+    connStatus: SyncStatus;
+    onReconnect: () => void;
+    pageNav: PageNavigation;
 }
 
 export function StatusBar({
@@ -62,6 +37,7 @@ export function StatusBar({
     editor,
     connStatus,
     onReconnect,
+    pageNav,
 }: StatusBarProps) {
     const { t } = useTranslation('editor');
     const perms = ROLE_PERMISSIONS[user.role];
@@ -104,6 +80,7 @@ export function StatusBar({
                 </>
             ) : null}
             <span className="statusbar-spacer" />
+            <PageJumper current={pageNav.current} total={pageNav.total} onJump={pageNav.jumpTo} />
             <PeerAvatarStack peers={peers} editor={editor} />
             <SyncMini status={connStatus} onReconnect={onReconnect} />
         </footer>

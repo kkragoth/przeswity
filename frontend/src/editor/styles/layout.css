@@ -256,8 +256,10 @@
     border-color: var(--accent);
 }
 
-/* ---------- Mobile drawer (≤900px) ---------- */
-@media (max-width: 900px) {
+/* ---------- Drawer mode (≤1100px) ----------
+   Below this width, panes overlay the editor instead of competing with the
+   typographic measure. The backdrop (.pane-backdrop) closes both drawers. */
+@media (max-width: 1100px) {
   .editor-host {
     --left-effective: 0px;
     --right-effective: 0px;
@@ -270,7 +272,7 @@
     position: fixed;
     top: var(--header-h);
     bottom: 0;
-    width: min(85vw, 320px);
+    width: min(85vw, 360px);
     z-index: var(--z-overlay);
     box-shadow: var(--shadow-paper-3);
     transform: translateX(-100%);
@@ -286,6 +288,27 @@
     transform: translateX(0);
   }
   .pane-handle { display: none !important; }
+}
+
+/* ---------- Drawer backdrop ----------
+   Rendered by EditorHost only when at least one pane is open in drawer mode.
+   Click anywhere on the backdrop to dismiss both drawers. */
+.pane-backdrop {
+  position: fixed;
+  inset: var(--header-h) 0 0 0;
+  background: color-mix(in srgb, var(--text) 18%, transparent);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  z-index: calc(var(--z-overlay) - 1);
+  animation: pane-backdrop-fade var(--d-fast) var(--ease-out);
+}
+@keyframes pane-backdrop-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@media (min-width: 1101px) {
+  .pane-backdrop { display: none; }
 }
 
 /* ---------- Sticky header / toolbar ---------- */
@@ -325,6 +348,97 @@
 .statusbar-sync--online    { color: var(--success); }
 .statusbar-sync--connecting { color: var(--warning); }
 .statusbar-sync--offline   { color: var(--danger); cursor: pointer; }
+
+/* ---------- Page indicator + jump-to popover ---------- */
+.page-jumper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-right: var(--sp-2);
+}
+.page-jumper-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-2);
+  padding: 1px 6px;
+  font: inherit;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--d-fast), color var(--d-fast), border-color var(--d-fast);
+}
+.page-jumper-trigger:hover {
+  background: var(--bg-tint);
+  color: var(--text);
+  border-color: var(--border);
+}
+.page-jumper-popover {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  min-width: 220px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--r-3);
+  box-shadow: var(--shadow-paper-3);
+  padding: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  z-index: var(--z-overlay);
+}
+.page-jumper-label {
+  font-size: 11px;
+  font-weight: var(--fw-semi);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-subtle);
+}
+.page-jumper-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.page-jumper-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 4px 8px;
+  font: inherit;
+  font-size: var(--fs-sm);
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-2);
+}
+.page-jumper-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+.page-jumper-input::-webkit-inner-spin-button,
+.page-jumper-input::-webkit-outer-spin-button {
+  opacity: 0.6;
+}
+.page-jumper-of {
+  font-size: var(--fs-sm);
+  color: var(--text-subtle);
+}
+.page-jumper-go {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border: none;
+  border-radius: var(--r-2);
+  padding: 4px 10px;
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  transition: filter var(--d-fast);
+}
+.page-jumper-go:hover { filter: brightness(1.05); }
 @keyframes statusbar-spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }

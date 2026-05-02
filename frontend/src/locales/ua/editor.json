@@ -1,6 +1,8 @@
 {
     "global": {
-        "cancel": "Скасувати"
+        "cancel": "Скасувати",
+        "close": "Закрити",
+        "delete": "Видалити"
     },
     "topbar": {
         "saving": "Збереження...",
@@ -45,7 +47,8 @@
         "comments": "Коментарі",
         "suggestions": "Пропозиції",
         "collapse": "Згорнути панель",
-        "expand": "Розгорнути панель"
+        "expand": "Розгорнути панель",
+        "close": "Закрити панелі"
     },
     "outlineEmpty": {
         "title": "Зміст порожній",
@@ -148,7 +151,28 @@
         "restore": "Відновити",
         "compare": "Порівняти",
         "createSnapshot": "Створити знімок",
-        "label": "Мітка"
+        "label": "Мітка",
+        "labelPlaceholder": "Мітка знімка (опційно)",
+        "empty": "Немає знімків.",
+        "compareBanner": "Виберіть другий знімок для порівняння з {{label}}",
+        "autoLabel": "Авто · {{time}}",
+        "snapshotSaved": "Знімок збережено: {{label}}",
+        "editorNotReady": "Редактор не готовий.",
+        "restoreConfirm": "Відновити \"{{label}}\"?",
+        "restoreSuccess": "Відновлено: {{label}}",
+        "compareTitle": "Порівняти версії",
+        "viewRich": "Rich",
+        "viewMarkdown": "Markdown",
+        "layoutInline": "Рядковий",
+        "layoutSbs": "Поруч",
+        "restoreOlder": "Відновити старішу",
+        "legendAdded": "додано (+{{count}} симв.)",
+        "legendRemoved": "видалено (−{{count}} симв.)",
+        "autoBadge": "авто",
+        "diffWithSelected": "Порівняти з вибраним",
+        "diffVsCurrent": "Порівняти з поточним",
+        "compareWith": "Порівняти ↔",
+        "delete": "Видалити"
     },
     "wordCount": {
         "words": "{{count}} слів",
@@ -167,7 +191,11 @@
         "usersOnline_few": "{{count}} користувачі онлайн",
         "usersOnline_many": "{{count}} користувачів онлайн",
         "usersOnline_other": "{{count}} користувачів онлайн",
-        "soloOnline": "тільки ви"
+        "soloOnline": "тільки ви",
+        "pageOf": "Сторінка {{current}} з {{total}}",
+        "jumpPageTitle": "Перейти до сторінки",
+        "jumpPageLabel": "Перейти до сторінки",
+        "jumpPageGo": "Перейти"
     },
     "peers": {
         "activeNow": "активний зараз",

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -70,6 +71,7 @@ export function VersionDiffModal({
     onClose,
     onRestore,
 }: Props) {
+    const { t } = useTranslation('editor');
     const [view, setView] = useState<ViewMode>(ViewMode.Rich);
     const [layout, setLayout] = useState<LayoutMode>(LayoutMode.Inline);
     const stats = diffStats(diffJson);
@@ -81,7 +83,7 @@ export function VersionDiffModal({
             <div className="modal" onMouseDown={(e) => e.stopPropagation()}>
                 <header className="modal-header">
                     <div>
-                        <div className="modal-title">Compare versions</div>
+                        <div className="modal-title">{t('versions.compareTitle')}</div>
                         <div className="modal-sub">
                             <span className="version-tag version-tag-older">{olderLabel}</span>
                             <span className="modal-arrow">→</span>
@@ -95,14 +97,14 @@ export function VersionDiffModal({
                                 className={view === ViewMode.Rich ? 'is-active' : ''}
                                 onClick={() => setView(ViewMode.Rich)}
                             >
-                                Rich
+                                {t('versions.viewRich')}
                             </button>
                             <button
                                 type="button"
                                 className={view === ViewMode.Markdown ? 'is-active' : ''}
                                 onClick={() => setView(ViewMode.Markdown)}
                             >
-                                Markdown
+                                {t('versions.viewMarkdown')}
                             </button>
                         </div>
                         {sbsAvailable && (
@@ -112,33 +114,33 @@ export function VersionDiffModal({
                                     className={layout === LayoutMode.Inline ? 'is-active' : ''}
                                     onClick={() => setLayout(LayoutMode.Inline)}
                                 >
-                                    Inline
+                                    {t('versions.layoutInline')}
                                 </button>
                                 <button
                                     type="button"
                                     className={layout === LayoutMode.Sbs ? 'is-active' : ''}
                                     onClick={() => setLayout(LayoutMode.Sbs)}
                                 >
-                                    Side by side
+                                    {t('versions.layoutSbs')}
                                 </button>
                             </div>
                         )}
                         {onRestore && (
                             <button type="button" className="btn-primary" onClick={onRestore}>
-                                Restore older
+                                {t('versions.restoreOlder')}
                             </button>
                         )}
                         <button type="button" onClick={onClose}>
-                            Close
+                            {t('global.close')}
                         </button>
                     </div>
                 </header>
                 <div className="modal-legend">
                     <span className="legend-chunk">
-                        <span className="legend-swatch legend-ins" /> added (+{stats.ins} chars)
+                        <span className="legend-swatch legend-ins" /> {t('versions.legendAdded', { count: stats.ins })}
                     </span>
                     <span className="legend-chunk">
-                        <span className="legend-swatch legend-del" /> removed (−{stats.del} chars)
+                        <span className="legend-swatch legend-del" /> {t('versions.legendRemoved', { count: stats.del })}
                     </span>
                 </div>
                 <div className="modal-body">

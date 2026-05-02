@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Editor } from '@tiptap/react';
 import * as Y from 'yjs';
@@ -15,8 +14,8 @@ import { OutlineSidebar } from '@/containers/editor/components/outline/OutlineSi
 import { VersionsPanel } from '@/containers/editor/components/versions/VersionsPanel';
 import { GlossaryPanel } from '@/containers/editor/components/glossary/GlossaryPanel';
 import { MetaPanel } from '@/containers/editor/components/meta/MetaPanel';
+import { useEditorHeadings } from '@/containers/editor/hooks/useEditorHeadings';
 import type { User } from '@/editor/identity/types';
-import type { PaneState } from '@/containers/editor/hooks/usePaneState';
 import { EmptyState } from '@/containers/editor/components/EmptyState';
 
 export enum LeftTab {
@@ -30,10 +29,8 @@ export enum LeftTab {
 interface LeftPaneProps {
     tab: LeftTab
     onTabChange: (t: LeftTab) => void
-    paneState: PaneState
     onExpand: () => void
     onRail: () => void
-    onHide: () => void
     doc: Y.Doc
     user: User
     editor: Editor | null
@@ -56,14 +53,6 @@ const TABS: { id: LeftTab; icon: typeof ListTree; labelKey: TabTKey }[] = [
     { id: LeftTab.Files,    icon: Folder,    labelKey: 'pane.files' },
 ];
 
-const TAB_TITLE: Record<LeftTab, TabTKey> = {
-    [LeftTab.Outline]:  'pane.outline',
-    [LeftTab.Versions]: 'pane.versions',
-    [LeftTab.Glossary]: 'pane.glossary',
-    [LeftTab.Meta]:     'pane.meta',
-    [LeftTab.Files]:    'pane.files',
-};
-
 function OutlineGhostIcon() {
     return (
         <svg width="40" height="32" viewBox="0 0 40 32" fill="none" aria-hidden="true">
@@ -72,27 +61,6 @@ function OutlineGhostIcon() {
             <rect x="6" y="22" width="20" height="3" rx="1.5" fill="currentColor" />
         </svg>
     );
-}
-
-function useHasHeadings(editor: Editor | null): boolean {
-    const [hasHeadings, setHasHeadings] = useState(false);
-
-    useEffect(() => {
-        if (!editor) return;
-        const check = () => {
-            let found = false;
-            editor.state.doc.descendants((node) => {
-                if (node.type.name === 'heading') { found = true; return false; }
-                return true;
-            });
-            setHasHeadings(found);
-        };
-        check();
-        editor.on('update', check);
-        return () => { editor.off('update', check); };
-    }, [editor]);
-
-    return hasHeadings;
 }
 
 export function LeftPane({
@@ -107,7 +75,8 @@ export function LeftPane({
     onToast,
 }: LeftPaneProps) {
     const { t } = useTranslation('editor');
-    const hasHeadings = useHasHeadings(editor);
+    const hasHeadings = useEditorHeadings(editor);
+    const activeLabelKey = TABS.find((e) => e.id === tab)!.labelKey;
 
     const handleTabClick = (id: LeftTab) => {
         onTabChange(id);
@@ -135,7 +104,7 @@ export function LeftPane({
             </nav>
 
             <div className="pane-header">
-                <h2 className="pane-title">{t(TAB_TITLE[tab])}</h2>
+                <h2 className="pane-title">{t(activeLabelKey)}</h2>
                 <button
                     type="button"
                     className="pane-collapse"

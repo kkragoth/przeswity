@@ -32,9 +32,9 @@ export function BookTitleMenu({ bookTitle, editor, perms, onToast }: BookTitleMe
         if (!editor) return;
         const tmpl = TEMPLATES.find((x) => x.id === id);
         if (!tmpl) return;
-        if (!window.confirm(`Apply template "${tmpl.name}"?\n\nThis replaces the current document.`)) return;
+        if (!window.confirm(t('fileMenu.confirmReplaceTemplate', { name: tmpl.name }))) return;
         editor.commands.setContent(tmpl.content as never, { emitUpdate: true });
-        onToast(`Loaded template: ${tmpl.name}`, 'success');
+        onToast(t('fileMenu.templateLoaded', { name: tmpl.name }), 'success');
     };
 
     if (!editor || (!perms.canEdit && !perms.canExport)) {
@@ -62,17 +62,17 @@ export function BookTitleMenu({ bookTitle, editor, perms, onToast }: BookTitleMe
                                     {perms.canEdit ? (
                                         <>
                                             <div className="topbar-dropdown-label">{t('toolbar.import')}</div>
-                                            <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => docImport.open('docx')}>DOCX (.docx)</DropdownMenuPrimitive.Item>
-                                            <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => docImport.open('md')}>Markdown (.md)</DropdownMenuPrimitive.Item>
+                                            <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => docImport.open('docx')}>{t('fileMenu.importDocx')}</DropdownMenuPrimitive.Item>
+                                            <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => docImport.open('md')}>{t('fileMenu.importMarkdown')}</DropdownMenuPrimitive.Item>
                                         </>
                                     ) : null}
                                     {perms.canEdit && perms.canExport ? <div className="topbar-dropdown-sep" /> : null}
                                     {perms.canExport ? (
                                         <>
                                             <div className="topbar-dropdown-label">{t('toolbar.export')}</div>
-                                            <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={docExport.exportMarkdown}>Markdown (.md)</DropdownMenuPrimitive.Item>
-                                            <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => void docExport.exportDocx({ acceptSuggestions: true })}>DOCX — clean</DropdownMenuPrimitive.Item>
-                                            <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => void docExport.exportDocx({ acceptSuggestions: false })}>DOCX — with track changes</DropdownMenuPrimitive.Item>
+                                            <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={docExport.exportMarkdown}>{t('fileMenu.exportMarkdown')}</DropdownMenuPrimitive.Item>
+                                            <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => void docExport.exportDocx({ acceptSuggestions: true })}>{t('fileMenu.exportDocxClean')}</DropdownMenuPrimitive.Item>
+                                            <DropdownMenuPrimitive.Item className="topbar-dropdown-item" onSelect={() => void docExport.exportDocx({ acceptSuggestions: false })}>{t('fileMenu.exportDocxTracks')}</DropdownMenuPrimitive.Item>
                                         </>
                                     ) : null}
                                     {perms.canEdit ? (

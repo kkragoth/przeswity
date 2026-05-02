@@ -1,6 +1,8 @@
 {
     "global": {
-        "cancel": "Anuluj"
+        "cancel": "Anuluj",
+        "close": "Zamknij",
+        "delete": "Usuń"
     },
     "topbar": {
         "saving": "Zapisywanie...",
@@ -45,7 +47,8 @@
         "comments": "Komentarze",
         "suggestions": "Sugestie",
         "collapse": "Zwiń panel",
-        "expand": "Rozwiń panel"
+        "expand": "Rozwiń panel",
+        "close": "Zamknij panele"
     },
     "outlineEmpty": {
         "title": "Spis treści jest pusty",
@@ -148,7 +151,28 @@
         "restore": "Przywróć",
         "compare": "Porównaj",
         "createSnapshot": "Utwórz migawkę",
-        "label": "Etykieta"
+        "label": "Etykieta",
+        "labelPlaceholder": "Etykieta migawki (opcjonalna)",
+        "empty": "Brak migawek.",
+        "compareBanner": "Wybierz drugą migawkę do porównania z {{label}}",
+        "autoLabel": "Auto · {{time}}",
+        "snapshotSaved": "Migawka zapisana: {{label}}",
+        "editorNotReady": "Edytor nie jest gotowy.",
+        "restoreConfirm": "Przywrócić \"{{label}}\"?",
+        "restoreSuccess": "Przywrócono: {{label}}",
+        "compareTitle": "Porównaj wersje",
+        "viewRich": "Bogaty",
+        "viewMarkdown": "Markdown",
+        "layoutInline": "Inline",
+        "layoutSbs": "Obok siebie",
+        "restoreOlder": "Przywróć starszą",
+        "legendAdded": "dodano (+{{count}} zn.)",
+        "legendRemoved": "usunięto (−{{count}} zn.)",
+        "autoBadge": "auto",
+        "diffWithSelected": "Porównaj z wybraną",
+        "diffVsCurrent": "Porównaj z bieżącą",
+        "compareWith": "Porównaj ↔",
+        "delete": "Usuń"
     },
     "wordCount": {
         "words": "{{count}} wyrazów",
@@ -167,7 +191,11 @@
         "usersOnline_few": "{{count}} użytkownicy online",
         "usersOnline_many": "{{count}} użytkowników online",
         "usersOnline_other": "{{count}} użytkowników online",
-        "soloOnline": "tylko Ty"
+        "soloOnline": "tylko Ty",
+        "pageOf": "Strona {{current}} z {{total}}",
+        "jumpPageTitle": "Przejdź do strony",
+        "jumpPageLabel": "Skocz do strony",
+        "jumpPageGo": "Idź"
     },
     "peers": {
         "activeNow": "aktywny teraz",

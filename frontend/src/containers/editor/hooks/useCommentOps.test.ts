@@ -19,7 +19,7 @@ describe('useCommentOps', () => {
         const threadId = ops.createThread({ id: 't1', quote: 'Quote' }, 'Body');
         const replyId = ops.addReply(threadId, 'Reply');
         ops.editReply(threadId, replyId, 'Reply edited');
-        ops.toggleReaction(threadId, '👍');
+        ops.toggleReaction({ kind: 'thread', threadId }, '👍');
         ops.resolve(threadId);
         ops.reopen(threadId);
 
@@ -29,7 +29,7 @@ describe('useCommentOps', () => {
         expect(thread?.reactions?.['👍']).toContain('u1');
         expect(thread?.replies[0]?.body).toBe('Reply edited');
 
-        ops.toggleReaction(threadId, '👍');
+        ops.toggleReaction({ kind: 'thread', threadId }, '👍');
         ops.remove(threadId);
         expect(getThreadMap(doc).get(threadId)).toBeUndefined();
     });
