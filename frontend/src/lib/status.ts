@@ -1,5 +1,9 @@
-import type { Book, BookSummary } from '@/api/generated/types.gen';
+import type { BookSummary } from '@/api/generated/types.gen';
 import { daysSince } from '@/lib/dates';
+import { STALE_THRESHOLD_DAYS, RECENT_THRESHOLD_DAYS } from '@/lib/constants';
+
+// Re-export allowedNextStages from lib/stage.ts for back-compat.
+export { allowedNextStages } from '@/lib/stage';
 
 export enum BookAttention {
     Stale = 'stale',
@@ -8,7 +12,7 @@ export enum BookAttention {
 }
 
 export function isStaleDays(days: number): boolean {
-    return days > 14;
+    return days > STALE_THRESHOLD_DAYS;
 }
 
 export function isAttentionBook(book: BookSummary): boolean {
@@ -16,7 +20,7 @@ export function isAttentionBook(book: BookSummary): boolean {
 }
 
 export function isRecentBook(book: BookSummary): boolean {
-    return daysSince(book.lastEditAt ?? book.stageChangedAt) <= 2;
+    return daysSince(book.lastEditAt ?? book.stageChangedAt) <= RECENT_THRESHOLD_DAYS;
 }
 
 export function bookAttention(book: BookSummary): BookAttention {
@@ -25,16 +29,3 @@ export function bookAttention(book: BookSummary): BookAttention {
     return BookAttention.Normal;
 }
 
-export function allowedNextStages(stage: Book['stage']): Book['stage'][] {
-    const map: Record<Book['stage'], Book['stage'][]> = {
-        translation: ['editing'],
-        editing: ['authorization', 'proofreading'],
-        authorization: ['proofreading', 'editing'],
-        proofreading: ['applying_changes', 'editing'],
-        applying_changes: ['typesetting', 'proofreading'],
-        typesetting: ['post_typeset_proof'],
-        post_typeset_proof: ['finalization', 'applying_changes'],
-        finalization: [],
-    };
-    return map[stage];
-}

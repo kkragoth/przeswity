@@ -2,12 +2,13 @@ import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import { createCommentOps } from '@/containers/editor/hooks/useCommentOps';
 import { getThreadMap } from '@/editor/comments/threadOps';
-import type { User } from '@/editor/identity/types';
+import { CommentStatus } from '@/editor/comments/types';
+import { Role, type User } from '@/editor/identity/types';
 
 const user: User = {
     id: 'u1',
     name: 'User One',
-    role: 'editor',
+    role: Role.Editor,
     color: '#111111',
 };
 
@@ -25,7 +26,7 @@ describe('useCommentOps', () => {
 
         const thread = getThreadMap(doc).get(threadId);
         expect(thread?.body).toBe('Body');
-        expect(thread?.status).toBe('open');
+        expect(thread?.status).toBe(CommentStatus.Open);
         expect(thread?.reactions?.['👍']).toContain('u1');
         expect(thread?.replies[0]?.body).toBe('Reply edited');
 

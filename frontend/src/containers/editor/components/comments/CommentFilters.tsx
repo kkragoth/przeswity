@@ -1,9 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import type { Role } from '@/editor/identity/types';
+import { Role, MENTIONABLE_ROLES } from '@/editor/identity/types';
 import { roleI18nKey } from '@/lib/roleI18n';
 import { CommentStatusFilter, type CommentFilterState } from '@/containers/editor/hooks/useCommentThreads';
-
-const ROLES: Role[] = ['translator', 'author', 'editor', 'proofreader', 'coordinator'];
 
 interface CommentFiltersProps {
     filter: CommentFilterState;
@@ -45,7 +43,7 @@ export function CommentFilters({ filter, setStatus, setAuthor, setRole, totalOpe
             </select>
             <select value={filter.role} onChange={(e) => setRole(e.target.value as Role | '')}>
                 <option value="">{t('comments.filter.allRoles')}</option>
-                {ROLES.map((r) => (
+                {MENTIONABLE_ROLES.map((r) => (
                     <option key={r} value={r}>{t(roleI18nKey(r))}</option>
                 ))}
             </select>

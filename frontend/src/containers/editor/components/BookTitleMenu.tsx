@@ -8,6 +8,8 @@ import type { RolePermissions } from '@/editor/identity/types';
 import { TEMPLATES } from '@/editor/workflow/templates';
 import { useDocumentImport } from '@/containers/editor/hooks/useDocumentImport';
 import { useDocumentExport } from '@/containers/editor/hooks/useDocumentExport';
+import { useConfirmDialog } from '@/components/feedback/useConfirmDialog';
+import { ConfirmDialogHost } from '@/components/feedback/ConfirmDialogHost';
 
 interface BookTitleMenuProps {
     bookTitle: string;
@@ -18,7 +20,8 @@ interface BookTitleMenuProps {
 
 export function BookTitleMenu({ bookTitle, editor, perms, onToast }: BookTitleMenuProps) {
     const { t } = useTranslation('editor');
-    const docImport = useDocumentImport({ editor, onToast });
+    const confirmDlg = useConfirmDialog();
+    const docImport = useDocumentImport({ editor, onToast, confirmDialog: confirmDlg });
     const docExport = useDocumentExport(editor);
     const [fileMenuOpen, setFileMenuOpen] = useState(false);
 
@@ -28,11 +31,15 @@ export function BookTitleMenu({ bookTitle, editor, perms, onToast }: BookTitleMe
         void docExport.preloadDocx();
     }, [docExport, docImport, fileMenuOpen]);
 
-    const applyTemplate = (id: string) => {
+    const applyTemplate = async (id: string) => {
         if (!editor) return;
         const tmpl = TEMPLATES.find((x) => x.id === id);
         if (!tmpl) return;
-        if (!window.confirm(t('fileMenu.confirmReplaceTemplate', { name: tmpl.name }))) return;
+        const ok = await confirmDlg.confirm({
+            title: t('fileMenu.confirmReplaceTemplate', { name: tmpl.name }),
+            destructive: true,
+        });
+        if (!ok) return;
         editor.commands.setContent(tmpl.content as never, { emitUpdate: true });
         onToast(t('fileMenu.templateLoaded', { name: tmpl.name }), 'success');
     };
@@ -80,7 +87,7 @@ export function BookTitleMenu({ bookTitle, editor, perms, onToast }: BookTitleMe
                                             <div className="topbar-dropdown-sep" />
                                             <div className="topbar-dropdown-label">{t('toolbar.templates')}</div>
                                             {TEMPLATES.map((tmpl) => (
-                                                <DropdownMenuPrimitive.Item key={tmpl.id} className="topbar-dropdown-item" onSelect={() => applyTemplate(tmpl.id)}>
+                                                <DropdownMenuPrimitive.Item key={tmpl.id} className="topbar-dropdown-item" onSelect={() => void applyTemplate(tmpl.id)}>
                                                     {tmpl.name}
                                                 </DropdownMenuPrimitive.Item>
                                             ))}
@@ -101,6 +108,11 @@ export function BookTitleMenu({ bookTitle, editor, perms, onToast }: BookTitleMe
                 onChange={(e) => void docImport.onFileChange(e)}
                 data-importing={docImport.isImporting}
                 data-exporting={docExport.isExporting}
+            />
+            <ConfirmDialogHost
+                dialogState={confirmDlg.dialogState}
+                onConfirm={confirmDlg.onConfirm}
+                onCancel={confirmDlg.onCancel}
             />
         </>
     );

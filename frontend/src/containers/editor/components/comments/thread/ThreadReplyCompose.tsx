@@ -2,6 +2,8 @@ import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MentionTextarea, type MentionCandidate } from '@/containers/editor/components/comments/MentionTextarea';
 import { withStop } from '@/utils/react/withStop';
+import { useConfirmDialog } from '@/components/feedback/useConfirmDialog';
+import { ConfirmDialogHost } from '@/components/feedback/ConfirmDialogHost';
 
 interface ThreadReplyComposeProps {
     replyDraft: string;
@@ -14,6 +16,13 @@ interface ThreadReplyComposeProps {
 
 export const ThreadReplyCompose = memo(function ThreadReplyCompose(props: ThreadReplyComposeProps) {
     const { t } = useTranslation('editor');
+    const confirmDlg = useConfirmDialog();
+
+    const handleRemove = async () => {
+        const ok = await confirmDlg.confirm({ title: t('comments.deleteConfirm'), destructive: true });
+        if (ok) props.onRemove();
+    };
+
     return (
         <div className="thread-reply-compose">
             <div className="thread-compose-row">
@@ -40,12 +49,15 @@ export const ThreadReplyCompose = memo(function ThreadReplyCompose(props: Thread
                         className="thread-icon-btn thread-remove"
                         title={t('comments.deleteThread')}
                         aria-label={t('comments.deleteThread')}
-                        onClick={withStop(() => {
-                            if (window.confirm(t('comments.deleteConfirm'))) props.onRemove();
-                        })}
+                        onClick={withStop(() => void handleRemove())}
                     >🗑</button>
                 </div>
             ) : null}
+            <ConfirmDialogHost
+                dialogState={confirmDlg.dialogState}
+                onConfirm={confirmDlg.onConfirm}
+                onCancel={confirmDlg.onCancel}
+            />
         </div>
     );
 });

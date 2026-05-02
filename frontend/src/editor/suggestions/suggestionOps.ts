@@ -1,11 +1,14 @@
 import type { Editor } from '@tiptap/react';
 
-type SuggestionType = 'insertion' | 'deletion'
+export enum SuggestionType {
+    Insertion = 'insertion',
+    Deletion = 'deletion',
+}
 
 const META_SKIP = 'suggestionMode/skip';
 
 export function acceptSuggestion(editor: Editor, suggestionId: string, type: SuggestionType): void {
-    if (type === 'insertion') {
+    if (type === SuggestionType.Insertion) {
         const tr = editor.state.tr;
         editor.state.doc.descendants((node, pos) => {
             if (!node.isText) return;
@@ -34,7 +37,7 @@ export function acceptSuggestion(editor: Editor, suggestionId: string, type: Sug
 }
 
 export function rejectSuggestion(editor: Editor, suggestionId: string, type: SuggestionType): void {
-    if (type === 'insertion') {
+    if (type === SuggestionType.Insertion) {
         const ranges: { from: number; to: number }[] = [];
         editor.state.doc.descendants((node, pos) => {
             if (!node.isText) return;

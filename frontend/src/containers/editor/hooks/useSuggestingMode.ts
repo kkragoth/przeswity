@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as Y from 'yjs';
-import type { Role } from '@/editor/identity/types';
+import { Role } from '@/editor/identity/types';
 
 const SETTINGS_KEY = '__settings__';
 const SUGGESTING_KEY = 'suggestingMode';
 
-const ROLES_FORCED_TO_SUGGEST: ReadonlySet<Role> = new Set(['proofreader', 'author']);
+const ROLES_FORCED_TO_SUGGEST: ReadonlySet<Role> = new Set([Role.Proofreader, Role.Author]);
 
 export interface SuggestingModeState {
     /** Effective mode applied to the editor (force rule already merged in). */

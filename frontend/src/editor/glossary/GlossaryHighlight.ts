@@ -1,7 +1,9 @@
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
+import type { EditorView } from '@tiptap/pm/view';
 import type { Node as PMNode } from '@tiptap/pm/model';
+import { formatGlossaryTooltip } from '@/editor/glossary/format';
 
 export interface GlossaryEntry {
   term: string
@@ -49,9 +51,7 @@ function buildDecos(doc: PMNode, entries: GlossaryEntry[]): DecorationSet {
                 const right = found + term.length === text.length ? '' : text[found + term.length];
                 const isBoundary = (c: string) => c === '' || /[^\p{L}\p{N}_]/u.test(c);
                 if (isBoundary(left) && isBoundary(right)) {
-                    const tooltip = entry.translation
-                        ? `${entry.term} → ${entry.translation}${entry.notes ? ' · ' + entry.notes : ''}`
-                        : entry.term;
+                    const tooltip = formatGlossaryTooltip(entry);
                     decos.push(
                         Decoration.inline(pos + found, pos + found + term.length, {
                             class: 'glossary-term',
@@ -99,8 +99,6 @@ export const GlossaryHighlight = Extension.create<GlossaryHighlightOptions>({
     },
 });
 
-export function refreshGlossaryDecorations(view: { dispatch: (tr: unknown) => void; state: { tr: unknown } }) {
-    const tr = (view.state as unknown as { tr: { setMeta: (k: string, v: boolean) => unknown } }).tr
-  ;(tr as unknown as { setMeta: (k: string, v: boolean) => void }).setMeta(REFRESH_META, true);
-    view.dispatch(tr);
+export function refreshGlossaryDecorations(view: EditorView): void {
+    view.dispatch(view.state.tr.setMeta(REFRESH_META, true));
 }

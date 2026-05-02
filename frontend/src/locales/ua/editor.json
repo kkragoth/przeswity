@@ -85,6 +85,8 @@
         "import": "Імпорт",
         "export": "Експорт",
         "templates": "Шаблони",
+        "ariaLabel": "Панель інструментів редактора",
+        "removeHighlight": "Видалити виділення",
         "style": {
             "body": "Основний текст",
             "h1": "Заголовок 1",
@@ -104,6 +106,8 @@
             "detached": "Від'єднані"
         },
         "addComment": "Додати коментар",
+        "addCommentTitle": "Додати коментар",
+        "addReaction": "Додати реакцію",
         "reply": "Відповісти",
         "edited": "(відредаговано)",
         "resolve": "Вирішити",
@@ -144,7 +148,13 @@
         "acceptAll": "Прийняти всі",
         "rejectAll": "Відхилити всі",
         "acceptFromAuthor": "Прийняти від {{author}}",
-        "checkSelection": "Перевірити виділення"
+        "checkSelection": "Перевірити виділення",
+        "sidebarTitle": "Пропозиції ({{count}})",
+        "empty": "Немає ожидаючих пропозицій.",
+        "accept": "Прийняти",
+        "reject": "Відхилити",
+        "inserted": "вставлено",
+        "deleted": "видалено"
     },
     "versions": {
         "snapshot": "Знімок",
@@ -244,6 +254,90 @@
         "markdown": "Markdown (.md)",
         "docxClean": "DOCX — чистий (пропозиції прийнято)",
         "docxTracks": "DOCX — зі відстеженням змін"
+    },
+    "dragHandle": {
+        "title": "Перетягніть, щоб перемістити · натисніть для меню"
+    },
+    "specialChars": {
+        "insertTitle": "Вставити спеціальний символ"
+    },
+    "findReplace": {
+        "prevTitle": "Попередній (Shift+Enter)",
+        "nextTitle": "Наступний (Enter)",
+        "toggleReplaceTitle": "Перемкнути замінення",
+        "closeTitle": "Закрити (Esc)",
+        "replacePlaceholder": "Замінити на",
+        "replace": "Замінити",
+        "replaceAll": "Замінити всі"
+    },
+    "shortcuts": {
+        "modalTitle": "Скорочення клавіатури",
+        "close": "Закрити",
+        "groups": {
+            "document": "Документ",
+            "format": "Форматування",
+            "comments": "Коментарі та пропозиції",
+            "navigation": "Навігація"
+        },
+        "undo": "Скасувати",
+        "redo": "Повторити",
+        "findReplace": "Знайти та замінити",
+        "shortcutSheet": "Цей аркуш скорочень",
+        "saveSnapshot": "Зберегти знімок",
+        "bold": "Жирний",
+        "italic": "Курсив",
+        "underline": "Підкреслення",
+        "insertLink": "Вставити посилання",
+        "headings": "Заголовок 1 / 2 / 3",
+        "body": "Основний текст",
+        "bulletList": "Маркований список",
+        "numberedList": "Нумерований список",
+        "quote": "Цитата",
+        "addComment": "Додати коментар до виділення",
+        "contextMenu": "Контекстне меню (вирізати/копіювати/формат/коментар/прийняти/відхилити)",
+        "suggestingDelete": "В режимі пропозицій: позначає замість видалення",
+        "scrollToAnchor": "Прокрутити до якоря + імпульс",
+        "jumpToHeading": "Перейти до заголовка",
+        "closeEsc": "Закрити пошук / меню / модал"
+    },
+    "outline": {
+        "title": "Структура",
+        "empty": "Заголовків ще немає. Скористайтесь списком стилів, щоб додати.",
+        "emptyHeading": "(порожній заголовок)"
+    },
+    "meta": {
+        "title": "Документ",
+        "fieldTitle": "Назва",
+        "fieldIsbn": "ISBN",
+        "fieldTargetWords": "Ціль слів",
+        "fieldDeadline": "Дедлайн",
+        "fieldNotes": "Нотатки",
+        "placeholderTitle": "Документ без назви",
+        "placeholderIsbn": "978-…",
+        "placeholderTargetWords": "50000",
+        "placeholderNotes": "Нотатки координатора…"
+    },
+    "glossary": {
+        "title": "Словник",
+        "placeholderTerm": "Термін (шукається в документі)",
+        "placeholderTranslation": "Переклад / канонічна форма",
+        "placeholderNotes": "Нотатки (необов'язково)",
+        "save": "Зберегти",
+        "add": "Додати",
+        "cancel": "Скасувати",
+        "edit": "Редагувати",
+        "delete": "Видалити",
+        "empty": "Немає записів словника. Додайте термін вище, щоб підсвітити його в документі."
+    },
+    "ai": {
+        "assistantName": "Асистент ШІ",
+        "results": {
+            "success": "Пропозиція ШІ готова — прийміть або відхиліть у панелі Пропозицій.",
+            "no-selection": "Спочатку виділіть текст.",
+            "empty-selection": "Виділення порожнє.",
+            "no-changes": "ШІ не повернув змін.",
+            "unsupported-schema": "Мітки відстеження змін не налаштовані."
+        }
     },
     "fileMenu": {
         "importDocx": "DOCX (.docx)",

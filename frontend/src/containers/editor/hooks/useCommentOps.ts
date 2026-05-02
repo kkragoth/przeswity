@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 import type * as Y from 'yjs';
 import { getThreadMap } from '@/editor/comments/threadOps';
-import type { CommentReply, CommentThread } from '@/editor/comments/types';
+import { CommentStatus, type CommentReply, type CommentThread } from '@/editor/comments/types';
+import { toggleEmojiPresence } from '@/editor/comments/reactions';
 import { makeId } from '@/editor/utils';
 import type { User } from '@/editor/identity/types';
+import { assertNever } from '@/lib/assert';
 
 export type ReactionTarget =
     | { kind: 'thread'; threadId: string }
@@ -17,41 +19,41 @@ export function createCommentOps(doc: Y.Doc, currentUser: User) {
         resolve(threadId: string) {
             const thread = get(threadId);
             if (!thread) return;
-            map().set(threadId, { ...thread, status: 'resolved', resolvedBy: currentUser.name, resolvedAt: Date.now() });
+            map().set(threadId, { ...thread, status: CommentStatus.Resolved, resolvedBy: currentUser.name, resolvedAt: Date.now() });
         },
         reopen(threadId: string) {
             const thread = get(threadId);
             if (!thread) return;
-            map().set(threadId, { ...thread, status: 'open', resolvedBy: undefined, resolvedAt: undefined });
+            map().set(threadId, { ...thread, status: CommentStatus.Open, resolvedBy: undefined, resolvedAt: undefined });
         },
         remove(threadId: string) {
             map().delete(threadId);
         },
         toggleReaction(target: ReactionTarget, emoji: string) {
-            if (target.kind === 'thread') {
-                const thread = get(target.threadId);
-                if (!thread) return;
-                const next = { ...(thread.reactions ?? {}) };
-                const ids = new Set(next[emoji] ?? []);
-                if (ids.has(currentUser.id)) ids.delete(currentUser.id);
-                else ids.add(currentUser.id);
-                if (ids.size === 0) delete next[emoji];
-                else next[emoji] = [...ids];
-                map().set(target.threadId, { ...thread, reactions: next });
-            } else {
-                const thread = get(target.threadId);
-                if (!thread) return;
-                const replies = thread.replies.map((reply) => {
-                    if (reply.id !== target.replyId) return reply;
-                    const next = { ...(reply.reactions ?? {}) };
-                    const ids = new Set(next[emoji] ?? []);
-                    if (ids.has(currentUser.id)) ids.delete(currentUser.id);
-                    else ids.add(currentUser.id);
-                    if (ids.size === 0) delete next[emoji];
-                    else next[emoji] = [...ids];
-                    return { ...reply, reactions: next };
-                });
-                map().set(target.threadId, { ...thread, replies });
+            switch (target.kind) {
+                case 'thread': {
+                    const thread = get(target.threadId);
+                    if (!thread) return;
+                    map().set(target.threadId, {
+                        ...thread,
+                        reactions: toggleEmojiPresence(thread.reactions, emoji, currentUser.id),
+                    });
+                    break;
+                }
+                case 'reply': {
+                    const thread = get(target.threadId);
+                    if (!thread) return;
+                    const replies = thread.replies.map((reply) =>
+                        reply.id !== target.replyId ? reply : {
+                            ...reply,
+                            reactions: toggleEmojiPresence(reply.reactions, emoji, currentUser.id),
+                        },
+                    );
+                    map().set(target.threadId, { ...thread, replies });
+                    break;
+                }
+                default:
+                    assertNever(target);
             }
         },
         addReply(threadId: string, body: string): string {
@@ -100,7 +102,7 @@ export function createCommentOps(doc: Y.Doc, currentUser: User) {
                 body: body.trim(),
                 originalQuote: anchor.quote,
                 createdAt: Date.now(),
-                status: 'open',
+                status: CommentStatus.Open,
                 replies: [],
             };
             map().set(id, thread);

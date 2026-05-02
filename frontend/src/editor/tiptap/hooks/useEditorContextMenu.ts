@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { Editor } from '@tiptap/react';
-import type { MutableRefObject } from 'react';
 import type { ContextMenuItem } from '@/editor/shell/ContextMenu';
 import { buildContextItems } from '@/editor/tiptap/contextItems';
 import type { CollabBundle } from '@/editor/collab/yDoc';
-import type { User } from '@/editor/identity/types';
+import type { EditorContextHandle } from '@/editor/tiptap/editorContext';
 
 export interface ContextMenuState {
     x: number;
@@ -15,7 +14,7 @@ export interface ContextMenuState {
 interface UseEditorContextMenuOptions {
     editor: Editor | null;
     collab: CollabBundle;
-    userRef: MutableRefObject<User>;
+    ctx: EditorContextHandle;
     onCreateComment: (commentId: string, originalQuote: string) => void;
     onActiveCommentChange: (commentId: string | null) => void;
 }
@@ -23,7 +22,7 @@ interface UseEditorContextMenuOptions {
 export function useEditorContextMenu({
     editor,
     collab,
-    userRef,
+    ctx,
     onCreateComment,
     onActiveCommentChange,
 }: UseEditorContextMenuOptions) {
@@ -43,7 +42,7 @@ export function useEditorContextMenu({
             const sel = editor.state.selection;
             const insideSelection = !sel.empty && clickPos >= sel.from && clickPos <= sel.to;
             if (!insideSelection && coords) editor.commands.setTextSelection(clickPos);
-            const items = buildContextItems(editor, userRef.current, collab.doc, clickPos, {
+            const items = buildContextItems(editor, ctx.get().user, collab.doc, clickPos, {
                 onCreateComment,
                 onActiveCommentChange,
             });
@@ -66,7 +65,7 @@ export function useEditorContextMenu({
             if (timer !== null) window.clearTimeout(timer);
             if (dom) dom.removeEventListener('contextmenu', handler);
         };
-    }, [editor, collab.doc, onCreateComment, onActiveCommentChange, userRef]);
+    }, [editor, collab.doc, onCreateComment, onActiveCommentChange, ctx]);
 
     return { contextMenu, setContextMenu };
 }

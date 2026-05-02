@@ -51,15 +51,23 @@ export function pairHunks(changes: Change[]): { removed?: Change; added?: Change
     return out;
 }
 
-export function buildInlineLines(older: string, newer: string): DiffLine[] {
+interface WalkCallbacks<T> {
+    onEqual: (text: string, ln: LineCounter) => T;
+    onReplaced: (oldText: string, newText: string, ln: LineCounter) => T[];
+    onDeleted: (text: string, ln: LineCounter) => T;
+    onInserted: (text: string, ln: LineCounter) => T;
+}
+
+function walkHunks<T>(older: string, newer: string, callbacks: WalkCallbacks<T>): T[] {
     const hunks = pairHunks(diffLines(older, newer));
-    const lines: DiffLine[] = [];
+    const out: T[] = [];
     const ln: LineCounter = { old: 0, new: 0 };
+
     for (const h of hunks) {
         if (h.eq) {
-            for (const t of splitLines(h.eq.value)) {
+            for (const text of splitLines(h.eq.value)) {
                 ln.old++; ln.new++;
-                lines.push({ kind: 'eq', text: t, oldNo: ln.old, newNo: ln.new });
+                out.push(callbacks.onEqual(text, { ...ln }));
             }
             continue;
         }
@@ -71,80 +79,59 @@ export function buildInlineLines(older: string, newer: string): DiffLine[] {
                 const ol = oldLines[i];
                 const nl = newLines[i];
                 if (ol !== undefined && nl !== undefined) {
-                    const { left, right } = intraWordSpans(ol, nl);
-                    ln.old++;
-                    lines.push({ kind: 'del', text: ol, spans: left, oldNo: ln.old });
-                    ln.new++;
-                    lines.push({ kind: 'ins', text: nl, spans: right, newNo: ln.new });
+                    ln.old++; ln.new++;
+                    out.push(...callbacks.onReplaced(ol, nl, { ...ln }));
                 } else if (ol !== undefined) {
                     ln.old++;
-                    lines.push({ kind: 'del', text: ol, oldNo: ln.old });
+                    out.push(callbacks.onDeleted(ol, { ...ln }));
                 } else {
                     ln.new++;
-                    lines.push({ kind: 'ins', text: nl!, newNo: ln.new });
+                    out.push(callbacks.onInserted(nl!, { ...ln }));
                 }
             }
             continue;
         }
-        if (h.removed) for (const t of splitLines(h.removed.value)) {
+        if (h.removed) for (const text of splitLines(h.removed.value)) {
             ln.old++;
-            lines.push({ kind: 'del', text: t, oldNo: ln.old });
+            out.push(callbacks.onDeleted(text, { ...ln }));
         }
-        if (h.added) for (const t of splitLines(h.added.value)) {
+        if (h.added) for (const text of splitLines(h.added.value)) {
             ln.new++;
-            lines.push({ kind: 'ins', text: t, newNo: ln.new });
+            out.push(callbacks.onInserted(text, { ...ln }));
         }
     }
-    return lines;
+    return out;
+}
+
+export function buildInlineLines(older: string, newer: string): DiffLine[] {
+    return walkHunks<DiffLine>(older, newer, {
+        onEqual: (text, ln) => ({ kind: 'eq', text, oldNo: ln.old, newNo: ln.new }),
+        onReplaced: (ol, nl, ln) => {
+            const { left, right } = intraWordSpans(ol, nl);
+            return [
+                { kind: 'del', text: ol, spans: left, oldNo: ln.old },
+                { kind: 'ins', text: nl, spans: right, newNo: ln.new },
+            ];
+        },
+        onDeleted: (text, ln) => ({ kind: 'del', text, oldNo: ln.old }),
+        onInserted: (text, ln) => ({ kind: 'ins', text, newNo: ln.new }),
+    });
 }
 
 export function buildSbsRows(older: string, newer: string): SbsRow[] {
-    const hunks = pairHunks(diffLines(older, newer));
-    const rows: SbsRow[] = [];
-    const ln: LineCounter = { old: 0, new: 0 };
-    for (const h of hunks) {
-        if (h.eq) {
-            for (const t of splitLines(h.eq.value)) {
-                ln.old++; ln.new++;
-                rows.push({
-                    left: { kind: 'eq', text: t, oldNo: ln.old },
-                    right: { kind: 'eq', text: t, newNo: ln.new },
-                });
-            }
-            continue;
-        }
-        if (h.removed && h.added) {
-            const oldLines = splitLines(h.removed.value);
-            const newLines = splitLines(h.added.value);
-            const max = Math.max(oldLines.length, newLines.length);
-            for (let i = 0; i < max; i++) {
-                const ol = oldLines[i];
-                const nl = newLines[i];
-                if (ol !== undefined && nl !== undefined) {
-                    const { left, right } = intraWordSpans(ol, nl);
-                    ln.old++; ln.new++;
-                    rows.push({
-                        left: { kind: 'del', text: ol, spans: left, oldNo: ln.old },
-                        right: { kind: 'ins', text: nl, spans: right, newNo: ln.new },
-                    });
-                } else if (ol !== undefined) {
-                    ln.old++;
-                    rows.push({ left: { kind: 'del', text: ol, oldNo: ln.old } });
-                } else {
-                    ln.new++;
-                    rows.push({ right: { kind: 'ins', text: nl!, newNo: ln.new } });
-                }
-            }
-            continue;
-        }
-        if (h.removed) for (const t of splitLines(h.removed.value)) {
-            ln.old++;
-            rows.push({ left: { kind: 'del', text: t, oldNo: ln.old } });
-        }
-        if (h.added) for (const t of splitLines(h.added.value)) {
-            ln.new++;
-            rows.push({ right: { kind: 'ins', text: t, newNo: ln.new } });
-        }
-    }
-    return rows;
+    return walkHunks<SbsRow>(older, newer, {
+        onEqual: (text, ln) => ({
+            left: { kind: 'eq', text, oldNo: ln.old },
+            right: { kind: 'eq', text, newNo: ln.new },
+        }),
+        onReplaced: (ol, nl, ln) => {
+            const { left, right } = intraWordSpans(ol, nl);
+            return [{
+                left: { kind: 'del', text: ol, spans: left, oldNo: ln.old },
+                right: { kind: 'ins', text: nl, spans: right, newNo: ln.new },
+            }];
+        },
+        onDeleted: (text, ln) => ({ left: { kind: 'del', text, oldNo: ln.old } }),
+        onInserted: (text, ln) => ({ right: { kind: 'ins', text, newNo: ln.new } }),
+    });
 }

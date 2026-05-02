@@ -2,6 +2,7 @@ import type { Editor } from '@tiptap/react';
 import type { HoveredBlock } from '@/editor/tiptap/hooks/useBlockHover';
 import type { DragState } from '@/editor/tiptap/hooks/useBlockDragDrop';
 import type { MutableRefObject } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface DragHandleProps {
   editor: Editor
@@ -18,6 +19,8 @@ export function DragHandle({
     onClickMenu,
     onDragEnd,
 }: DragHandleProps) {
+    const { t } = useTranslation('editor');
+
     return (
         <button
             type="button"
@@ -55,7 +58,7 @@ export function DragHandle({
                 }
             }}
             onDragEnd={onDragEnd}
-            title="Drag to move · click for menu"
+            title={t('dragHandle.title')}
         >
       ⠿
         </button>

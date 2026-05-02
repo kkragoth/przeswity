@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+// TODO Phase 30 — promote systemRole literals to SystemRole enum
 
 interface DevUser {
     id: string;
@@ -13,6 +14,7 @@ interface DevUser {
 
 export function DevQuickLogin({ onLogin }: { onLogin: () => Promise<void> }) {
     const { t } = useTranslation('auth');
+    const { t: tc } = useTranslation('common');
     const [users, setUsers] = useState<DevUser[]>([]);
     const [filter, setFilter] = useState('');
     const [busy, setBusy] = useState<string | null>(null);
@@ -61,12 +63,12 @@ export function DevQuickLogin({ onLogin }: { onLogin: () => Promise<void> }) {
                             <div className="font-medium">{u.name}</div>
                             <div className="text-xs text-stone-500">{u.email}</div>
                             <div className="mt-1 flex gap-1">
-                                {u.systemRole === 'admin' ? <Badge>Admin</Badge> : null}
-                                {u.systemRole === 'project_manager' ? <Badge variant="secondary">PM</Badge> : null}
+                                {u.systemRole === 'admin' ? <Badge>{tc('roles.admin')}</Badge> : null}
+                                {u.systemRole === 'project_manager' ? <Badge variant="secondary">{tc('roles.projectManagerShort')}</Badge> : null}
                             </div>
                         </div>
                         <Button size="sm" variant="outline" onClick={() => signInAs(u.email)} disabled={busy === u.email}>
-                            {busy === u.email ? '...' : t('login.submit')}
+                            {busy === u.email ? tc('states.saving') : t('login.submit')}
                         </Button>
                     </li>
                 ))}

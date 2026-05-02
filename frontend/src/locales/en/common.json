@@ -18,7 +18,8 @@
         "close": "Close",
         "add": "Add",
         "submit": "Submit",
-        "refresh": "Refresh"
+        "refresh": "Refresh",
+        "editLink": "Link URL"
     },
     "labels": {
         "name": "Name",
@@ -75,6 +76,11 @@
         },
         "back": "Back to books"
     },
+    "roles": {
+        "admin": "Admin",
+        "projectManager": "Project Manager",
+        "projectManagerShort": "PM"
+    },
     "books": {
         "title": "Books",
         "newBook": "New book",
@@ -107,5 +113,9 @@
             "post_typeset_proof": "Post-typeset proof",
             "finalization": "Finalization"
         }
+    },
+    "messages": {
+        "success": "Success",
+        "error": "An error occurred"
     }
 }

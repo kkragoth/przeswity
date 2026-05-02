@@ -8,22 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatActivity } from '@/lib/dates';
 import { bookAttention, BookAttention } from '@/lib/status';
+import { BOOK_STAGES_ORDER } from '@/lib/stage';
 import { BookStatusBadge } from '@/containers/books/components/BookStatusBadge';
-
-const STAGES = [
-    'translation',
-    'editing',
-    'authorization',
-    'proofreading',
-    'applying_changes',
-    'typesetting',
-    'post_typeset_proof',
-    'finalization',
-] as const;
 
 export function BookRow({ book, me: _me }: { book: BookSummary; me: SessionUser }) {
     const { t } = useTranslation('common');
-    const stageIndex = Math.max(0, STAGES.indexOf(book.stage)) + 1;
+    const stageIndex = Math.max(0, BOOK_STAGES_ORDER.indexOf(book.stage as never)) + 1;
     const status = bookAttention(book);
 
     return (
@@ -43,7 +33,7 @@ export function BookRow({ book, me: _me }: { book: BookSummary; me: SessionUser 
                 <div className="mt-3 grid gap-3 md:grid-cols-[1.5fr,1fr,1fr]">
                     <div>
                         <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-                            <span>{t('books.card.stageProgress', { current: stageIndex, total: STAGES.length })}</span>
+                            <span>{t('books.card.stageProgress', { current: stageIndex, total: BOOK_STAGES_ORDER.length })}</span>
                             <span className="font-medium text-foreground">{book.progress}%</span>
                         </div>
                         <div className="h-2 rounded-full bg-muted">

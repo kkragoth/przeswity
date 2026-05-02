@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Editor } from '@tiptap/react';
+import { useTranslation } from 'react-i18next';
 
 interface SpecialCharsMenuProps {
   editor: Editor | null
@@ -90,6 +91,7 @@ const GROUPS: CharGroup[] = [
 ];
 
 export function SpecialCharsMenu({ editor }: SpecialCharsMenuProps) {
+    const { t } = useTranslation('editor');
     const [open, setOpen] = useState(false);
 
     if (!editor) return null;
@@ -103,7 +105,7 @@ export function SpecialCharsMenu({ editor }: SpecialCharsMenuProps) {
             <button
                 type="button"
                 className="tb-btn"
-                title="Insert special character"
+                title={t('specialChars.insertTitle')}
                 onClick={() => setOpen((v) => !v)}
             >
         Ω

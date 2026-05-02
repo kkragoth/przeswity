@@ -1,10 +1,7 @@
-import { useRef, useState } from 'react';
-import type { Editor } from '@tiptap/react';
-import mammoth from 'mammoth';
-import { marked } from 'marked';
 import { saveAs } from 'file-saver';
 import { ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import type { Editor } from '@tiptap/react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -17,69 +14,34 @@ import { editorToMarkdown } from '@/editor/io/markdown';
 import { editorToDocxBlob } from '@/editor/io/docx';
 import { TEMPLATES } from '@/editor/workflow/templates';
 import type { RolePermissions } from '@/editor/identity/types';
-
-const MAMMOTH_STYLE_MAP = [
-    "p[style-name='Heading 1'] => h1:fresh",
-    "p[style-name='Heading 2'] => h2:fresh",
-    "p[style-name='Heading 3'] => h3:fresh",
-    "p[style-name='Quote'] => blockquote > p:fresh",
-    "p[style-name='List Bullet'] => ul > li:fresh",
-    "p[style-name='List Number'] => ol > li:fresh",
-    "b => strong",
-    "i => em",
-    "u => u",
-];
+import { useConfirmDialog } from '@/components/feedback/useConfirmDialog';
+import { ConfirmDialogHost } from '@/components/feedback/ConfirmDialogHost';
+import { useDocumentImport } from '@/containers/editor/hooks/useDocumentImport';
 
 interface FileMenuProps {
-    editor: Editor
-    perms: RolePermissions
-    onToast: (msg: string, kind?: 'info' | 'success' | 'error') => void
+    editor: Editor;
+    perms: RolePermissions;
+    onToast: (msg: string, kind?: 'info' | 'success' | 'error') => void;
 }
 
 export function FileMenu({ editor, perms, onToast }: FileMenuProps) {
     const { t } = useTranslation('editor');
-    const fileRef = useRef<HTMLInputElement>(null);
-    const [importKind, setImportKind] = useState<'docx' | 'md'>('docx');
+    const confirmDlg = useConfirmDialog();
+    const docImport = useDocumentImport({ editor, onToast, confirmDialog: confirmDlg });
 
-    const startImport = (kind: 'docx' | 'md') => {
-        if (!fileRef.current) return;
-        setImportKind(kind);
-        fileRef.current.accept = kind === 'docx' ? '.docx' : '.md,.markdown,.txt';
-        setTimeout(() => fileRef.current?.click(), 0);
-    };
-
-    const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        e.target.value = '';
-        if (!file) return;
-        if (!window.confirm(t('fileMenu.confirmReplaceImport', { name: file.name }))) return;
-        try {
-            onToast(t('fileMenu.importing'), 'info');
-            let html: string;
-            if (/\.docx$/i.test(file.name)) {
-                const buf = await file.arrayBuffer();
-                const result = await mammoth.convertToHtml({ arrayBuffer: buf }, { styleMap: MAMMOTH_STYLE_MAP });
-                html = result.value;
-            } else {
-                html = await marked.parse(await file.text());
-            }
-            editor.commands.setContent(html, { emitUpdate: true });
-            onToast(t('fileMenu.imported', { name: file.name }), 'success');
-        } catch (err) {
-            onToast(t('fileMenu.importFailed', { error: (err as Error).message }), 'error');
-        }
-    };
-
-    const applyTemplate = (id: string) => {
+    const applyTemplate = async (id: string) => {
         const tmpl = TEMPLATES.find((x) => x.id === id);
         if (!tmpl) return;
-        if (!window.confirm(t('fileMenu.confirmReplaceTemplate', { name: tmpl.name }))) return;
+        const ok = await confirmDlg.confirm({
+            title: t('fileMenu.confirmReplaceTemplate', { name: tmpl.name }),
+            destructive: true,
+        });
+        if (!ok) return;
         editor.commands.setContent(tmpl.content as never, { emitUpdate: true });
         onToast(t('fileMenu.templateLoaded', { name: tmpl.name }), 'success');
     };
 
     const showAny = perms.canEdit || perms.canExport;
-
     if (!showAny) return null;
 
     return (
@@ -95,10 +57,10 @@ export function FileMenu({ editor, perms, onToast }: FileMenuProps) {
                     {perms.canEdit && (
                         <>
                             <DropdownMenuLabel>{t('toolbar.import')}</DropdownMenuLabel>
-                            <DropdownMenuItem onSelect={() => startImport('docx')}>
+                            <DropdownMenuItem onSelect={() => docImport.open('docx')}>
                                 {t('fileMenu.importDocx')}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => startImport('md')}>
+                            <DropdownMenuItem onSelect={() => docImport.open('md')}>
                                 {t('fileMenu.importMarkdown')}
                             </DropdownMenuItem>
                         </>
@@ -132,7 +94,7 @@ export function FileMenu({ editor, perms, onToast }: FileMenuProps) {
                             <DropdownMenuSeparator />
                             <DropdownMenuLabel>{t('toolbar.templates')}</DropdownMenuLabel>
                             {TEMPLATES.map((tmpl) => (
-                                <DropdownMenuItem key={tmpl.id} onSelect={() => applyTemplate(tmpl.id)}>
+                                <DropdownMenuItem key={tmpl.id} onSelect={() => void applyTemplate(tmpl.id)}>
                                     {tmpl.name}
                                 </DropdownMenuItem>
                             ))}
@@ -141,11 +103,16 @@ export function FileMenu({ editor, perms, onToast }: FileMenuProps) {
                 </DropdownMenuContent>
             </DropdownMenu>
             <input
-                ref={fileRef}
+                ref={docImport.inputRef}
                 type="file"
+                accept={docImport.accept}
                 style={{ display: 'none' }}
-                onChange={onFile}
-                data-import-kind={importKind}
+                onChange={(e) => void docImport.onFileChange(e)}
+            />
+            <ConfirmDialogHost
+                dialogState={confirmDlg.dialogState}
+                onConfirm={confirmDlg.onConfirm}
+                onCancel={confirmDlg.onCancel}
             />
         </>
     );

@@ -1,11 +1,11 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import {
     bookPatchProgressMutation,
     bookPatchStageMutation,
-    booksListQueryKey,
 } from '@/api/generated/@tanstack/react-query.gen';
 import type { Book } from '@/api/generated/types.gen';
+import { useInvalidateBooks } from '@/hooks/api/cache/useInvalidateBooks';
 
 export function shouldCommitStage(current: Book['stage'], draft: Book['stage'] | undefined): boolean {
     return Boolean(draft && draft !== current);
@@ -18,7 +18,7 @@ export function shouldCommitProgress(current: number, draft: number | undefined)
 }
 
 export function useBookActions(initialBooks: Array<{ id: string; stage: Book['stage']; progress: number }>) {
-    const queryClient = useQueryClient();
+    const invalidateBooks = useInvalidateBooks();
     const [stageDraft, setStageDraft] = useState<Record<string, Book['stage']>>({});
     const [progressDraft, setProgressDraft] = useState<Record<string, number>>({});
     const byId = new Map(initialBooks.map((b) => [b.id, b]));
@@ -26,13 +26,13 @@ export function useBookActions(initialBooks: Array<{ id: string; stage: Book['st
     const stageMutation = useMutation({
         ...bookPatchStageMutation(),
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: booksListQueryKey() });
+            await invalidateBooks();
         },
     });
     const progressMutation = useMutation({
         ...bookPatchProgressMutation(),
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: booksListQueryKey() });
+            await invalidateBooks();
         },
     });
 

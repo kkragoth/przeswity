@@ -2,24 +2,19 @@ import { useEditor } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
 import { useMemo } from 'react';
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
-import type { HeaderClickEvent, FooterClickEvent } from 'tiptap-pagination-plus';
 import { buildExtensions } from '@/editor/tiptap/extensions';
 import type { CollabBundle } from '@/editor/collab/yDoc';
 import type { User } from '@/editor/identity/types';
 import type { DragState } from '@/editor/tiptap/hooks/useBlockDragDrop';
 import type { SlashTriggerInfo } from '@/editor/tiptap/slash/SlashCommand';
-import type { GlossaryEntry } from '@/editor/glossary/GlossaryHighlight';
+import type { EditorContextHandle } from '@/editor/tiptap/editorContext';
 
 export function useEditorInit(props: {
     collab: CollabBundle;
     user: User;
     placeholder: string;
     canEditOrSuggest: boolean;
-    userRef: MutableRefObject<User>;
-    suggestingRef: MutableRefObject<boolean>;
-    glossaryRef: MutableRefObject<GlossaryEntry[]>;
-    onHeaderClickRef: MutableRefObject<(() => void) | undefined>;
-    onFooterClickRef: MutableRefObject<(() => void) | undefined>;
+    ctx: EditorContextHandle;
     dragStateRef: MutableRefObject<DragState>;
     resetDrag: () => void;
     setSlashTrigger: Dispatch<SetStateAction<SlashTriggerInfo>>;
@@ -32,12 +27,15 @@ export function useEditorInit(props: {
         user: props.user,
         onCommentClick: props.onActiveCommentChange,
         onSlashTrigger: props.setSlashTrigger,
-        getSuggestingEnabled: () => props.suggestingRef.current,
-        getSuggestionAuthor: () => ({ id: props.userRef.current.id, name: props.userRef.current.name, color: props.userRef.current.color }),
-        getGlossaryEntries: () => props.glossaryRef.current,
-        getOnHeaderClick: (): HeaderClickEvent => () => props.onHeaderClickRef.current?.(),
-        getOnFooterClick: (): FooterClickEvent => () => props.onFooterClickRef.current?.(),
-    }), [props.collab, props.user, props.onActiveCommentChange, props.setSlashTrigger, props.suggestingRef, props.userRef, props.glossaryRef, props.onHeaderClickRef, props.onFooterClickRef]);
+        getSuggestingEnabled: () => props.ctx.get().suggesting,
+        getSuggestionAuthor: () => {
+            const u = props.ctx.get().user;
+            return { id: u.id, name: u.name, color: u.color };
+        },
+        getGlossaryEntries: () => props.ctx.get().glossary,
+        getOnHeaderClick: () => props.ctx.get().onHeaderClick,
+        getOnFooterClick: () => props.ctx.get().onFooterClick,
+    }), [props.collab, props.user, props.onActiveCommentChange, props.setSlashTrigger, props.ctx]);
 
     const editor = useEditor({
         extensions,

@@ -1,19 +1,18 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
     bookAssignmentDeleteMutation,
     bookAssignmentsListOptions,
-    bookAssignmentsListQueryKey,
 } from '@/api/generated/@tanstack/react-query.gen';
 import type { AssignmentWithUser } from '@/api/generated/types.gen';
 import { Button } from '@/components/ui/button';
 import { RoleBadge } from '@/components/badges/RoleBadge';
 import { EmptyState } from '@/components/feedback/EmptyState';
+import { useInvalidateBookAssignments } from '@/hooks/api/cache/useInvalidateBookAssignments';
 
 export function AssignmentList({ bookId }: { bookId: string }) {
     const { t } = useTranslation('common');
-    const qc = useQueryClient();
-    const listKey = bookAssignmentsListQueryKey({ path: { bookId } });
+    const invalidateAssignments = useInvalidateBookAssignments(bookId);
 
     const { data: assignments = [], isLoading } = useQuery({
         ...bookAssignmentsListOptions({ path: { bookId } }),
@@ -21,7 +20,7 @@ export function AssignmentList({ bookId }: { bookId: string }) {
 
     const removeMutation = useMutation({
         ...bookAssignmentDeleteMutation(),
-        onSuccess: () => qc.invalidateQueries({ queryKey: listKey }),
+        onSuccess: () => void invalidateAssignments(),
     });
 
     const remove = (a: AssignmentWithUser) =>

@@ -9,6 +9,7 @@
         "typecheck": "tsc -b --noEmit",
         "lint": "eslint .",
         "test": "vitest run",
+        "test:watch": "vitest",
         "gen-api": "openapi-ts",
         "check-locales": "tsx scripts/check-locales.ts"
     },

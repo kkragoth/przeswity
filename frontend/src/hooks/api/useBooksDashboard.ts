@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { booksListOptions } from '@/api/generated/@tanstack/react-query.gen';
 import type { SessionUser } from '@/auth/types';
 import { isAttentionBook, isRecentBook } from '@/lib/status';
@@ -10,10 +10,6 @@ export function useBooksDashboard(me: SessionUser) {
     const [view, setView] = useState<DashboardView>(DashboardView.List);
     const [quickFilter, setQuickFilter] = useState<QuickFilter>(QuickFilter.All);
     const [roleFilter, setRoleFilter] = useState<string>('all');
-    const onSetShowOnlyMine = useCallback((next: boolean) => setShowOnlyMine(next), []);
-    const onSetView = useCallback((next: DashboardView) => setView(next), []);
-    const onSetQuickFilter = useCallback((next: QuickFilter) => setQuickFilter(next), []);
-    const onSetRoleFilter = useCallback((next: string) => setRoleFilter(next), []);
 
     const { data: books = [], isLoading } = useQuery({
         ...booksListOptions(),
@@ -29,12 +25,12 @@ export function useBooksDashboard(me: SessionUser) {
     }), [scoped]);
     const roleOptions = useMemo(() => Array.from(new Set(scoped.flatMap((b) => b.myRoles))).sort(), [scoped]);
     const filters = useMemo(() => ({ showOnlyMine, view, quickFilter, roleFilter }), [showOnlyMine, view, quickFilter, roleFilter]);
-    const setFilter = useMemo(() => ({
-        setShowOnlyMine: onSetShowOnlyMine,
-        setView: onSetView,
-        setQuickFilter: onSetQuickFilter,
-        setRoleFilter: onSetRoleFilter,
-    }), [onSetQuickFilter, onSetRoleFilter, onSetShowOnlyMine, onSetView]);
+    const setFilter = {
+        setShowOnlyMine,
+        setView,
+        setQuickFilter,
+        setRoleFilter,
+    };
 
     return {
         books,

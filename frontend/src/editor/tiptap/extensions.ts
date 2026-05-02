@@ -19,31 +19,33 @@ import { Comment } from '@/editor/comments/Comment';
 import { Insertion, Deletion } from '@/editor/suggestions/TrackChange';
 import { DiffBlockAttr } from '@/editor/suggestions/DiffBlockAttr';
 import { SuggestionMode } from '@/editor/suggestions/SuggestionMode';
-import { SmartPaste } from './formatting/SmartPaste';
-import { SmartTypography } from './formatting/SmartTypography';
-import { Highlight } from './formatting/Highlight';
-import { FindReplace } from './find/FindReplace';
-import { Footnote } from './blocks/Footnote';
-import { TableOfContents } from './blocks/Toc';
-import { SlashCommand } from './slash/SlashCommand';
-import type { SlashTriggerInfo } from './slash/SlashCommand';
+import { SmartPaste } from '@/editor/tiptap/formatting/SmartPaste';
+import { SmartTypography } from '@/editor/tiptap/formatting/SmartTypography';
+import { Highlight } from '@/editor/tiptap/formatting/Highlight';
+import { FindReplace } from '@/editor/tiptap/find/FindReplace';
+import { Footnote } from '@/editor/tiptap/blocks/Footnote';
+import { TableOfContents } from '@/editor/tiptap/blocks/Toc';
+import { SlashCommand } from '@/editor/tiptap/slash/SlashCommand';
+import type { SlashTriggerInfo } from '@/editor/tiptap/slash/SlashCommand';
 import { GlossaryHighlight } from '@/editor/glossary/GlossaryHighlight';
 import type { GlossaryEntry } from '@/editor/glossary/GlossaryHighlight';
 import type { CollabBundle } from '@/editor/collab/yDoc';
 import type { User } from '@/editor/identity/types';
-
-// A4 at 96dpi: 794×1123px with 1-inch (96px) margins on all sides.
-// Content width = 794 - 96 - 96 = 602px (matches --editor-measure token).
-const PAGE_GAP_BORDER_COLOR = '#d4cfc9';
-const PAGE_BREAK_BACKGROUND = '#f0ede8';
+import {
+    A4_PAGE_HEIGHT_PX,
+    A4_PAGE_WIDTH_PX,
+    A4_MARGIN_PX,
+    PAGE_GAP_BORDER_COLOR,
+    PAGE_BREAK_BACKGROUND,
+} from '@/editor/constants';
 
 const A4_PAGE = {
-    pageHeight: 1123,
-    pageWidth: 794,
-    marginTop: 96,
-    marginBottom: 96,
-    marginLeft: 96,
-    marginRight: 96,
+    pageHeight: A4_PAGE_HEIGHT_PX,
+    pageWidth: A4_PAGE_WIDTH_PX,
+    marginTop: A4_MARGIN_PX,
+    marginBottom: A4_MARGIN_PX,
+    marginLeft: A4_MARGIN_PX,
+    marginRight: A4_MARGIN_PX,
 } as const;
 
 export interface ExtensionsConfig {

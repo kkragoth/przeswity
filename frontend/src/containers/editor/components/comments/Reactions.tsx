@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const QUICK = ['👍', '❤️', '🎉', '✅', '🤔', '❓', '🚀'];
 
@@ -9,6 +10,7 @@ interface ReactionsProps {
 }
 
 export function Reactions({ reactions, myUserId, onToggle }: ReactionsProps) {
+    const { t } = useTranslation('editor');
     const [pickerOpen, setPickerOpen] = useState(false);
     const entries = Object.entries(reactions ?? {}).filter(([, ids]) => ids.length > 0);
 
@@ -33,7 +35,7 @@ export function Reactions({ reactions, myUserId, onToggle }: ReactionsProps) {
                 type="button"
                 className="reaction reaction-add"
                 onClick={() => setPickerOpen((v) => !v)}
-                title="Add reaction"
+                title={t('comments.addReaction')}
             >
         ＋
             </button>

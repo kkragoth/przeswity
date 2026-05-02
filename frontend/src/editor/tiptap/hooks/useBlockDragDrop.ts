@@ -1,12 +1,21 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
 import type { Editor } from '@tiptap/react';
+import { BLOCK_DROP_MIDPOINT_RATIO } from '@/editor/constants';
 
 export interface DragState {
   from: number
   to: number
   insertAt: number | null
   active: boolean
+}
+
+/**
+ * Returns true when the pointer is in the upper half of the block rect,
+ * meaning the drop indicator should appear *above* the block.
+ */
+export function isDropAbove(clientY: number, rect: DOMRect): boolean {
+    return clientY < rect.top + rect.height * BLOCK_DROP_MIDPOINT_RATIO;
 }
 
 export const INITIAL_DRAG_STATE: DragState = {
@@ -16,10 +25,30 @@ export const INITIAL_DRAG_STATE: DragState = {
     active: false,
 };
 
+export interface BlockDrag {
+    dragStateRef: MutableRefObject<DragState>;
+    dropTop: number | null;
+    setDropTop: (top: number | null) => void;
+    resetDrag: () => void;
+}
+
+/**
+ * Encapsulates all mutable drag state: the ref used by editorProps.handleDrop,
+ * the dropTop indicator position, and the reset callback.
+ */
+export function useBlockDrag(): BlockDrag {
+    const dragStateRef = useRef<DragState>({ ...INITIAL_DRAG_STATE });
+    const [dropTop, setDropTop] = useState<number | null>(null);
+    const resetDrag = () => {
+        dragStateRef.current = { ...INITIAL_DRAG_STATE };
+        setDropTop(null);
+    };
+    return { dragStateRef, dropTop, setDropTop, resetDrag };
+}
+
 /**
  * Installs the dragover/dragleave listener that powers the drop indicator.
- * State (the ref + dropTop setter) lives in EditorView so editorProps.handleDrop
- * can read the same ref.
+ * Reads dragStateRef from useBlockDrag so editorProps.handleDrop can share the same ref.
  */
 export function useBlockDragOver(
     editor: Editor | null,
@@ -55,7 +84,7 @@ export function useBlockDragOver(
 
             const blockRect = blockEl.getBoundingClientRect();
             const pageRect = page.getBoundingClientRect();
-            const dropBefore = e.clientY < blockRect.top + blockRect.height / 2;
+            const dropBefore = isDropAbove(e.clientY, blockRect);
             const insertAt = dropBefore ? blockStart : blockEnd;
             const indicatorTop = (dropBefore ? blockRect.top : blockRect.bottom) - pageRect.top;
 

@@ -1,15 +1,12 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Avatar } from '@/editor/shell/Avatar';
-import { authorColor } from '@/editor/comments/color';
 import type { CommentThread } from '@/editor/comments/types';
-import { Reactions } from '@/containers/editor/components/comments/Reactions';
-import { CommentReply } from '@/containers/editor/components/comments/CommentReply';
-import { type MentionCandidate, renderBodyWithMentions } from '@/containers/editor/components/comments/MentionTextarea';
+import type { MentionCandidate } from '@/containers/editor/components/comments/MentionTextarea';
 import type { CommentEditTarget } from '@/containers/editor/hooks/useCommentDrafts';
 import { ThreadComposeForm } from '@/containers/editor/components/comments/thread/ThreadComposeForm';
-import { ThreadReplyCompose } from '@/containers/editor/components/comments/thread/ThreadReplyCompose';
-import { withStop } from '@/utils/react/withStop';
+import { ThreadHeader } from '@/containers/editor/components/comments/thread/ThreadHeader';
+import { ThreadEditor } from '@/containers/editor/components/comments/thread/ThreadEditor';
+import { ThreadReplies } from '@/containers/editor/components/comments/thread/ThreadReplies';
 
 function previewBody(body: string, max = 90): string {
     const single = body.replace(/\s+/g, ' ').trim();
@@ -59,31 +56,15 @@ export const CommentThreadCard = memo(function CommentThreadCard(props: CommentT
 
     return (
         <div className={`thread${isActive ? ' is-active' : ''}`} onClick={cb.onSelect}>
-            <div className="thread-head">
-                <Avatar name={thread.authorName} color={authorColor(thread)} size="md" ring={isActive} />
-                <div className="thread-head-text">
-                    <div className="thread-head-row">
-                        <span className="thread-author">{thread.authorName}</span>
-                        <span className="thread-role-chip">{thread.authorRole}</span>
-                    </div>
-                    <div className="thread-head-time">{props.timeLabel}</div>
-                </div>
-                <div className="thread-head-aside">
-                    {thread.replies.length > 0 && !isActive ? (
-                        <span className="thread-reply-count" title={t('comments.repliesCount', { count: thread.replies.length })}>
-                            ↳ {thread.replies.length}
-                        </span>
-                    ) : null}
-                    {props.canResolve && isActive ? (
-                        <button type="button" className="btn-resolve" aria-label={t('comments.resolve')} onClick={withStop(cb.onResolve)}>
-                            ✓ {t('comments.resolve')}
-                        </button>
-                    ) : null}
-                    {isActive ? (
-                        <button type="button" className="thread-close-btn" title={t('comments.close')} aria-label={t('comments.close')} onClick={withStop(cb.onClose)}>✕</button>
-                    ) : null}
-                </div>
-            </div>
+            <ThreadHeader
+                thread={thread}
+                isActive={isActive}
+                timeLabel={props.timeLabel}
+                canResolve={props.canResolve}
+                replyCount={thread.replies.length}
+                onResolve={cb.onResolve}
+                onClose={cb.onClose}
+            />
             <div className="thread-quote">"{thread.originalQuote}"</div>
 
             {draftEmpty && isActive ? (
@@ -102,68 +83,39 @@ export const CommentThreadCard = memo(function CommentThreadCard(props: CommentT
                     ) : null}
                     <div className="thread-expandable">
                         <div className="thread-expandable-inner">
-                            <div className="thread-message">
-                                {thread.body && editingThreadBody ? (
-                                    <ThreadComposeForm
-                                        value={props.editText}
-                                        onChange={props.onEditTextChange}
-                                        placeholder={t('comments.editComment')}
-                                        onSubmit={cb.onEditSubmit}
-                                        onCancel={cb.onEditCancel}
-                                        candidates={props.candidates}
-                                    />
-                                ) : thread.body ? (
-                                    <div className="thread-body">
-                                        {renderBodyWithMentions(thread.body)}
-                                        {thread.edited ? (
-                                            <span className="thread-edited" title={new Date(thread.edited).toLocaleString()}>
-                                                {' '}· {t('comments.editedSuffix')}
-                                            </span>
-                                        ) : null}
-                                        {thread.authorId === props.currentUserId ? (
-                                            <button type="button" className="thread-edit-btn" title={t('comments.editTooltip')} onClick={withStop(cb.onEditThreadStart)}>✎</button>
-                                        ) : null}
-                                    </div>
-                                ) : null}
-                                {isActive && thread.body ? (
-                                    <Reactions reactions={thread.reactions} myUserId={props.currentUserId} onToggle={cb.onToggleThreadReaction} />
-                                ) : null}
-                            </div>
-
-                            {thread.replies.map((reply) => {
-                                const isEditingReply =
-                                    props.editTarget?.kind === 'reply'
-                                    && props.editTarget.threadId === thread.id
-                                    && props.editTarget.replyId === reply.id;
-                                return (
-                                    <CommentReply
-                                        key={reply.id}
-                                        reply={reply}
-                                        timeLabel={props.replyTimeLabel(reply.createdAt)}
-                                        canEdit={reply.authorId === props.currentUserId}
-                                        isEditing={isEditingReply}
-                                        editValue={props.editText}
-                                        onEditChange={props.onEditTextChange}
-                                        onEditStart={() => cb.onEditReplyStart(reply.id)}
-                                        onEditCancel={cb.onEditCancel}
-                                        onEditSubmit={cb.onEditSubmit}
-                                        candidates={props.candidates}
-                                        currentUserId={props.currentUserId}
-                                        onToggleReaction={(e) => cb.onToggleReplyReaction(reply.id, e)}
-                                    />
-                                );
-                            })}
-
-                            {props.canComment && thread.body && isActive ? (
-                                <ThreadReplyCompose
-                                    replyDraft={props.replyDraft}
-                                    onChange={props.onReplyDraftChange}
-                                    onSubmit={cb.onSubmitReply}
-                                    onRemove={cb.onRemove}
-                                    canResolve={props.canResolve}
-                                    candidates={props.candidates}
-                                />
-                            ) : null}
+                            <ThreadEditor
+                                thread={thread}
+                                isActive={isActive}
+                                editingBody={editingThreadBody}
+                                editText={props.editText}
+                                onEditTextChange={props.onEditTextChange}
+                                onEditSubmit={cb.onEditSubmit}
+                                onEditCancel={cb.onEditCancel}
+                                onEditThreadStart={cb.onEditThreadStart}
+                                onToggleThreadReaction={cb.onToggleThreadReaction}
+                                currentUserId={props.currentUserId}
+                                candidates={props.candidates}
+                            />
+                            <ThreadReplies
+                                thread={thread}
+                                isActive={isActive}
+                                replyTimeLabel={props.replyTimeLabel}
+                                editTarget={props.editTarget}
+                                editText={props.editText}
+                                onEditTextChange={props.onEditTextChange}
+                                onEditReplyStart={cb.onEditReplyStart}
+                                onEditCancel={cb.onEditCancel}
+                                onEditSubmit={cb.onEditSubmit}
+                                onToggleReplyReaction={cb.onToggleReplyReaction}
+                                replyDraft={props.replyDraft}
+                                onReplyDraftChange={props.onReplyDraftChange}
+                                onSubmitReply={cb.onSubmitReply}
+                                onRemove={cb.onRemove}
+                                canResolve={props.canResolve}
+                                canComment={props.canComment}
+                                currentUserId={props.currentUserId}
+                                candidates={props.candidates}
+                            />
                         </div>
                     </div>
                 </>

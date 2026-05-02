@@ -10,6 +10,8 @@ import { VersionDiffModal } from '@/containers/editor/components/versions/Versio
 import { VersionsList } from '@/containers/editor/components/versions/VersionsList';
 import { useAutoSnapshot } from '@/containers/editor/hooks/useAutoSnapshot';
 import { useVersions } from '@/containers/editor/hooks/useVersions';
+import { useConfirmDialog } from '@/components/feedback/useConfirmDialog';
+import { ConfirmDialogHost } from '@/components/feedback/ConfirmDialogHost';
 
 interface VersionsPanelProps {
     doc: Y.Doc;
@@ -22,6 +24,7 @@ interface VersionsPanelProps {
 export function VersionsPanel({ doc, user, editor, bookId, onToast }: VersionsPanelProps) {
     const { t } = useTranslation('editor');
     const versionsApi = useVersions(doc, user, editor, bookId);
+    const confirmDlg = useConfirmDialog();
     const [compareSourceId, setCompareSourceId] = useState<string | null>(null);
     const [diffState, setDiffState] = useState<{
         diffJson: JSONNode;
@@ -39,12 +42,16 @@ export function VersionsPanel({ doc, user, editor, bookId, onToast }: VersionsPa
         }, [versionsApi, t]),
     );
 
-    const confirmRestore = (snapshot: VersionSnapshot) => {
+    const confirmRestore = async (snapshot: VersionSnapshot) => {
         if (!editor) {
             onToast?.(t('versions.editorNotReady'), 'error');
             return;
         }
-        if (!window.confirm(t('versions.restoreConfirm', { label: snapshot.label }))) return;
+        const ok = await confirmDlg.confirm({
+            title: t('versions.restoreConfirm', { label: snapshot.label }),
+            destructive: true,
+        });
+        if (!ok) return;
         if (versionsApi.restore(snapshot)) onToast?.(t('versions.restoreSuccess', { label: snapshot.label }), 'success');
     };
 
@@ -98,7 +105,7 @@ export function VersionsPanel({ doc, user, editor, bookId, onToast }: VersionsPa
                             if (!source || source.id === snapshot.id) return;
                             setDiffState(versionsApi.diffBetween(source, snapshot));
                         }}
-                        onRestore={confirmRestore}
+                        onRestore={(snapshot) => void confirmRestore(snapshot)}
                         onDelete={(snapshot) => {
                             versionsApi.remove(snapshot.id);
                             if (compareSourceId === snapshot.id) setCompareSourceId(null);
@@ -115,9 +122,15 @@ export function VersionsPanel({ doc, user, editor, bookId, onToast }: VersionsPa
                     olderLabel={diffState.olderLabel}
                     newerLabel={diffState.newerLabel}
                     onClose={() => setDiffState(null)}
-                    onRestore={diffState.restoreSnapshot ? () => confirmRestore(diffState.restoreSnapshot!) : undefined}
+                    onRestore={diffState.restoreSnapshot ? () => void confirmRestore(diffState.restoreSnapshot!) : undefined}
                 />
             ) : null}
+
+            <ConfirmDialogHost
+                dialogState={confirmDlg.dialogState}
+                onConfirm={confirmDlg.onConfirm}
+                onCancel={confirmDlg.onCancel}
+            />
         </>
     );
 }

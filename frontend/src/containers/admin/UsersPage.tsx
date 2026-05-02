@@ -1,18 +1,18 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { usersListOptions, usersListQueryKey } from '@/api/generated/@tanstack/react-query.gen';
+import { usersListOptions } from '@/api/generated/@tanstack/react-query.gen';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { NewUserDialog } from '@/containers/admin/components/NewUserDialog';
 import { UsersTable } from '@/containers/admin/components/UsersTable';
+import { useInvalidateUsers } from '@/hooks/api/cache/useInvalidateUsers';
 
 export function UsersPage() {
     const { t: ta } = useTranslation('admin');
     const { t: tc } = useTranslation('common');
-    const qc = useQueryClient();
+    const invalidate = useInvalidateUsers();
     const { data: users = [], isLoading } = useQuery({
         ...usersListOptions(),
     });
-    const invalidate = () => qc.invalidateQueries({ queryKey: usersListQueryKey() });
 
     return (
         <div className="mx-auto max-w-7xl px-4 py-8">

@@ -1,4 +1,4 @@
-import type { Role, User } from './types';
+import { Role, type User } from './types';
 
 const COLORS = ['#e11d48', '#7c3aed', '#0891b2', '#16a34a', '#ea580c', '#9333ea', '#0284c7'];
 
@@ -18,7 +18,7 @@ export function loadUser(): User {
     const id = Math.random().toString(36).slice(2, 10);
     const name = NAMES[Math.floor(Math.random() * NAMES.length)];
     const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-    const user: User = { id, name, color, role: 'editor' };
+    const user: User = { id, name, color, role: Role.Editor };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     return user;
 }

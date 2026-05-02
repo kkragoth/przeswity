@@ -18,7 +18,8 @@
         "close": "Закрити",
         "add": "Додати",
         "submit": "Надіслати",
-        "refresh": "Оновити"
+        "refresh": "Оновити",
+        "editLink": "URL посилання"
     },
     "labels": {
         "name": "Ім'я",
@@ -75,6 +76,11 @@
         },
         "back": "Назад до книг"
     },
+    "roles": {
+        "admin": "Адміністратор",
+        "projectManager": "Керівник проекту",
+        "projectManagerShort": "КП"
+    },
     "books": {
         "title": "Книги",
         "newBook": "Нова книга",
@@ -107,5 +113,9 @@
             "post_typeset_proof": "Коректура після верстки",
             "finalization": "Фіналізація"
         }
+    },
+    "messages": {
+        "success": "Успіх",
+        "error": "Сталася помилка"
     }
 }

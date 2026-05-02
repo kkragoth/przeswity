@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import type { Editor } from '@tiptap/react';
+import { useTranslation } from 'react-i18next';
 import type { User } from '@/editor/identity/types';
 import { ROLE_PERMISSIONS } from '@/editor/identity/types';
-import { acceptSuggestion, rejectSuggestion } from '@/editor/suggestions/suggestionOps';
+import { acceptSuggestion, rejectSuggestion, SuggestionType } from '@/editor/suggestions/suggestionOps';
 
 interface SuggestionEntry {
-  type: 'insertion' | 'deletion'
+  type: SuggestionType
   suggestionId: string
   authorId: string
   authorName: string
@@ -27,7 +28,7 @@ function collectSuggestions(editor: Editor): SuggestionEntry[] {
     editor.state.doc.descendants((node, pos) => {
         if (!node.isText) return;
         for (const mark of node.marks) {
-            if (mark.type.name !== 'insertion' && mark.type.name !== 'deletion') continue;
+            if (mark.type.name !== SuggestionType.Insertion && mark.type.name !== SuggestionType.Deletion) continue;
             const id = mark.attrs.suggestionId as string;
             const existing = seen.get(id);
             if (existing) {
@@ -35,7 +36,7 @@ function collectSuggestions(editor: Editor): SuggestionEntry[] {
                 existing.text += node.text ?? '';
             } else {
                 const entry: SuggestionEntry = {
-                    type: mark.type.name as 'insertion' | 'deletion',
+                    type: mark.type.name as SuggestionType,
                     suggestionId: id,
                     authorId: mark.attrs.authorId,
                     authorName: mark.attrs.authorName,
@@ -54,6 +55,7 @@ function collectSuggestions(editor: Editor): SuggestionEntry[] {
 }
 
 export function SuggestionsSidebar({ editor, user }: SuggestionsSidebarProps) {
+    const { t } = useTranslation('editor');
     const [entries, setEntries] = useState<SuggestionEntry[]>([]);
     const perms = ROLE_PERMISSIONS[user.role];
 
@@ -86,18 +88,18 @@ export function SuggestionsSidebar({ editor, user }: SuggestionsSidebarProps) {
 
     return (
         <div className="sidebar suggestions-sidebar">
-            <div className="sidebar-title">Suggestions ({entries.length})</div>
+            <div className="sidebar-title">{t('suggestions.sidebarTitle', { count: entries.length })}</div>
             {entries.length === 0 ? (
-                <div className="sidebar-empty">No pending suggestions.</div>
+                <div className="sidebar-empty">{t('suggestions.empty')}</div>
             ) : (
                 <>
                     {perms.canResolveSuggestion && (
                         <div className="bulk-actions">
                             <button type="button" onClick={acceptAll}>
-                Accept all
+                                {t('suggestions.acceptAll')}
                             </button>
                             <button type="button" onClick={rejectAll}>
-                Reject all
+                                {t('suggestions.rejectAll')}
                             </button>
                         </div>
                     )}
@@ -113,7 +115,7 @@ export function SuggestionsSidebar({ editor, user }: SuggestionsSidebarProps) {
                             <div className="suggestion-meta">
                                 <span style={{ color: e.authorColor }}>● {e.authorName}</span>
                                 <span className="suggestion-type">
-                                    {e.type === 'insertion' ? 'inserted' : 'deleted'}
+                                    {e.type === SuggestionType.Insertion ? t('suggestions.inserted') : t('suggestions.deleted')}
                                 </span>
                                 <span className="suggestion-time">
                                     {new Date(e.timestamp).toLocaleTimeString()}
@@ -129,7 +131,7 @@ export function SuggestionsSidebar({ editor, user }: SuggestionsSidebarProps) {
                                             accept(e);
                                         }}
                                     >
-                    Accept
+                                        {t('suggestions.accept')}
                                     </button>
                                     <button
                                         type="button"
@@ -138,7 +140,7 @@ export function SuggestionsSidebar({ editor, user }: SuggestionsSidebarProps) {
                                             reject(e);
                                         }}
                                     >
-                    Reject
+                                        {t('suggestions.reject')}
                                     </button>
                                 </div>
                             )}

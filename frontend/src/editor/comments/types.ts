@@ -1,5 +1,10 @@
 import type { Role } from '@/editor/identity/types';
 
+export enum CommentStatus {
+    Open = 'open',
+    Resolved = 'resolved',
+}
+
 export interface CommentThread {
   id: string
   authorId: string
@@ -11,7 +16,7 @@ export interface CommentThread {
   originalQuote: string
   createdAt: number
   edited?: number
-  status: 'open' | 'resolved'
+  status: CommentStatus
   resolvedBy?: string
   resolvedAt?: number
   reactions?: Record<string, string[]>

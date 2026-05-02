@@ -1,5 +1,6 @@
 import { BubbleMenu } from '@tiptap/react/menus';
 import type { Editor } from '@tiptap/react';
+import { useTranslation } from 'react-i18next';
 
 interface BubbleToolbarProps {
   editor: Editor
@@ -8,6 +9,8 @@ interface BubbleToolbarProps {
 }
 
 export function BubbleToolbar({ editor, canComment, onAddComment }: BubbleToolbarProps) {
+    const { t } = useTranslation('editor');
+
     return (
         <BubbleMenu editor={editor}>
             <div className="bubble-menu">
@@ -33,7 +36,7 @@ export function BubbleToolbar({ editor, canComment, onAddComment }: BubbleToolba
           U
                 </button>
                 {canComment && (
-                    <button type="button" onClick={onAddComment} title="Add comment">
+                    <button type="button" onClick={onAddComment} title={t('comments.addCommentTitle')}>
             💬
                     </button>
                 )}

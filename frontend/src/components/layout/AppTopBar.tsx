@@ -4,9 +4,9 @@ import { LogOut, Settings, BookOpen } from 'lucide-react';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import { authClient } from '@/auth/client';
 import { LanguageSwitcher } from '@/i18n/LanguageSwitcher';
-import { SystemRole } from '@/auth/types';
 import type { SessionUser } from '@/auth/types';
-import { userInitials } from '@/lib/user';
+import { Avatar } from '@/components/Avatar';
+import { canAccessAdmin, canAccessCoordinator } from '@/lib/auth';
 
 interface AppTopBarProps {
     user: SessionUser;
@@ -25,9 +25,7 @@ function UserMenu({ user }: { user: SessionUser }) {
         <DropdownMenuPrimitive.Root>
             <DropdownMenuPrimitive.Trigger asChild>
                 <button type="button" className="topbar-avatar-trigger" aria-label={user.name ?? user.email}>
-                    <span className="topbar-app-avatar">
-                        {userInitials(user.name ?? undefined, user.email[0]?.toUpperCase() ?? '?')}
-                    </span>
+                    <Avatar name={user.name ?? user.email} size="sm" />
                 </button>
             </DropdownMenuPrimitive.Trigger>
             <DropdownMenuPrimitive.Portal>
@@ -77,10 +75,10 @@ export function AppTopBar({ user }: AppTopBarProps) {
             </Link>
             <nav className="topbar-breadcrumb" aria-label="Main navigation">
                 <Link to="/books" className="topbar-breadcrumb-link">{t('nav.books')}</Link>
-                {(user.systemRole === SystemRole.Admin || user.systemRole === SystemRole.ProjectManager) && (
+                {canAccessCoordinator(user) && (
                     <Link to="/coordinator" className="topbar-breadcrumb-link">{t('nav.coordinator')}</Link>
                 )}
-                {user.systemRole === SystemRole.Admin && (
+                {canAccessAdmin(user) && (
                     <Link to="/admin" className="topbar-breadcrumb-link">{t('nav.admin')}</Link>
                 )}
                 <Link to="/settings" className="topbar-breadcrumb-link">{t('nav.settings')}</Link>

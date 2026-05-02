@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { CommentThread } from '@/editor/comments/types';
+import { CommentStatus, type CommentThread } from '@/editor/comments/types';
 import type { Role, User } from '@/editor/identity/types';
 
 export enum CommentStatusFilter {
@@ -31,8 +31,8 @@ function threadInvolvesRole(thread: CommentThread, role: Role): boolean {
 
 function matchesStatus(thread: CommentThread, status: CommentStatusFilter, currentUser: User): boolean {
     if (status === CommentStatusFilter.All) return true;
-    if (status === CommentStatusFilter.Open) return thread.status === 'open';
-    if (status === CommentStatusFilter.Resolved) return thread.status === 'resolved';
+    if (status === CommentStatusFilter.Open) return thread.status === CommentStatus.Open;
+    if (status === CommentStatusFilter.Resolved) return thread.status === CommentStatus.Resolved;
     return thread.authorId === currentUser.id || thread.replies.some((r) => r.authorId === currentUser.id);
 }
 
@@ -63,7 +63,7 @@ export function useCommentThreads(threads: CommentThread[], currentUser: User) {
         const o: CommentThread[] = [];
         const r: CommentThread[] = [];
         for (const th of v) {
-            if (th.status === 'open') o.push(th);
+            if (th.status === CommentStatus.Open) o.push(th);
             else r.push(th);
         }
         return { visible: v, open: o, resolved: r };

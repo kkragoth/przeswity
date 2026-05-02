@@ -1,10 +1,12 @@
+import { useTranslation } from 'react-i18next';
+
 interface ShortcutsModalProps {
   onClose: () => void
 }
 
 interface Group {
-  title: string
-  rows: { keys: string; label: string }[]
+  titleKey: string
+  rows: { keys: string; labelKey: string }[]
 }
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
@@ -13,68 +15,70 @@ const A = isMac ? '⌥' : 'Alt';
 
 const GROUPS: Group[] = [
     {
-        title: 'Document',
+        titleKey: 'shortcuts.groups.document',
         rows: [
-            { keys: `${M}+Z`, label: 'Undo' },
-            { keys: `${M}+Shift+Z`, label: 'Redo' },
-            { keys: `${M}+F`, label: 'Find & replace' },
-            { keys: `${M}+/`, label: 'This shortcut sheet' },
-            { keys: `${M}+S`, label: 'Save snapshot' },
+            { keys: `${M}+Z`, labelKey: 'shortcuts.undo' },
+            { keys: `${M}+Shift+Z`, labelKey: 'shortcuts.redo' },
+            { keys: `${M}+F`, labelKey: 'shortcuts.findReplace' },
+            { keys: `${M}+/`, labelKey: 'shortcuts.shortcutSheet' },
+            { keys: `${M}+S`, labelKey: 'shortcuts.saveSnapshot' },
         ],
     },
     {
-        title: 'Format',
+        titleKey: 'shortcuts.groups.format',
         rows: [
-            { keys: `${M}+B`, label: 'Bold' },
-            { keys: `${M}+I`, label: 'Italic' },
-            { keys: `${M}+U`, label: 'Underline' },
-            { keys: `${M}+K`, label: 'Insert link' },
-            { keys: `${M}+${A}+1…3`, label: 'Heading 1 / 2 / 3' },
-            { keys: `${M}+${A}+0`, label: 'Body' },
-            { keys: `${M}+Shift+8`, label: 'Bullet list' },
-            { keys: `${M}+Shift+7`, label: 'Numbered list' },
-            { keys: `${M}+Shift+B`, label: 'Quote' },
+            { keys: `${M}+B`, labelKey: 'shortcuts.bold' },
+            { keys: `${M}+I`, labelKey: 'shortcuts.italic' },
+            { keys: `${M}+U`, labelKey: 'shortcuts.underline' },
+            { keys: `${M}+K`, labelKey: 'shortcuts.insertLink' },
+            { keys: `${M}+${A}+1…3`, labelKey: 'shortcuts.headings' },
+            { keys: `${M}+${A}+0`, labelKey: 'shortcuts.body' },
+            { keys: `${M}+Shift+8`, labelKey: 'shortcuts.bulletList' },
+            { keys: `${M}+Shift+7`, labelKey: 'shortcuts.numberedList' },
+            { keys: `${M}+Shift+B`, labelKey: 'shortcuts.quote' },
         ],
     },
     {
-        title: 'Comments & suggestions',
+        titleKey: 'shortcuts.groups.comments',
         rows: [
-            { keys: `${M}+${A}+M`, label: 'Add comment to selection' },
-            { keys: 'Right-click', label: 'Context menu (cut/copy/format/comment/accept/reject)' },
-            { keys: 'Backspace / Delete', label: 'In Suggesting mode: marks instead of deletes' },
+            { keys: `${M}+${A}+M`, labelKey: 'shortcuts.addComment' },
+            { keys: 'Right-click', labelKey: 'shortcuts.contextMenu' },
+            { keys: 'Backspace / Delete', labelKey: 'shortcuts.suggestingDelete' },
         ],
     },
     {
-        title: 'Navigation',
+        titleKey: 'shortcuts.groups.navigation',
         rows: [
-            { keys: 'Click thread', label: 'Scroll to anchor + pulse' },
-            { keys: 'Click outline', label: 'Jump to heading' },
-            { keys: 'Esc', label: 'Close find / menu / modal' },
+            { keys: 'Click thread', labelKey: 'shortcuts.scrollToAnchor' },
+            { keys: 'Click outline', labelKey: 'shortcuts.jumpToHeading' },
+            { keys: 'Esc', labelKey: 'shortcuts.closeEsc' },
         ],
     },
 ];
 
 export function ShortcutsModal({ onClose }: ShortcutsModalProps) {
+    const { t } = useTranslation('editor');
+
     return (
         <div className="modal-backdrop" onMouseDown={onClose}>
             <div className="modal modal-narrow" onMouseDown={(e) => e.stopPropagation()}>
                 <header className="modal-header">
                     <div>
-                        <div className="modal-title">Keyboard shortcuts</div>
+                        <div className="modal-title">{t('shortcuts.modalTitle')}</div>
                     </div>
                     <div className="modal-actions">
                         <button type="button" onClick={onClose}>
-              Close
+                            {t('shortcuts.close')}
                         </button>
                     </div>
                 </header>
                 <div className="modal-body">
                     <div className="shortcut-grid">
                         {GROUPS.map((g) => (
-                            <div key={g.title} className="shortcut-group">
-                                <div className="shortcut-group-title">{g.title}</div>
+                            <div key={g.titleKey} className="shortcut-group">
+                                <div className="shortcut-group-title">{t(g.titleKey as never)}</div>
                                 {g.rows.map((r) => (
-                                    <div key={r.keys + r.label} className="shortcut-row">
+                                    <div key={r.keys + r.labelKey} className="shortcut-row">
                                         <span className="shortcut-keys">
                                             {r.keys.split('+').map((k, i, arr) => (
                                                 <span key={i}>
@@ -83,7 +87,7 @@ export function ShortcutsModal({ onClose }: ShortcutsModalProps) {
                                                 </span>
                                             ))}
                                         </span>
-                                        <span className="shortcut-label">{r.label}</span>
+                                        <span className="shortcut-label">{t(r.labelKey as never)}</span>
                                     </div>
                                 ))}
                             </div>

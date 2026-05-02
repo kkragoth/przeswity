@@ -85,6 +85,8 @@
         "import": "Importuj",
         "export": "Eksportuj",
         "templates": "Szablony",
+        "ariaLabel": "Pasek narzędzi edytora",
+        "removeHighlight": "Usuń wyróżnienie",
         "style": {
             "body": "Treść",
             "h1": "Nagłówek 1",
@@ -104,6 +106,8 @@
             "detached": "Odłączone"
         },
         "addComment": "Dodaj komentarz",
+        "addCommentTitle": "Dodaj komentarz",
+        "addReaction": "Dodaj reakcję",
         "reply": "Odpowiedz",
         "edited": "(edytowano)",
         "resolve": "Rozwiąż",
@@ -144,7 +148,13 @@
         "acceptAll": "Akceptuj wszystkie",
         "rejectAll": "Odrzuć wszystkie",
         "acceptFromAuthor": "Akceptuj od {{author}}",
-        "checkSelection": "Sprawdź zaznaczenie"
+        "checkSelection": "Sprawdź zaznaczenie",
+        "sidebarTitle": "Sugestie ({{count}})",
+        "empty": "Brak oczekujących sugestii.",
+        "accept": "Akceptuj",
+        "reject": "Odrzuć",
+        "inserted": "wstawiono",
+        "deleted": "usunięto"
     },
     "versions": {
         "snapshot": "Migawka",
@@ -244,6 +254,90 @@
         "markdown": "Markdown (.md)",
         "docxClean": "DOCX — czysty (sugestie zaakceptowane)",
         "docxTracks": "DOCX — ze śledzeniem zmian"
+    },
+    "dragHandle": {
+        "title": "Przeciągnij, aby przenieść · kliknij, aby otworzyć menu"
+    },
+    "specialChars": {
+        "insertTitle": "Wstaw znak specjalny"
+    },
+    "findReplace": {
+        "prevTitle": "Poprzedni (Shift+Enter)",
+        "nextTitle": "Następny (Enter)",
+        "toggleReplaceTitle": "Przełącz zamianę",
+        "closeTitle": "Zamknij (Esc)",
+        "replacePlaceholder": "Zamień na",
+        "replace": "Zamień",
+        "replaceAll": "Zamień wszystkie"
+    },
+    "shortcuts": {
+        "modalTitle": "Skróty klawiszowe",
+        "close": "Zamknij",
+        "groups": {
+            "document": "Dokument",
+            "format": "Formatowanie",
+            "comments": "Komentarze i sugestie",
+            "navigation": "Nawigacja"
+        },
+        "undo": "Cofnij",
+        "redo": "Ponów",
+        "findReplace": "Znajdź i zamień",
+        "shortcutSheet": "Ten arkusz skrótów",
+        "saveSnapshot": "Zapisz migawkę",
+        "bold": "Pogrubienie",
+        "italic": "Kursywa",
+        "underline": "Podkreślenie",
+        "insertLink": "Wstaw link",
+        "headings": "Nagłówek 1 / 2 / 3",
+        "body": "Treść",
+        "bulletList": "Lista punktowana",
+        "numberedList": "Lista numerowana",
+        "quote": "Cytat",
+        "addComment": "Dodaj komentarz do zaznaczenia",
+        "contextMenu": "Menu kontekstowe (wytnij/kopiuj/format/komentarz/akceptuj/odrzuć)",
+        "suggestingDelete": "W trybie sugerowania: zaznacza zamiast usuwać",
+        "scrollToAnchor": "Przewiń do kotwicy + impuls",
+        "jumpToHeading": "Przejdź do nagłówka",
+        "closeEsc": "Zamknij szukaj / menu / modal"
+    },
+    "outline": {
+        "title": "Konspekt",
+        "empty": "Brak nagłówków. Użyj listy styli, aby dodać nagłówek.",
+        "emptyHeading": "(pusty nagłówek)"
+    },
+    "meta": {
+        "title": "Dokument",
+        "fieldTitle": "Tytuł",
+        "fieldIsbn": "ISBN",
+        "fieldTargetWords": "Cel słów",
+        "fieldDeadline": "Termin",
+        "fieldNotes": "Uwagi",
+        "placeholderTitle": "Dokument bez tytułu",
+        "placeholderIsbn": "978-…",
+        "placeholderTargetWords": "50000",
+        "placeholderNotes": "Uwagi koordynatora…"
+    },
+    "glossary": {
+        "title": "Słownik",
+        "placeholderTerm": "Termin (wyszukiwany w dokumencie)",
+        "placeholderTranslation": "Tłumaczenie / forma kanoniczna",
+        "placeholderNotes": "Uwagi (opcjonalne)",
+        "save": "Zapisz",
+        "add": "Dodaj",
+        "cancel": "Anuluj",
+        "edit": "Edytuj",
+        "delete": "Usuń",
+        "empty": "Brak haseł. Dodaj termin powyżej, aby podświetlić go w dokumencie."
+    },
+    "ai": {
+        "assistantName": "Asystent AI",
+        "results": {
+            "success": "Sugestia AI gotowa — zaakceptuj lub odrzuć w panelu Sugestii.",
+            "no-selection": "Najpierw zaznacz tekst.",
+            "empty-selection": "Zaznaczenie jest puste.",
+            "no-changes": "AI nie zwróciło zmian.",
+            "unsupported-schema": "Znaczniki śledzenia zmian nie są skonfigurowane."
+        }
     },
     "fileMenu": {
         "importDocx": "DOCX (.docx)",

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useLocalStorageState } from '@/utils/storage/useLocalStorageState';
 
 export enum PaneState {
     Expanded = 'expanded',
@@ -16,8 +16,14 @@ export function readPaneState(side: PaneSide, fallback: PaneState = PaneState.Ex
     return fallback;
 }
 
-function readInitial(side: PaneSide, fallback: PaneState): PaneState {
-    return readPaneState(side, fallback);
+/** Returns a CSS class name string based on pane state. */
+export function paneClass(state: PaneState): string {
+    return `pane-${state}`;
+}
+
+function deserializePaneState(raw: string): PaneState {
+    if (raw === PaneState.Expanded || raw === PaneState.Rail || raw === PaneState.Hidden) return raw as PaneState;
+    throw new Error(`Unknown pane state: ${raw}`);
 }
 
 export interface PaneStateApi {
@@ -27,34 +33,20 @@ export interface PaneStateApi {
     expand: () => void
     rail: () => void
     hide: () => void
-    isExpanded: boolean
-    isRail: boolean
-    isHidden: boolean
 }
 
 export function usePaneState(side: PaneSide, fallback: PaneState = PaneState.Expanded): PaneStateApi {
-    const [state, setStateRaw] = useState<PaneState>(() => readInitial(side, fallback));
-
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
-        window.localStorage.setItem(storageKey(side), state);
-    }, [side, state]);
-
-    const setState = useCallback((next: PaneState) => setStateRaw(next), []);
-    const cycle = useCallback(
-        () => setStateRaw((current) => (current === PaneState.Expanded ? PaneState.Hidden : PaneState.Expanded)),
-        [],
+    const [state, setStateRaw] = useLocalStorageState<PaneState>(
+        storageKey(side),
+        fallback,
+        { deserialize: deserializePaneState },
     );
 
-    return {
-        state,
-        setState,
-        cycle,
-        expand: useCallback(() => setStateRaw(PaneState.Expanded), []),
-        rail: useCallback(() => setStateRaw(PaneState.Rail), []),
-        hide: useCallback(() => setStateRaw(PaneState.Hidden), []),
-        isExpanded: state === PaneState.Expanded,
-        isRail: state === PaneState.Rail,
-        isHidden: state === PaneState.Hidden,
-    };
+    const setState = (next: PaneState) => setStateRaw(next);
+    const cycle = () => setStateRaw((current) => (current === PaneState.Expanded ? PaneState.Hidden : PaneState.Expanded));
+    const expand = () => setStateRaw(PaneState.Expanded);
+    const rail = () => setStateRaw(PaneState.Rail);
+    const hide = () => setStateRaw(PaneState.Hidden);
+
+    return { state, setState, cycle, expand, rail, hide };
 }

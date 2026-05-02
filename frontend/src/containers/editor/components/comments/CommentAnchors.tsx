@@ -1,34 +1,56 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import * as Y from 'yjs';
+import { useTranslation } from 'react-i18next';
 import { useThreads } from '@/editor/comments/useThreads';
+import { CommentStatus } from '@/editor/comments/types';
 import { authorColor } from '@/editor/comments/color';
 import { Avatar } from '@/editor/shell/Avatar';
+import { COMMENT_PIN_GAP_PX } from '@/editor/constants';
 
 interface CommentAnchorsProps {
-  editor: Editor | null
-  doc: Y.Doc
-  activeCommentId: string | null
-  onSelect: (id: string) => void
+    editor: Editor | null;
+    doc: Y.Doc;
+    activeCommentId: string | null;
+    onSelect: (id: string) => void;
 }
 
 interface PinAnchor {
-  id: string
-  top: number
-  authorName: string
-  authorColor: string
-  replies: number
+    id: string;
+    top: number;
+    authorName: string;
+    authorColor: string;
+    replies: number;
 }
 
-const PIN_GAP = 36;
+interface OpenThread {
+    id: string;
+    authorName: string;
+    authorColor: string;
+    replies: number;
+}
+
+function threadChangeKey(threads: ReturnType<typeof useThreads>): string {
+    return threads.map((t) => `${t.id}:${t.status}:${t.replies.length}`).join(',');
+}
 
 export function CommentAnchors({ editor, doc, activeCommentId, onSelect }: CommentAnchorsProps) {
+    const { t } = useTranslation('editor');
     const threads = useThreads(doc);
     const [pins, setPins] = useState<PinAnchor[]>([]);
 
-    const threadKey = threads
-        .map((t) => `${t.id}:${t.status}:${t.replies.length}`)
-        .join(',');
+    // Derive stable open-threads array; only recomputes when identity/count changes.
+    const openThreads = useMemo<OpenThread[]>(
+        () => threads
+            .filter((th) => th.status === CommentStatus.Open)
+            .map((th) => ({
+                id: th.id,
+                authorName: th.authorName,
+                authorColor: authorColor(th),
+                replies: th.replies.length,
+            })),
+        [threadChangeKey(threads)], // eslint-disable-line react-hooks/exhaustive-deps
+    );
 
     useEffect(() => {
         if (!editor) return;
@@ -42,27 +64,20 @@ export function CommentAnchors({ editor, doc, activeCommentId, onSelect }: Comme
                 const pageRect = page.getBoundingClientRect();
                 const placed: PinAnchor[] = [];
                 const seen = new Set<string>();
-                for (const t of threads) {
-                    if (t.status !== 'open') continue;
-                    if (seen.has(t.id)) continue;
+                for (const th of openThreads) {
+                    if (seen.has(th.id)) continue;
                     const span = dom.querySelector(
-                        `[data-comment-id="${CSS.escape(t.id)}"]`,
+                        `[data-comment-id="${CSS.escape(th.id)}"]`,
                     ) as HTMLElement | null;
                     if (!span) continue;
-                    seen.add(t.id);
+                    seen.add(th.id);
                     const r = span.getBoundingClientRect();
-                    placed.push({
-                        id: t.id,
-                        top: r.top - pageRect.top,
-                        authorName: t.authorName,
-                        authorColor: authorColor(t),
-                        replies: t.replies.length,
-                    });
+                    placed.push({ ...th, top: r.top - pageRect.top });
                 }
                 placed.sort((a, b) => a.top - b.top);
                 for (let i = 1; i < placed.length; i++) {
-                    if (placed[i].top - placed[i - 1].top < PIN_GAP) {
-                        placed[i].top = placed[i - 1].top + PIN_GAP;
+                    if (placed[i].top - placed[i - 1].top < COMMENT_PIN_GAP_PX) {
+                        placed[i].top = placed[i - 1].top + COMMENT_PIN_GAP_PX;
                     }
                 }
                 setPins(placed);
@@ -77,8 +92,7 @@ export function CommentAnchors({ editor, doc, activeCommentId, onSelect }: Comme
             editor.off('transaction', onTr);
             window.removeEventListener('resize', compute);
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [editor, threadKey]);
+    }, [editor, openThreads]);
 
     if (!editor || pins.length === 0) return null;
 
@@ -94,7 +108,7 @@ export function CommentAnchors({ editor, doc, activeCommentId, onSelect }: Comme
                         e.stopPropagation();
                         onSelect(p.id);
                     }}
-                    title={`${p.authorName}${p.replies > 0 ? ` · ${p.replies} repl${p.replies === 1 ? 'y' : 'ies'}` : ''}`}
+                    title={`${p.authorName}${p.replies > 0 ? ` · ${t('comments.repliesCount', { count: p.replies })}` : ''}`}
                 >
                     <Avatar
                         name={p.authorName}

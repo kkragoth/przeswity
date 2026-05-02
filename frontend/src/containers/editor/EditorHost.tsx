@@ -4,10 +4,9 @@ import type { Editor } from '@tiptap/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { FONT_VARIANTS } from '@/editor/io/typography';
 import { EditorView } from '@/editor/tiptap/EditorView';
 import { FindReplaceBar } from '@/editor/tiptap/find/FindReplaceBar';
-import { ToastProvider, useToast } from '@/editor/shell/Toast';
+import { useToast } from '@/editor/shell/useToast';
 import type { User, Role } from '@/editor/identity/types';
 import { ROLE_PERMISSIONS } from '@/editor/identity/types';
 import { Toolbar } from '@/editor/tiptap/Toolbar';
@@ -24,9 +23,8 @@ import { useReadingStats } from '@/containers/editor/hooks/useReadingStats';
 import { useDocumentKeyDown } from '@/containers/editor/hooks/useDocumentKeyDown';
 import { useSuggestingMode } from '@/containers/editor/hooks/useSuggestingMode';
 import { usePaneState, PaneState } from '@/containers/editor/hooks/usePaneState';
-import { useCollabSession } from '@/containers/editor/hooks/useCollabSession';
-import { useFontsReady } from '@/containers/editor/hooks/useFontsReady';
-import { useInitialSync } from '@/containers/editor/hooks/useInitialSync';
+import { useEditorBootstrap } from '@/containers/editor/hooks/useEditorBootstrap';
+import type { CollabBundle } from '@/editor/collab/yDoc';
 import { useNarrowLayout } from '@/containers/editor/hooks/useNarrowLayout';
 import { usePageNavigation } from '@/containers/editor/hooks/usePageNavigation';
 import { EditorLayout } from '@/containers/editor/EditorLayout';
@@ -42,7 +40,7 @@ function EditorSession({ bookId, bookTitle, user, collab }: {
     bookId: string;
     bookTitle: string;
     user: User;
-    collab: ReturnType<typeof useCollabSession>['collab'] & { id: string };
+    collab: CollabBundle;
 }) {
     const toast = useToast();
     const { t } = useTranslation('editor');
@@ -78,7 +76,7 @@ function EditorSession({ bookId, bookTitle, user, collab }: {
         leftPane.hide();
         rightPane.hide();
     }, [leftPane, rightPane]);
-    const drawerOpen = narrow && (leftPane.isExpanded || rightPane.isExpanded);
+    const drawerOpen = narrow && (leftPane.state === PaneState.Expanded || rightPane.state === PaneState.Expanded);
 
     useEffect(() => {
         if (!editor) return;
@@ -104,7 +102,7 @@ function EditorSession({ bookId, bookTitle, user, collab }: {
             paneState={{ left: leftPane.state, right: rightPane.state }}
             topBar={<TopBar user={user} bookTitle={bookTitle} editor={editor} perms={ROLE_PERMISSIONS[user.role]} onToast={toast.show} />}
             leftPane={<LeftPane tab={leftTab} onTabChange={setLeftTab} onExpand={expandLeft} onRail={leftPane.rail} doc={collab.doc} user={user} editor={editor} bookId={bookId} onToast={toast.show} />}
-            leftHandle={leftPane.isHidden ? <button type="button" className="pane-handle pane-handle-left" title={t('pane.expand')} onClick={expandLeft}><ChevronRight size={14} /></button> : null}
+            leftHandle={leftPane.state === PaneState.Hidden ? <button type="button" className="pane-handle pane-handle-left" title={t('pane.expand')} onClick={expandLeft}><ChevronRight size={14} /></button> : null}
             content={
                 <>
                     {editor ? (
@@ -114,13 +112,12 @@ function EditorSession({ bookId, bookTitle, user, collab }: {
                             suggestingMode={suggesting.effective}
                             suggestingForced={suggesting.forced}
                             onSuggestingModeChange={suggesting.setMode}
-                            onToast={toast.show}
                             leftPaneState={leftPane.state}
                             rightPaneState={rightPane.state}
                             leftPaneTab={leftTabLabels[leftTab]}
                             rightPaneTab={rightTabLabels[rightTab]}
-                            onToggleLeftPane={narrow ? (leftPane.isExpanded ? leftPane.hide : expandLeft) : leftPane.cycle}
-                            onToggleRightPane={narrow ? (rightPane.isExpanded ? rightPane.hide : expandRight) : rightPane.cycle}
+                            onToggleLeftPane={narrow ? (leftPane.state === PaneState.Expanded ? leftPane.hide : expandLeft) : leftPane.cycle}
+                            onToggleRightPane={narrow ? (rightPane.state === PaneState.Expanded ? rightPane.hide : expandRight) : rightPane.cycle}
                         />
                     ) : null}
                     <EditorView
@@ -162,7 +159,7 @@ function EditorSession({ bookId, bookTitle, user, collab }: {
                 />
             }
             rightPane={<RightPane tab={rightTab} onTabChange={setRightTab} onExpand={expandRight} onHide={rightPane.hide} doc={collab.doc} editor={editor} user={user} peers={peers} activeCommentId={activeCommentId} onActiveCommentChange={setActiveCommentId} pendingNew={pendingNew} onPendingHandled={() => setPendingNew(null)} />}
-            rightHandle={rightPane.isHidden ? <button type="button" className="pane-handle pane-handle-right" title={t('pane.expand')} onClick={expandRight}><ChevronLeft size={14} /></button> : null}
+            rightHandle={rightPane.state === PaneState.Hidden ? <button type="button" className="pane-handle pane-handle-right" title={t('pane.expand')} onClick={expandRight}><ChevronLeft size={14} /></button> : null}
             overlays={
                 <>
                     {drawerOpen ? (
@@ -181,21 +178,15 @@ function EditorSession({ bookId, bookTitle, user, collab }: {
 }
 
 function EditorHostInner({ bookId, user: userProp, bookTitle }: EditorHostProps) {
-    const { collab } = useCollabSession({ bookId });
-    const fontsReady = useFontsReady(FONT_VARIANTS);
-    const initialSyncDone = useInitialSync(collab);
+    const { collab, ready } = useEditorBootstrap({ bookId });
     const user: User = useMemo(
         () => ({ id: userProp.id, name: userProp.name, color: userProp.color, role: userProp.role as Role }),
         [userProp.id, userProp.name, userProp.color, userProp.role],
     );
-    if (!collab || !fontsReady || !initialSyncDone) return <EditorSkeleton bookTitle={bookTitle} />;
+    if (!ready || !collab) return <EditorSkeleton bookTitle={bookTitle} />;
     return <EditorSession key={collab.id} bookId={bookId} bookTitle={bookTitle} user={user} collab={collab} />;
 }
 
 export function EditorHost(props: EditorHostProps) {
-    return (
-        <ToastProvider>
-            <EditorHostInner {...props} />
-        </ToastProvider>
-    );
+    return <EditorHostInner {...props} />;
 }

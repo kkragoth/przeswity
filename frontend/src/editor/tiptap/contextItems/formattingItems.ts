@@ -1,3 +1,6 @@
+// TODO (Phase 41 follow-up): replace window.prompt calls below with an injected
+// async callback from the host component that opens LinkPromptDialog. The TipTap
+// extension callback system is synchronous so this requires host-side wiring.
 import type { ContextMenuItem } from '@/editor/shell/ContextMenu';
 import { ROLE_PERMISSIONS } from '@/editor/identity/types';
 import type { BuildContextArgs, MarkSet } from '@/editor/tiptap/contextItems/types';

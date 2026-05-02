@@ -1,23 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { HocuspocusProvider } from '@hocuspocus/provider';
 import type { HocuspocusProviderRuntime } from '@/editor/yjs/types';
+import { SyncStatus, getProviderSyncStatus } from '@/editor/collab/syncStatus';
 
-export enum SyncStatus {
-    Online = 'online',
-    Connecting = 'connecting',
-    Offline = 'offline',
-}
-
-function readStatus(provider: HocuspocusProvider): SyncStatus {
-    const p = provider as unknown as HocuspocusProviderRuntime;
-    const socketStatus = p.configuration?.websocketProvider?.status;
-    const status = p.status ?? socketStatus;
-    if (status === 'disconnected' || socketStatus === 'disconnected') return SyncStatus.Offline;
-    if (status === 'connecting' || socketStatus === 'connecting') return SyncStatus.Connecting;
-    if (status === 'connected' || socketStatus === 'connected') return SyncStatus.Online;
-    if ((p.synced || p.isSynced) && p.isConnected) return SyncStatus.Online;
-    return SyncStatus.Connecting;
-}
+export { SyncStatus } from '@/editor/collab/syncStatus';
 
 export interface ConnectionState {
     status: SyncStatus;
@@ -25,7 +11,7 @@ export interface ConnectionState {
 }
 
 export function useConnectionStatus(provider: HocuspocusProvider): ConnectionState {
-    const [status, setStatus] = useState<SyncStatus>(() => readStatus(provider));
+    const [status, setStatus] = useState<SyncStatus>(() => getProviderSyncStatus(provider));
 
     const reconnect = useCallback(() => {
         try {
@@ -46,7 +32,8 @@ export function useConnectionStatus(provider: HocuspocusProvider): ConnectionSta
             else if (e.connected === false || e.status === 'disconnected') setStatus(SyncStatus.Offline);
             else if (e.status === 'connecting') setStatus(SyncStatus.Connecting);
         };
-        const onSynced = (e?: { state?: boolean }) => setStatus(e?.state === false ? readStatus(provider) : SyncStatus.Online);
+        const onSynced = (e?: { state?: boolean }) =>
+            setStatus(e?.state === false ? getProviderSyncStatus(provider) : SyncStatus.Online);
         const onClose = () => setStatus(SyncStatus.Offline);
         const onAuthFailed = () => setStatus(SyncStatus.Offline);
 
@@ -54,7 +41,7 @@ export function useConnectionStatus(provider: HocuspocusProvider): ConnectionSta
         provider.on('synced', onSynced as never);
         provider.on('close', onClose as never);
         provider.on('authenticationFailed', onAuthFailed as never);
-        setStatus(readStatus(provider));
+        setStatus(getProviderSyncStatus(provider));
 
         return () => {
             provider.off('status', onStatus as never);
@@ -67,11 +54,11 @@ export function useConnectionStatus(provider: HocuspocusProvider): ConnectionSta
     useEffect(() => {
         const onVisible = () => {
             if (document.visibilityState !== 'visible') return;
-            if (readStatus(provider) === SyncStatus.Online) return;
+            if (getProviderSyncStatus(provider) === SyncStatus.Online) return;
             reconnect();
         };
         const onOnline = () => {
-            if (readStatus(provider) !== SyncStatus.Online) reconnect();
+            if (getProviderSyncStatus(provider) !== SyncStatus.Online) reconnect();
         };
         document.addEventListener('visibilitychange', onVisible);
         window.addEventListener('focus', onVisible);
@@ -87,7 +74,7 @@ export function useConnectionStatus(provider: HocuspocusProvider): ConnectionSta
         if (status === SyncStatus.Online) return;
         const retry = window.setInterval(() => {
             if (document.visibilityState !== 'visible') return;
-            if (readStatus(provider) !== SyncStatus.Online) reconnect();
+            if (getProviderSyncStatus(provider) !== SyncStatus.Online) reconnect();
         }, 3000);
         return () => window.clearInterval(retry);
     }, [provider, reconnect, status]);

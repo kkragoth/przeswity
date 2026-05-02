@@ -1,10 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import type { BulkCreateAssignmentsBody, User } from '@/api/generated/types.gen';
-import { ROLE_KEYS, RoleBadge } from '@/components/badges/RoleBadge';
+import { Role, ALL_ROLES, RoleBadge } from '@/components/badges/RoleBadge';
+import { roleI18nKey } from '@/lib/roleI18n';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-type Role = (typeof ROLE_KEYS)[number];
 type Draft = BulkCreateAssignmentsBody['assignments'][number];
 
 export function UserSelect({
@@ -35,15 +34,16 @@ export function UserSelect({
 
 export function RoleSelect({ value, onChange }: { value: Role; onChange: (r: Role) => void }) {
     const { t } = useTranslation('common');
+    const { t: te } = useTranslation('editor');
     return (
         <Select value={value} onValueChange={(v) => onChange(v as Role)}>
             <SelectTrigger className="w-40">
                 <SelectValue placeholder={t('people.selectRole')} />
             </SelectTrigger>
             <SelectContent>
-                {ROLE_KEYS.map((r) => (
+                {ALL_ROLES.map((r) => (
                     <SelectItem key={r} value={r}>
-                        {r}
+                        {te(roleI18nKey(r))}
                     </SelectItem>
                 ))}
             </SelectContent>

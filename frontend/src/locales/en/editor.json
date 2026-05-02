@@ -85,6 +85,8 @@
         "import": "Import",
         "export": "Export",
         "templates": "Templates",
+        "ariaLabel": "Editor toolbar",
+        "removeHighlight": "Remove highlight",
         "style": {
             "body": "Body",
             "h1": "Heading 1",
@@ -104,6 +106,8 @@
             "detached": "Detached"
         },
         "addComment": "Add comment",
+        "addCommentTitle": "Add comment",
+        "addReaction": "Add reaction",
         "reply": "Reply",
         "edited": "(edited)",
         "resolve": "Resolve",
@@ -144,7 +148,13 @@
         "acceptAll": "Accept all",
         "rejectAll": "Reject all",
         "acceptFromAuthor": "Accept from {{author}}",
-        "checkSelection": "Check selection"
+        "checkSelection": "Check selection",
+        "sidebarTitle": "Suggestions ({{count}})",
+        "empty": "No pending suggestions.",
+        "accept": "Accept",
+        "reject": "Reject",
+        "inserted": "inserted",
+        "deleted": "deleted"
     },
     "versions": {
         "snapshot": "Snapshot",
@@ -244,6 +254,90 @@
         "markdown": "Markdown (.md)",
         "docxClean": "DOCX — clean (suggestions accepted)",
         "docxTracks": "DOCX — with track-change colors"
+    },
+    "dragHandle": {
+        "title": "Drag to move · click for menu"
+    },
+    "specialChars": {
+        "insertTitle": "Insert special character"
+    },
+    "findReplace": {
+        "prevTitle": "Previous (Shift+Enter)",
+        "nextTitle": "Next (Enter)",
+        "toggleReplaceTitle": "Toggle replace",
+        "closeTitle": "Close (Esc)",
+        "replacePlaceholder": "Replace with",
+        "replace": "Replace",
+        "replaceAll": "Replace all"
+    },
+    "shortcuts": {
+        "modalTitle": "Keyboard shortcuts",
+        "close": "Close",
+        "groups": {
+            "document": "Document",
+            "format": "Format",
+            "comments": "Comments & suggestions",
+            "navigation": "Navigation"
+        },
+        "undo": "Undo",
+        "redo": "Redo",
+        "findReplace": "Find & replace",
+        "shortcutSheet": "This shortcut sheet",
+        "saveSnapshot": "Save snapshot",
+        "bold": "Bold",
+        "italic": "Italic",
+        "underline": "Underline",
+        "insertLink": "Insert link",
+        "headings": "Heading 1 / 2 / 3",
+        "body": "Body",
+        "bulletList": "Bullet list",
+        "numberedList": "Numbered list",
+        "quote": "Quote",
+        "addComment": "Add comment to selection",
+        "contextMenu": "Context menu (cut/copy/format/comment/accept/reject)",
+        "suggestingDelete": "In Suggesting mode: marks instead of deletes",
+        "scrollToAnchor": "Scroll to anchor + pulse",
+        "jumpToHeading": "Jump to heading",
+        "closeEsc": "Close find / menu / modal"
+    },
+    "outline": {
+        "title": "Outline",
+        "empty": "No headings yet. Use the style dropdown to add one.",
+        "emptyHeading": "(empty heading)"
+    },
+    "meta": {
+        "title": "Document",
+        "fieldTitle": "Title",
+        "fieldIsbn": "ISBN",
+        "fieldTargetWords": "Target words",
+        "fieldDeadline": "Deadline",
+        "fieldNotes": "Notes",
+        "placeholderTitle": "Untitled document",
+        "placeholderIsbn": "978-…",
+        "placeholderTargetWords": "50000",
+        "placeholderNotes": "Coordinator notes…"
+    },
+    "glossary": {
+        "title": "Glossary",
+        "placeholderTerm": "Term (matched in document)",
+        "placeholderTranslation": "Translation / canonical form",
+        "placeholderNotes": "Notes (optional)",
+        "save": "Save",
+        "add": "Add",
+        "cancel": "Cancel",
+        "edit": "Edit",
+        "delete": "Delete",
+        "empty": "No glossary entries. Add a term above to highlight it in the document."
+    },
+    "ai": {
+        "assistantName": "AI Assistant",
+        "results": {
+            "success": "AI suggestion ready — accept or reject in the Suggestions panel.",
+            "no-selection": "Select some text first.",
+            "empty-selection": "Selection is empty.",
+            "no-changes": "AI returned no changes.",
+            "unsupported-schema": "Track-change marks not configured."
+        }
     },
     "fileMenu": {
         "importDocx": "DOCX (.docx)",

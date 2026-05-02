@@ -1,8 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
     bookAssignmentsBulkCreateMutation,
-    bookAssignmentsListQueryKey,
     usersListOptions,
 } from '@/api/generated/@tanstack/react-query.gen';
 import type { BulkCreateAssignmentsBody, User } from '@/api/generated/types.gen';
@@ -18,11 +17,18 @@ import {
 import { Input } from '@/components/ui/input';
 import { usePeoplePickerState } from '@/components/people/hooks/usePeoplePickerState';
 import { DraftList, RoleSelect, UserSelect } from '@/components/people/PeoplePickerFields';
+import { useFormDialog } from '@/hooks/useFormDialog';
+import { useInvalidateBookAssignments } from '@/hooks/api/cache/useInvalidateBookAssignments';
+
 type Draft = BulkCreateAssignmentsBody['assignments'][number];
 
 export function PeoplePicker({ bookId }: { bookId: string }) {
     const { t } = useTranslation('common');
-    const qc = useQueryClient();
+    const invalidateAssignments = useInvalidateBookAssignments(bookId);
+    const dialog = useFormDialog({}, {
+        successKey: 'messages.success',
+        errorKey: 'messages.error',
+    });
     const state = usePeoplePickerState();
 
     const { data: users = [] } = useQuery({
@@ -34,22 +40,24 @@ export function PeoplePicker({ bookId }: { bookId: string }) {
     const m = useMutation({
         ...bookAssignmentsBulkCreateMutation(),
         onSuccess: () => {
+            dialog.close();
             state.closeDialog();
-            void qc.invalidateQueries({ queryKey: bookAssignmentsListQueryKey({ path: { bookId } }) });
+            dialog.toastSuccess();
+            void invalidateAssignments();
         },
+        onError: () => dialog.toastError(),
     });
 
     const submit = () =>
         m.mutate({ path: { bookId }, body: { assignments: state.drafts as Draft[] } });
 
+    const handleOpenChange = (o: boolean) => {
+        if (o) dialog.openWith();
+        else { dialog.close(); state.closeDialog(); }
+    };
+
     return (
-        <Dialog
-            open={state.open}
-            onOpenChange={(o) => {
-                state.setOpen(o);
-                if (!o) state.setDrafts([]);
-            }}
-        >
+        <Dialog open={dialog.open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
                 <Button size="sm" variant="outline">
                     {t('people.addPeople')}

@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import type { BulkCreateAssignmentsBody } from '@/api/generated/types.gen';
-import { ROLE_KEYS } from '@/components/badges/RoleBadge';
-
-type Role = (typeof ROLE_KEYS)[number];
+import { Role } from '@/editor/identity/types';
 type Draft = BulkCreateAssignmentsBody['assignments'][number];
 
 function dedupe(drafts: ReadonlyArray<Draft>): ReadonlyArray<Draft> {
@@ -20,15 +18,16 @@ export function usePeoplePickerState() {
     const [drafts, setDrafts] = useState<ReadonlyArray<Draft>>([]);
     const [filter, setFilter] = useState('');
     const [pickedUserId, setPickedUserId] = useState('');
-    const [pickedRole, setPickedRole] = useState<Role>('editor');
+    const [pickedRole, setPickedRole] = useState<Role>(Role.Editor);
 
     const addDraft = () => {
         if (!pickedUserId) return;
-        setDrafts((prev) => dedupe([...prev, { userId: pickedUserId, role: pickedRole }]));
+        // Role enum values are compatible with the API literal union at runtime.
+        setDrafts((prev) => dedupe([...prev, { userId: pickedUserId, role: pickedRole as Draft['role'] }]));
     };
 
     const removeDraft = (userId: string, role: Role) =>
-        setDrafts((prev) => prev.filter((draft) => !(draft.userId === userId && draft.role === role)));
+        setDrafts((prev) => prev.filter((draft) => !(draft.userId === userId && draft.role === (role as Draft['role']))));
 
     const closeDialog = () => {
         setOpen(false);

@@ -4,3 +4,4 @@ dist/
 .env.local
 src/api/generated/
 src/routeTree.gen.ts
+openapi-ts-error-*.log

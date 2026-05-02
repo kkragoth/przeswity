@@ -18,7 +18,8 @@
         "close": "Zamknij",
         "add": "Dodaj",
         "submit": "Wyślij",
-        "refresh": "Odśwież"
+        "refresh": "Odśwież",
+        "editLink": "Adres linku"
     },
     "labels": {
         "name": "Imię",
@@ -75,6 +76,11 @@
         },
         "back": "Wróć do książek"
     },
+    "roles": {
+        "admin": "Administrator",
+        "projectManager": "Kierownik projektu",
+        "projectManagerShort": "KP"
+    },
     "books": {
         "title": "Książki",
         "newBook": "Nowa książka",
@@ -107,5 +113,9 @@
             "post_typeset_proof": "Korekta po składzie",
             "finalization": "Finalizacja"
         }
+    },
+    "messages": {
+        "success": "Sukces",
+        "error": "Wystąpił błąd"
     }
 }

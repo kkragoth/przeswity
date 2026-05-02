@@ -2,16 +2,8 @@ import { Link } from '@tanstack/react-router';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { BookSummary } from '@/api/generated/types.gen';
-import { daysSince } from '@/lib/dates';
+import { daysSince, formatActivity } from '@/lib/dates';
 import { isAttentionBook } from '@/lib/status';
-
-function formatLastActivity(activityAt: string | null, t: ReturnType<typeof useTranslation>['t'], tc: ReturnType<typeof useTranslation>['t']) {
-    if (!activityAt) return t('dashboard.activity.none');
-    const d = daysSince(activityAt);
-    if (d === 0) return t('dashboard.activity.today');
-    if (d === 1) return t('dashboard.activity.yesterday');
-    return tc('books.card.activityDaysAgo', { count: d });
-}
 
 export function BooksTimeline({ books, loading }: { books: ReadonlyArray<BookSummary>; loading: boolean }) {
     const { t } = useTranslation('coordinator');
@@ -26,7 +18,6 @@ export function BooksTimeline({ books, loading }: { books: ReadonlyArray<BookSum
 }
 
 const BooksTimelineRow = memo(function BooksTimelineRow({ book }: { book: BookSummary }) {
-    const { t } = useTranslation('coordinator');
     const { t: tc } = useTranslation('common');
     const d = daysSince(book.lastEditAt ?? book.stageChangedAt);
     const ratio = Math.max(0, Math.min(100, 100 - Math.round((d / 21) * 100)));
@@ -35,7 +26,7 @@ const BooksTimelineRow = memo(function BooksTimelineRow({ book }: { book: BookSu
             <div className="flex items-center gap-3">
                 <p className="w-52 shrink-0 truncate text-sm font-medium">{book.title}</p>
                 <div className="h-2 flex-1 rounded-full bg-muted"><div className={`h-2 rounded-full ${isAttentionBook(book) ? 'bg-destructive' : 'bg-primary'}`} style={{ width: `${ratio}%` }} /></div>
-                <p className="w-32 shrink-0 text-right text-xs text-muted-foreground">{formatLastActivity(book.lastEditAt ?? book.stageChangedAt, t, tc)}</p>
+                <p className="w-32 shrink-0 text-right text-xs text-muted-foreground">{formatActivity(book.lastEditAt ?? book.stageChangedAt, tc)}</p>
             </div>
         </Link>
     );

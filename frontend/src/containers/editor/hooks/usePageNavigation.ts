@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/react';
+import { PAGE_NAV_ACTIVE_LINE_RATIO, PAGE_NAV_TOP_OFFSET_PX } from '@/editor/constants';
 
 export interface PageNavigation {
     current: number;
@@ -8,8 +9,6 @@ export interface PageNavigation {
 }
 
 const PAGE_BREAK_SELECTOR = '.rm-page-break';
-const TOP_OFFSET_PX = 16;
-const ACTIVE_LINE_RATIO = 0.30;
 
 function findScrollEl(editor: Editor | null): HTMLElement | null {
     return (editor?.view.dom.closest('.editor-scroll') as HTMLElement | null) ?? null;
@@ -35,7 +34,7 @@ function offsetTopWithin(target: HTMLElement, scrollEl: HTMLElement): number {
 
 function activePageFor(scrollEl: HTMLElement, breaks: HTMLElement[]): number {
     if (breaks.length === 0) return 1;
-    const activeLine = scrollEl.scrollTop + scrollEl.clientHeight * ACTIVE_LINE_RATIO;
+    const activeLine = scrollEl.scrollTop + scrollEl.clientHeight * PAGE_NAV_ACTIVE_LINE_RATIO;
     let active = 1;
     for (let i = 0; i < breaks.length; i++) {
         if (offsetTopWithin(breaks[i], scrollEl) <= activeLine) active = i + 1;
@@ -96,7 +95,7 @@ export function usePageNavigation(editor: Editor | null): PageNavigation {
         }
         const clamped = Math.max(1, Math.min(page, breaks.length));
         const target = breaks[clamped - 1];
-        const top = Math.max(0, offsetTopWithin(target, scrollEl) - TOP_OFFSET_PX);
+        const top = Math.max(0, offsetTopWithin(target, scrollEl) - PAGE_NAV_TOP_OFFSET_PX);
         scrollEl.scrollTo({ top, behavior: 'smooth' });
     }, [editor]);
 

@@ -5,20 +5,13 @@ import { useTranslation } from 'react-i18next';
 import type { BookSummary } from '@/api/generated/types.gen';
 import type { SessionUser } from '@/auth/types';
 import { EmptyState } from '@/components/feedback/EmptyState';
+import { RoleBadge } from '@/components/badges/RoleBadge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { daysSince } from '@/lib/dates';
-import { allowedNextStages } from '@/lib/status';
+import { formatActivity } from '@/lib/dates';
+import { allowedNextStages } from '@/lib/stage';
 import { CoordinatorStatusBadge } from '@/containers/coordinator/components/CoordinatorStatusBadge';
 import { useBookActions } from '@/hooks/api/useBookActions';
-
-function formatLastActivity(activityAt: string | null, t: ReturnType<typeof useTranslation>['t'], tc: ReturnType<typeof useTranslation>['t']) {
-    if (!activityAt) return t('dashboard.activity.none');
-    const d = daysSince(activityAt);
-    if (d === 0) return t('dashboard.activity.today');
-    if (d === 1) return t('dashboard.activity.yesterday');
-    return tc('books.card.activityDaysAgo', { count: d });
-}
 
 export function BooksList({ books, me: _me, loading }: { books: ReadonlyArray<BookSummary>; me: SessionUser; loading: boolean }) {
     const { t } = useTranslation('coordinator');
@@ -37,7 +30,6 @@ const BooksListRow = memo(function BooksListRow({
     book: BookSummary;
     actions: ReturnType<typeof useBookActions>;
 }) {
-    const { t } = useTranslation('coordinator');
     const { t: tc } = useTranslation('common');
     const nextStages = allowedNextStages(book.stage);
     const selectedStage = actions.stageDraft[book.id] ?? book.stage;
@@ -58,8 +50,8 @@ const BooksListRow = memo(function BooksListRow({
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                 <Badge variant="secondary" className="gap-1"><UserCheck className="h-3 w-3" />{book.assigneeCount}</Badge>
-                <Badge variant="outline" className="gap-1"><Clock3 className="h-3 w-3" />{formatLastActivity(book.lastEditAt ?? book.stageChangedAt, t, tc)}</Badge>
-                {book.myRoles.map((role) => <Badge key={role} variant="outline">{role}</Badge>)}
+                <Badge variant="outline" className="gap-1"><Clock3 className="h-3 w-3" />{formatActivity(book.lastEditAt ?? book.stageChangedAt, tc)}</Badge>
+                {book.myRoles.map((role) => <RoleBadge key={role} role={role} />)}
             </div>
             <div className="mt-3 grid gap-2 rounded-md border bg-background/60 p-3 md:grid-cols-[1fr,140px,1fr,96px]">
                 <select value={selectedStage} onChange={(e) => actions.setStageDraft((p) => ({ ...p, [book.id]: e.target.value as typeof book.stage }))} className="h-9 rounded-md border bg-background px-2 text-sm">

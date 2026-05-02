@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import * as Y from 'yjs';
+import { useTranslation } from 'react-i18next';
 
 interface MetaPanelProps {
   doc: Y.Doc
@@ -10,11 +11,10 @@ interface DocumentMeta {
   isbn?: string
   targetWords?: number
   deadline?: string
-  status?: string
   notes?: string
 }
 
-const STATUS_OPTIONS = ['draft', 'in-translation', 'in-edit', 'in-proof', 'composed', 'finalized'];
+// STATUS_OPTIONS removed — book stage lives on the API row (see docs/refactor-frontend.md Phase 23)
 
 function useMeta(doc: Y.Doc): DocumentMeta {
     const [meta, setMeta] = useState<DocumentMeta>({});
@@ -35,6 +35,7 @@ function useMeta(doc: Y.Doc): DocumentMeta {
 }
 
 export function MetaPanel({ doc }: MetaPanelProps) {
+    const { t } = useTranslation('editor');
     const meta = useMeta(doc);
     const map = doc.getMap('meta') as Y.Map<unknown>;
 
@@ -45,33 +46,33 @@ export function MetaPanel({ doc }: MetaPanelProps) {
 
     return (
         <div className="sidebar meta-panel">
-            <div className="sidebar-title">Document</div>
+            <div className="sidebar-title">{t('meta.title')}</div>
             <div className="meta-form">
                 <label className="meta-field">
-                    <span>Title</span>
+                    <span>{t('meta.fieldTitle')}</span>
                     <input
                         type="text"
                         value={meta.title ?? ''}
-                        placeholder="Untitled document"
+                        placeholder={t('meta.placeholderTitle')}
                         onChange={(e) => set('title', e.target.value)}
                     />
                 </label>
                 <label className="meta-field">
-                    <span>ISBN</span>
+                    <span>{t('meta.fieldIsbn')}</span>
                     <input
                         type="text"
                         value={meta.isbn ?? ''}
-                        placeholder="978-…"
+                        placeholder={t('meta.placeholderIsbn')}
                         onChange={(e) => set('isbn', e.target.value)}
                     />
                 </label>
                 <label className="meta-field">
-                    <span>Target words</span>
+                    <span>{t('meta.fieldTargetWords')}</span>
                     <input
                         type="number"
                         min={0}
                         value={meta.targetWords ?? ''}
-                        placeholder="50000"
+                        placeholder={t('meta.placeholderTargetWords')}
                         onChange={(e) => {
                             const n = parseInt(e.target.value, 10);
                             set('targetWords', isNaN(n) ? undefined : n);
@@ -79,7 +80,7 @@ export function MetaPanel({ doc }: MetaPanelProps) {
                     />
                 </label>
                 <label className="meta-field">
-                    <span>Deadline</span>
+                    <span>{t('meta.fieldDeadline')}</span>
                     <input
                         type="date"
                         value={meta.deadline ?? ''}
@@ -87,23 +88,10 @@ export function MetaPanel({ doc }: MetaPanelProps) {
                     />
                 </label>
                 <label className="meta-field">
-                    <span>Stage</span>
-                    <select
-                        value={meta.status ?? 'draft'}
-                        onChange={(e) => set('status', e.target.value)}
-                    >
-                        {STATUS_OPTIONS.map((s) => (
-                            <option key={s} value={s}>
-                                {s}
-                            </option>
-                        ))}
-                    </select>
-                </label>
-                <label className="meta-field">
-                    <span>Notes</span>
+                    <span>{t('meta.fieldNotes')}</span>
                     <textarea
                         value={meta.notes ?? ''}
-                        placeholder="Coordinator notes…"
+                        placeholder={t('meta.placeholderNotes')}
                         rows={4}
                         onChange={(e) => set('notes', e.target.value)}
                     />

@@ -5,7 +5,7 @@
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import { Lock, Highlighter } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { HIGHLIGHT_PALETTE } from './formatting/Highlight';
+import { HIGHLIGHT_PALETTE } from '@/editor/tiptap/formatting/Highlight';
 
 // ── Tooltip ──────────────────────────────────────────────────────────────────
 
@@ -107,6 +107,8 @@ interface HighlightBtnProps {
 }
 
 export function HighlightBtn({ editor, label }: HighlightBtnProps) {
+    const { t } = useTranslation('editor');
+
     return (
         <Tip label={label}>
             <div className="tb-highlight-wrap">
@@ -132,7 +134,7 @@ export function HighlightBtn({ editor, label }: HighlightBtnProps) {
                     <button
                         type="button"
                         className="tb-color-clear"
-                        title="Remove highlight"
+                        title={t('toolbar.removeHighlight')}
                         onClick={() => editor.chain().focus().unsetHighlight().run()}
                     >
                         ⊘

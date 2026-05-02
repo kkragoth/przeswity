@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import * as Y from 'yjs';
+import { useTranslation } from 'react-i18next';
 import type { GlossaryEntry } from '@/editor/glossary/GlossaryHighlight';
 import { makeId } from '@/editor/utils';
 
@@ -30,6 +31,7 @@ export function useGlossary(doc: Y.Doc): StoredEntry[] {
 }
 
 export function GlossaryPanel({ doc }: GlossaryPanelProps) {
+    const { t } = useTranslation('editor');
     const entries = useGlossary(doc);
     const [draft, setDraft] = useState<{ term: string; translation: string; notes: string }>({
         term: '',
@@ -83,11 +85,11 @@ export function GlossaryPanel({ doc }: GlossaryPanelProps) {
 
     return (
         <div className="sidebar glossary-panel">
-            <div className="sidebar-title">Glossary</div>
+            <div className="sidebar-title">{t('glossary.title')}</div>
             <div className="glossary-form">
                 <input
                     type="text"
-                    placeholder="Term (matched in document)"
+                    placeholder={t('glossary.placeholderTerm')}
                     value={draft.term}
                     onChange={(e) => setDraft((d) => ({ ...d, term: e.target.value }))}
                     onKeyDown={(e) => {
@@ -96,7 +98,7 @@ export function GlossaryPanel({ doc }: GlossaryPanelProps) {
                 />
                 <input
                     type="text"
-                    placeholder="Translation / canonical form"
+                    placeholder={t('glossary.placeholderTranslation')}
                     value={draft.translation}
                     onChange={(e) => setDraft((d) => ({ ...d, translation: e.target.value }))}
                     onKeyDown={(e) => {
@@ -105,7 +107,7 @@ export function GlossaryPanel({ doc }: GlossaryPanelProps) {
                 />
                 <input
                     type="text"
-                    placeholder="Notes (optional)"
+                    placeholder={t('glossary.placeholderNotes')}
                     value={draft.notes}
                     onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value }))}
                     onKeyDown={(e) => {
@@ -119,7 +121,7 @@ export function GlossaryPanel({ doc }: GlossaryPanelProps) {
                         disabled={!draft.term.trim()}
                         className="btn-primary"
                     >
-                        {editingId ? 'Save' : 'Add'}
+                        {editingId ? t('glossary.save') : t('glossary.add')}
                     </button>
                     {editingId && (
                         <button
@@ -129,13 +131,13 @@ export function GlossaryPanel({ doc }: GlossaryPanelProps) {
                                 setDraft({ term: '', translation: '', notes: '' });
                             }}
                         >
-              Cancel
+                            {t('glossary.cancel')}
                         </button>
                     )}
                 </div>
             </div>
             {entries.length === 0 ? (
-                <div className="sidebar-empty">No glossary entries. Add a term above to highlight it in the document.</div>
+                <div className="sidebar-empty">{t('glossary.empty')}</div>
             ) : (
                 entries.map((e) => (
                     <div key={e.id} className={`glossary-entry${editingId === e.id ? ' is-editing' : ''}`}>
@@ -147,10 +149,10 @@ export function GlossaryPanel({ doc }: GlossaryPanelProps) {
                         {e.notes && <div className="glossary-notes">{e.notes}</div>}
                         <div className="glossary-buttons">
                             <button type="button" onClick={() => startEdit(e)}>
-                Edit
+                                {t('glossary.edit')}
                             </button>
                             <button type="button" className="btn-danger" onClick={() => remove(e.id)}>
-                Delete
+                                {t('glossary.delete')}
                             </button>
                         </div>
                     </div>

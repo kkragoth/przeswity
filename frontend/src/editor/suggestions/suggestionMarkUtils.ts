@@ -2,6 +2,7 @@ import type { EditorState } from '@tiptap/pm/state';
 import type { MarkType } from '@tiptap/pm/model';
 import { makeId } from '@/editor/utils';
 import type { SuggestionAuthor } from '@/editor/suggestions/SuggestionMode';
+import { SuggestionType } from '@/editor/suggestions/suggestionOps';
 
 export function makeMarkAttrs(author: SuggestionAuthor) {
     return {
@@ -22,8 +23,8 @@ function insertionCoverage(state: EditorState, authorId: string): { total: numbe
         const size = node.text?.length ?? 0;
         if (size === 0) return;
         total += size;
-        if (node.marks.some((m) => m.type.name === 'deletion')) deletion += size;
-        if (node.marks.some((m) => m.type.name === 'insertion' && m.attrs.authorId === authorId)) authoredInsertion += size;
+        if (node.marks.some((m) => m.type.name === SuggestionType.Deletion)) deletion += size;
+        if (node.marks.some((m) => m.type.name === SuggestionType.Insertion && m.attrs.authorId === authorId)) authoredInsertion += size;
     });
     return { total, authoredInsertion, deletion };
 }

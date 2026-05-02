@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Editor } from '@tiptap/react';
+import { useTranslation } from 'react-i18next';
 
 interface OutlineEntry {
   level: number
@@ -12,6 +13,7 @@ interface OutlineSidebarProps {
 }
 
 export function OutlineSidebar({ editor }: OutlineSidebarProps) {
+    const { t } = useTranslation('editor');
     const [outline, setOutline] = useState<OutlineEntry[]>([]);
     const [activePos, setActivePos] = useState<number | null>(null);
 
@@ -71,10 +73,10 @@ export function OutlineSidebar({ editor }: OutlineSidebarProps) {
 
     return (
         <div className="sidebar outline-sidebar">
-            <div className="sidebar-title">Outline</div>
+            <div className="sidebar-title">{t('outline.title')}</div>
             {outline.length === 0 ? (
                 <div className="sidebar-empty">
-          No headings yet. Use the style dropdown to add one.
+                    {t('outline.empty')}
                 </div>
             ) : (
                 <ul className="outline-list">
@@ -86,7 +88,7 @@ export function OutlineSidebar({ editor }: OutlineSidebarProps) {
                             }`}
                             onClick={() => jumpTo(h.pos)}
                         >
-                            {h.text || <em>(empty heading)</em>}
+                            {h.text || <em>{t('outline.emptyHeading')}</em>}
                         </li>
                     ))}
                 </ul>

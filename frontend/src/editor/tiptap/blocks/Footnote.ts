@@ -1,3 +1,6 @@
+// TODO (Phase 41 follow-up): replace window.prompt in the nodeView mousedown
+// handler with an injected async callback. TipTap NodeViews run outside React
+// so host-side wiring is required.
 import { Node, mergeAttributes } from '@tiptap/core';
 
 declare module '@tiptap/core' {

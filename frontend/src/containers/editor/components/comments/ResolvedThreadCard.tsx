@@ -3,6 +3,8 @@ import { Avatar } from '@/editor/shell/Avatar';
 import { authorColor } from '@/editor/comments/color';
 import type { CommentThread } from '@/editor/comments/types';
 import { renderBodyWithMentions } from '@/containers/editor/components/comments/MentionTextarea';
+import { useConfirmDialog } from '@/components/feedback/useConfirmDialog';
+import { ConfirmDialogHost } from '@/components/feedback/ConfirmDialogHost';
 
 interface ResolvedThreadCardProps {
     thread: CommentThread;
@@ -14,6 +16,13 @@ interface ResolvedThreadCardProps {
 
 export function ResolvedThreadCard({ thread, timeLabel, canDelete, onReopen, onDelete }: ResolvedThreadCardProps) {
     const { t } = useTranslation('editor');
+    const confirmDlg = useConfirmDialog();
+
+    const handleDelete = async () => {
+        const ok = await confirmDlg.confirm({ title: t('comments.deleteResolvedConfirm'), destructive: true });
+        if (ok) onDelete();
+    };
+
     return (
         <div className="thread is-resolved">
             <div className="thread-head">
@@ -37,12 +46,15 @@ export function ResolvedThreadCard({ thread, timeLabel, canDelete, onReopen, onD
                     <button
                         type="button"
                         className="thread-icon-btn thread-remove"
-                        onClick={() => {
-                            if (window.confirm(t('comments.deleteResolvedConfirm'))) onDelete();
-                        }}
+                        onClick={() => void handleDelete()}
                     >🗑</button>
                 ) : null}
             </div>
+            <ConfirmDialogHost
+                dialogState={confirmDlg.dialogState}
+                onConfirm={confirmDlg.onConfirm}
+                onCancel={confirmDlg.onCancel}
+            />
         </div>
     );
 }

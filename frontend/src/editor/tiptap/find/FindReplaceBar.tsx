@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/react';
+import { useTranslation } from 'react-i18next';
 import { findReplaceKey } from './FindReplace';
 
 interface FindReplaceBarProps {
@@ -9,6 +10,7 @@ interface FindReplaceBarProps {
 }
 
 export function FindReplaceBar({ editor, open, onClose }: FindReplaceBarProps) {
+    const { t } = useTranslation('editor');
     const [query, setQuery] = useState('');
     const [replacement, setReplacement] = useState('');
     const [caseSensitive, setCaseSensitive] = useState(false);
@@ -81,11 +83,11 @@ export function FindReplaceBar({ editor, open, onClose }: FindReplaceBarProps) {
                 <span className="find-counter">
                     {counter.total === 0 ? 'no results' : `${counter.current} / ${counter.total}`}
                 </span>
-                <button type="button" onClick={prev} title="Previous (Shift+Enter)">
-          ↑
+                <button type="button" onClick={prev} title={t('findReplace.prevTitle')}>
+                    ↑
                 </button>
-                <button type="button" onClick={next} title="Next (Enter)">
-          ↓
+                <button type="button" onClick={next} title={t('findReplace.nextTitle')}>
+                    ↓
                 </button>
                 <label className="find-case">
                     <input
@@ -99,11 +101,11 @@ export function FindReplaceBar({ editor, open, onClose }: FindReplaceBarProps) {
                     type="button"
                     onClick={() => setShowReplace((v) => !v)}
                     className={showReplace ? 'is-active' : ''}
-                    title="Toggle replace"
+                    title={t('findReplace.toggleReplaceTitle')}
                 >
           ⇄
                 </button>
-                <button type="button" onClick={onClose} title="Close (Esc)">
+                <button type="button" onClick={onClose} title={t('findReplace.closeTitle')}>
           ✕
                 </button>
             </div>
@@ -111,7 +113,7 @@ export function FindReplaceBar({ editor, open, onClose }: FindReplaceBarProps) {
                 <div className="find-row">
                     <input
                         type="text"
-                        placeholder="Replace with"
+                        placeholder={t('findReplace.replacePlaceholder')}
                         value={replacement}
                         onChange={(e) => setReplacement(e.target.value)}
                         onKeyDown={(e) => {
@@ -122,10 +124,10 @@ export function FindReplaceBar({ editor, open, onClose }: FindReplaceBarProps) {
                         }}
                     />
                     <button type="button" onClick={replaceOne} disabled={counter.total === 0}>
-            Replace
+                        {t('findReplace.replace')}
                     </button>
                     <button type="button" onClick={replaceAll} disabled={counter.total === 0}>
-            Replace all
+                        {t('findReplace.replaceAll')}
                     </button>
                 </div>
             )}

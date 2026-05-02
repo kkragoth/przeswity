@@ -1,8 +1,13 @@
 import { useCallback, useMemo, useState } from 'react';
 
+export enum MentionKind {
+    User = 'user',
+    Role = 'role',
+}
+
 export interface MentionCandidate {
     display: string
-    kind: 'user' | 'role'
+    kind: MentionKind
 }
 
 export function useMentionDetection(candidates: MentionCandidate[]) {

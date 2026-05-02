@@ -1,29 +1,27 @@
-import { useEffect, useRef, useState } from 'react';
-import type { Editor } from '@tiptap/react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HeaderFooterKind } from '@/editor/tiptap/HeaderFooterBar';
 import { EditorCanvas } from '@/editor/tiptap/EditorCanvas';
 import { EMPTY_SLASH, type EditorViewProps, type SlashTriggerInfo } from '@/editor/tiptap/types';
 
-import { useBlockHover } from './hooks/useBlockHover';
-import { useBlockDragOver, INITIAL_DRAG_STATE, type DragState } from './hooks/useBlockDragDrop';
-import { useCommentScrollPulse } from './hooks/useCommentScrollPulse';
-import { useHeaderFooterSync } from './hooks/useHeaderFooterSync';
-import { useEditorContextMenu } from './hooks/useEditorContextMenu';
-import { useEditorInit } from './hooks/useEditorInit';
-import { useBlockMenu } from './hooks/useBlockMenu';
+import { useBlockHover } from '@/editor/tiptap/hooks/useBlockHover';
+import { useBlockDrag, useBlockDragOver } from '@/editor/tiptap/hooks/useBlockDragDrop';
+import { useAwarenessSync } from '@/editor/tiptap/hooks/useAwarenessSync';
+import { useCommentScrollPulse } from '@/editor/tiptap/hooks/useCommentScrollPulse';
+import { useHeaderFooterSync } from '@/editor/tiptap/hooks/useHeaderFooterSync';
+import { useEditorContextMenu } from '@/editor/tiptap/hooks/useEditorContextMenu';
+import { useEditorInit } from '@/editor/tiptap/hooks/useEditorInit';
+import { useBlockMenu } from '@/editor/tiptap/hooks/useBlockMenu';
 import { addCommentFromBubble, focusOnEmptyClick } from '@/editor/tiptap/hooks/useEditorInteractions';
+import { createEditorContext } from '@/editor/tiptap/editorContext';
 
-import type { CollabBundle } from '@/editor/collab/yDoc';
-import type { User } from '@/editor/identity/types';
 import { ROLE_PERMISSIONS } from '@/editor/identity/types';
 
 export function EditorView({
     collab,
     user,
     suggestingMode,
-    suggestingForced = false,
-    onSuggestingModeChange,
+    suggestingForced: _suggestingForced = false,
+    onSuggestingModeChange: _onSuggestingModeChange,
     activeCommentId,
     glossaryEntries,
     onActiveCommentChange,
@@ -33,13 +31,23 @@ export function EditorView({
 }: EditorViewProps) {
     const { t } = useTranslation('editor');
 
-    // Live refs so extension getters never see stale closure values
-    const userRef = useRef(user);
-    userRef.current = user;
-    const suggestingRef = useRef(suggestingMode);
-    suggestingRef.current = suggestingMode;
-    const glossaryRef = useRef(glossaryEntries);
-    glossaryRef.current = glossaryEntries;
+    // Single context cell replacing 5 mutable refs — initialized before first useEditor call.
+    const ctx = useMemo(() => createEditorContext({
+        user,
+        suggesting: suggestingMode,
+        glossary: glossaryEntries,
+    }), []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Keep snapshot in sync before any TipTap event handlers can fire on this render.
+    // onHeaderClick / onFooterClick are injected by useHeaderFooterSync below.
+    useLayoutEffect(() => {
+        ctx.update({
+            ...ctx.get(),
+            user,
+            suggesting: suggestingMode,
+            glossary: glossaryEntries,
+        });
+    });
 
     const perms = ROLE_PERMISSIONS[user.role];
     const canEditOrSuggest = perms.canEdit || perms.canSuggest;
@@ -47,44 +55,31 @@ export function EditorView({
     const blockMenu = useBlockMenu();
     const [slashTrigger, setSlashTrigger] = useState<SlashTriggerInfo>(EMPTY_SLASH);
 
-    const dragStateRef = useRef<DragState>({ ...INITIAL_DRAG_STATE });
-    const [dropTop, setDropTop] = useState<number | null>(null);
-    const resetDrag = () => {
-        dragStateRef.current = { ...INITIAL_DRAG_STATE };
-        setDropTop(null);
-    };
-
-    // Stable refs captured by PaginationPlus on extension build — updated each render by the sync hook
-    const onHeaderClickRef = useRef<(() => void) | undefined>(undefined);
-    const onFooterClickRef = useRef<(() => void) | undefined>(undefined);
+    const { dragStateRef, dropTop, setDropTop, resetDrag } = useBlockDrag();
 
     const { editor } = useEditorInit({
         collab,
         user,
         placeholder: '',
         canEditOrSuggest,
-        userRef,
-        suggestingRef,
-        glossaryRef,
-        onHeaderClickRef,
-        onFooterClickRef,
+        ctx,
         dragStateRef,
         resetDrag,
         setSlashTrigger,
         onActiveCommentChange,
     });
 
+    // useHeaderFooterSync injects onHeaderClick / onFooterClick into ctx each render.
     const { headerFooterFocus, setHeaderFooterFocus, applyHeaderFooter } = useHeaderFooterSync({
         collab,
         editor,
-        onHeaderClickRef,
-        onFooterClickRef,
+        ctx,
     });
 
     const { contextMenu, setContextMenu } = useEditorContextMenu({
         editor,
         collab,
-        userRef,
+        ctx,
         onCreateComment,
         onActiveCommentChange,
     });
@@ -97,48 +92,11 @@ export function EditorView({
         if (editor) onEditorReady(editor);
     }, [editor, onEditorReady]);
 
-    // Awareness: keep our user info in sync with provider, and bump
-    // lastActiveAt on selection/text activity so peers can fade out our label.
-    useEffect(() => {
-        if (!editor) return;
-        const awareness = collab.provider.awareness;
-        if (!awareness) return;
-
-        const setUser = (lastActiveAt: number) => {
-            awareness.setLocalStateField('user', {
-                name: user.name,
-                color: user.color,
-                userId: user.id,
-                lastActiveAt,
-            });
-        };
-
-        setUser(Date.now());
-
-        let pendingTimer: ReturnType<typeof setTimeout> | null = null;
-        const ACTIVITY_THROTTLE_MS = 250;
-        const onActivity = () => {
-            if (pendingTimer !== null) return;
-            pendingTimer = setTimeout(() => {
-                pendingTimer = null;
-                setUser(Date.now());
-            }, ACTIVITY_THROTTLE_MS);
-        };
-        editor.on('selectionUpdate', onActivity);
-        editor.on('update', onActivity);
-        return () => {
-            editor.off('selectionUpdate', onActivity);
-            editor.off('update', onActivity);
-            if (pendingTimer !== null) {
-                clearTimeout(pendingTimer);
-                pendingTimer = null;
-            }
-        };
-    }, [collab.provider, editor, user.id, user.name, user.color]);
+    useAwarenessSync(editor, collab.provider, user);
 
     // Block-handle hover state + drag-over indicator — both install once editor is ready
     const hoveredBlock = useBlockHover(editor);
-    useBlockDragOver(editor, dragStateRef, setDropTop);
+    useBlockDragOver(editor, dragStateRef, setDropTop); // setDropTop from useBlockDrag
 
     useCommentScrollPulse(editor, activeCommentId);
 

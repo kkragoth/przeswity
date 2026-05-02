@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
-import type { Role } from '@/editor/identity/types';
-import { useMentionDetection, type MentionCandidate } from '@/containers/editor/hooks/useMentionDetection';
+import { ALL_ROLES } from '@/editor/identity/types';
+import { MentionKind, useMentionDetection, type MentionCandidate } from '@/containers/editor/hooks/useMentionDetection';
 
 export type { MentionCandidate } from '@/containers/editor/hooks/useMentionDetection';
 
@@ -13,16 +13,6 @@ interface MentionTextareaProps {
     onClick?: (e: React.MouseEvent<HTMLTextAreaElement>) => void
 }
 
-const ROLES: Role[] = [
-    'translator',
-    'author',
-    'editor',
-    'proofreader',
-    'typesetter',
-    'coordinator',
-    'admin',
-];
-
 export function buildCandidates(peers: { name: string }[], selfName: string): MentionCandidate[] {
     const namesSeen = new Set<string>();
     const out: MentionCandidate[] = [];
@@ -30,9 +20,9 @@ export function buildCandidates(peers: { name: string }[], selfName: string): Me
         if (p.name === selfName) continue;
         if (namesSeen.has(p.name)) continue;
         namesSeen.add(p.name);
-        out.push({ display: p.name, kind: 'user' });
+        out.push({ display: p.name, kind: MentionKind.User });
     }
-    for (const r of ROLES) out.push({ display: r, kind: 'role' });
+    for (const r of ALL_ROLES) out.push({ display: r, kind: MentionKind.Role });
     return out;
 }
 
@@ -44,7 +34,7 @@ export function renderBodyWithMentions(body: string): React.ReactNode {
     let i = 0;
     while ((m = re.exec(body)) !== null) {
         if (m.index > last) parts.push(body.slice(last, m.index));
-        const isRole = ROLES.includes(m[1] as Role);
+        const isRole = (ALL_ROLES as string[]).includes(m[1]);
         parts.push(
             <span key={`m-${i++}`} className={`mention${isRole ? ' mention-role' : ''}`}>
                 @{m[1]}

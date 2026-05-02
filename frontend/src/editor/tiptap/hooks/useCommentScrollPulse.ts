@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import type { Editor } from '@tiptap/react';
+import { HEADING_PULSE_MS } from '@/editor/constants';
 
 const PULSE_CLASS = 'comment-pulse';
-const PULSE_MS = 1400;
 
 /**
  * When activeCommentId changes, scrolls the matching comment-anchor span(s)
@@ -27,7 +27,7 @@ export function useCommentScrollPulse(
         });
         const t = window.setTimeout(() => {
             spans.forEach((span) => span.classList.remove(PULSE_CLASS));
-        }, PULSE_MS);
+        }, HEADING_PULSE_MS);
         return () => {
             window.clearTimeout(t);
             spans.forEach((span) => span.classList.remove(PULSE_CLASS));

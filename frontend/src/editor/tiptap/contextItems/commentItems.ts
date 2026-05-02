@@ -1,5 +1,5 @@
 import * as Y from 'yjs';
-import type { CommentThread } from '@/editor/comments/types';
+import { CommentStatus, type CommentThread } from '@/editor/comments/types';
 import { ROLE_PERMISSIONS } from '@/editor/identity/types';
 import { makeId } from '@/editor/utils';
 import type { ContextMenuItem } from '@/editor/shell/ContextMenu';
@@ -18,7 +18,7 @@ export function commentItems(args: BuildContextArgs, marks: MarkSet): ContextMen
                     action: () => {
                         const map = args.doc.getMap('comments') as Y.Map<CommentThread>;
                         const thread = map.get(id);
-                        if (thread) map.set(id, { ...thread, status: 'resolved', resolvedBy: args.user.name, resolvedAt: Date.now() });
+                        if (thread) map.set(id, { ...thread, status: CommentStatus.Resolved, resolvedBy: args.user.name, resolvedAt: Date.now() });
                         args.editor.chain().focus().unsetComment(id).run();
                     },
                 },

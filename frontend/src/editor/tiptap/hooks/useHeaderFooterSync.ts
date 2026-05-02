@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import type { MutableRefObject } from 'react';
 import type { Editor } from '@tiptap/react';
 import type { CollabBundle } from '@/editor/collab/yDoc';
 import { HeaderFooterKind } from '@/editor/tiptap/HeaderFooterBar';
+import type { EditorContextHandle } from '@/editor/tiptap/editorContext';
 
 export type HeaderFooterFocus =
     | { kind: HeaderFooterKind.Header; left: string; right: string }
@@ -23,33 +23,33 @@ function paginationCmds(editor: Editor): PaginationCommands {
 interface UseHeaderFooterSyncOptions {
     collab: CollabBundle;
     editor: Editor | null;
-    /** Stable refs owned by EditorView — captured by PaginationPlus on extension build */
-    onHeaderClickRef: MutableRefObject<(() => void) | undefined>;
-    onFooterClickRef: MutableRefObject<(() => void) | undefined>;
+    ctx: EditorContextHandle;
 }
 
-export function useHeaderFooterSync({ collab, editor, onHeaderClickRef, onFooterClickRef }: UseHeaderFooterSyncOptions) {
+export function useHeaderFooterSync({ collab, editor, ctx }: UseHeaderFooterSyncOptions) {
     const [headerFooterFocus, setHeaderFooterFocus] = useState<HeaderFooterFocus>({ kind: HeaderFooterKind.None });
 
-    // Intentionally outside useEffect — PaginationPlus captures these refs once on extension
-    // construction (via getOnHeaderClick/getOnFooterClick getters), so we must update .current
-    // each render to avoid stale closures over collab/setHeaderFooterFocus.
-    onHeaderClickRef.current = () => {
-        const meta = collab.doc.getMap<string>('meta');
-        setHeaderFooterFocus({
-            kind: HeaderFooterKind.Header,
-            left: meta.get('headerLeft') ?? '',
-            right: meta.get('headerRight') ?? '',
-        });
-    };
-    onFooterClickRef.current = () => {
-        const meta = collab.doc.getMap<string>('meta');
-        setHeaderFooterFocus({
-            kind: HeaderFooterKind.Footer,
-            left: meta.get('footerLeft') ?? '',
-            right: meta.get('footerRight') ?? '{page}',
-        });
-    };
+    // Update click callbacks on ctx each render so extensions never see stale closures
+    // over collab/setHeaderFooterFocus. ctx.get() is called at event time (after update).
+    ctx.update({
+        ...ctx.get(),
+        onHeaderClick: () => {
+            const meta = collab.doc.getMap<string>('meta');
+            setHeaderFooterFocus({
+                kind: HeaderFooterKind.Header,
+                left: meta.get('headerLeft') ?? '',
+                right: meta.get('headerRight') ?? '',
+            });
+        },
+        onFooterClick: () => {
+            const meta = collab.doc.getMap<string>('meta');
+            setHeaderFooterFocus({
+                kind: HeaderFooterKind.Footer,
+                left: meta.get('footerLeft') ?? '',
+                right: meta.get('footerRight') ?? '{page}',
+            });
+        },
+    });
 
     useEffect(() => {
         if (!editor) return;

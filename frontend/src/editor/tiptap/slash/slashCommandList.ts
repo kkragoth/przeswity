@@ -1,3 +1,5 @@
+// TODO (Phase 41 follow-up): replace window.prompt calls in fn/img commands with
+// an injected async callback from the host that opens a proper dialog.
 import type { Editor } from '@tiptap/react';
 import { aiFactCheck, aiRephrase } from '@/editor/ai/aiOps';
 

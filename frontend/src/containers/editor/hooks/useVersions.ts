@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import * as Y from 'yjs';
 import { yDocToProsemirrorJSON } from 'y-prosemirror';
 import type { Editor } from '@tiptap/react';
@@ -6,22 +6,13 @@ import type { Editor } from '@tiptap/react';
 import type { User } from '@/editor/identity/types';
 import type { VersionSnapshot } from '@/editor/versions/types';
 import { buildDiffDoc, type JSONNode } from '@/editor/versions/diffDoc';
+import { VERSIONS_AUTO_KEEP, VERSIONS_PERSIST_DEBOUNCE_MS } from '@/editor/constants';
+import { useLocalStorageState } from '@/utils/storage/useLocalStorageState';
 
 const STORAGE_PREFIX = 'przeswity.versions';
-const AUTO_KEEP = 8;
 
 function storageKey(bookId: string): string {
     return `${STORAGE_PREFIX}:${bookId}`;
-}
-
-function loadVersions(bookId: string): VersionSnapshot[] {
-    try {
-        const raw = localStorage.getItem(storageKey(bookId));
-        if (!raw) return [];
-        return JSON.parse(raw) as VersionSnapshot[];
-    } catch {
-        return [];
-    }
 }
 
 function jsonFromSnapshot(snapshot: VersionSnapshot): JSONNode {
@@ -33,19 +24,12 @@ function jsonFromSnapshot(snapshot: VersionSnapshot): JSONNode {
 }
 
 export function useVersions(doc: Y.Doc, user: User, editor: Editor | null, bookId: string) {
-    const [versions, setVersions] = useState<VersionSnapshot[]>(() => loadVersions(bookId));
+    const [versions, setVersions] = useLocalStorageState<VersionSnapshot[]>(
+        storageKey(bookId),
+        [],
+        { debounceMs: VERSIONS_PERSIST_DEBOUNCE_MS },
+    );
     const [label, setLabel] = useState('');
-
-    useEffect(() => {
-        setVersions(loadVersions(bookId));
-    }, [bookId]);
-
-    useEffect(() => {
-        const id = window.setTimeout(() => {
-            localStorage.setItem(storageKey(bookId), JSON.stringify(versions));
-        }, 250);
-        return () => window.clearTimeout(id);
-    }, [bookId, versions]);
 
     const snapshot = (auto = false, customLabel?: string) => {
         const state = Y.encodeStateAsUpdate(doc);
@@ -61,8 +45,8 @@ export function useVersions(doc: Y.Doc, user: User, editor: Editor | null, bookI
             const merged = [next, ...prev];
             if (!auto) return merged;
             const autos = merged.filter((item) => item.auto);
-            if (autos.length <= AUTO_KEEP) return merged;
-            const dropIds = new Set(autos.slice(AUTO_KEEP).map((item) => item.id));
+            if (autos.length <= VERSIONS_AUTO_KEEP) return merged;
+            const dropIds = new Set(autos.slice(VERSIONS_AUTO_KEEP).map((item) => item.id));
             return merged.filter((item) => !dropIds.has(item.id));
         });
         if (!auto) setLabel('');
