@@ -5,17 +5,16 @@ import { auth } from './betterAuth.config.js';
 import { db } from '../db/client.js';
 import { user } from '../db/auth-schema.js';
 import { env } from '../env.js';
-import { DEV_PASSWORD } from '../seed/devPassword.js';
+import { getDevSeedPassword } from '../seed/devPassword.js';
 
 const DevSignInBody = z
     .object({ userId: z.string().optional(), email: z.string().email().optional() })
     .refine((b) => !!(b.userId || b.email), { message: 'userId or email required' });
 
+// env.ts.superRefine guarantees ENABLE_DEV_AUTH=false when NODE_ENV=production. The
+// trailing NODE_ENV check is defence in depth — if the env validation is ever weakened,
+// dev-auth must still refuse to mount in prod.
 export const devAuthEnabled = env.ENABLE_DEV_AUTH && env.NODE_ENV !== 'production';
-
-if (env.NODE_ENV === 'production' && env.ENABLE_DEV_AUTH) {
-    throw new Error('ENABLE_DEV_AUTH must be false when NODE_ENV=production');
-}
 
 export const devAuthRouter = Router();
 
@@ -55,7 +54,7 @@ if (devAuthEnabled) {
             return;
         }
         const result = await auth.api.signInEmail({
-            body: { email, password: DEV_PASSWORD },
+            body: { email, password: getDevSeedPassword() },
             asResponse: true,
         });
         const setCookie = result.headers.get('set-cookie');

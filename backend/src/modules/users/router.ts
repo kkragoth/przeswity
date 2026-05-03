@@ -7,8 +7,8 @@ import { auth } from '../../auth/betterAuth.config.js';
 import { requireSession, requireAdmin, requireProjectManager, authedHandler } from '../../auth/session.js';
 import { asyncHandler, AppError } from '../../lib/errors.js';
 import { registry } from '../../openapi/registry.js';
-import { UserDto, MeDto, CreateUserBody, UpdateUserBody, PatchMeBody } from './schemas.js';
-import { projectUser, buildMeResponse } from './service.js';
+import { UserDto, MeDto, CreateUserBody, UpdateUserBody, PatchMeBody, UsersListQuery } from './schemas.js';
+import { projectUser, buildMeResponse, listUsersPaginated } from './service.js';
 
 export const usersRouter = Router();
 
@@ -41,9 +41,9 @@ registry.registerPath({
     responses: { 200: { description: 'me updated', content: { 'application/json': { schema: MeDto } } } },
 });
 
-usersRouter.get('/api/users', requireSession, requireProjectManager, asyncHandler(async (_req, res) => {
-    const rows = await db.select().from(user);
-    res.json(rows.map(projectUser));
+usersRouter.get('/api/users', requireSession, requireProjectManager, asyncHandler(async (req, res) => {
+    const q = UsersListQuery.parse(req.query);
+    res.json(await listUsersPaginated(q.limit, q.offset));
 }));
 
 usersRouter.post('/api/users', requireSession, requireProjectManager, authedHandler(async (req, res) => {
@@ -55,8 +55,10 @@ usersRouter.post('/api/users', requireSession, requireProjectManager, authedHand
     try {
         await auth.api.signUpEmail({ body: { email: body.email, password: body.password, name: body.name }, asResponse: true });
     } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        if (msg.toLowerCase().includes('exists')) {
+        const code = (e as { body?: { code?: string }; cause?: { code?: string } } | null)?.body?.code
+            ?? (e as { cause?: { code?: string } } | null)?.cause?.code
+            ?? '';
+        if (code === 'USER_ALREADY_EXISTS') {
             throw new AppError('errors.user.duplicate', 409, 'user already exists');
         }
         throw e;

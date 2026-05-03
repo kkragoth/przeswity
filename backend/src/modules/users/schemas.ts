@@ -35,6 +35,11 @@ export const UpdateUserBody = z.object({
     color: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),
 }).openapi('UpdateUserBody');
 
+export const UsersListQuery = z.object({
+    limit: z.coerce.number().int().min(1).max(200).default(200),
+    offset: z.coerce.number().int().min(0).default(0),
+}).openapi('UsersListQuery');
+
 export const PatchMeBody = z.object({
     name: z.string().min(1).max(80).optional(),
     color: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),

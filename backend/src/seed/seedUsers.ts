@@ -2,13 +2,13 @@ import { eq } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { user } from '../db/schema.js';
 import { auth } from '../auth/betterAuth.config.js';
-import { DEV_PASSWORD } from './devPassword.js';
+import { getDevSeedPassword } from './devPassword.js';
 import { USERS } from './data/users.js';
 import type { SeedUser } from './data/types.js';
 
 async function upsertSeedUser(spec: SeedUser): Promise<void> {
     try {
-        await auth.api.signUpEmail({ body: { email: spec.email, password: DEV_PASSWORD, name: spec.name }, asResponse: true });
+        await auth.api.signUpEmail({ body: { email: spec.email, password: getDevSeedPassword(), name: spec.name }, asResponse: true });
     } catch (e: unknown) {
         const code = (e as { body?: { code?: string }; cause?: { code?: string } })?.body?.code
             ?? (e as { cause?: { code?: string } })?.cause?.code

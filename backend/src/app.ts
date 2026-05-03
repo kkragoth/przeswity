@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { toNodeHandler } from 'better-auth/node';
 import { auth } from './auth/betterAuth.config.js';
 import { devAuthRouter, devAuthEnabled } from './auth/devSignIn.js';
@@ -13,13 +14,24 @@ import { versionsRouter } from './modules/versions/router.js';
 import { aiRouter } from './modules/ai/router.js';
 import { pdfRouter } from './modules/pdf/router.js';
 import { errorMiddleware } from './lib/errors.js';
+import { authLimiter, pdfLimiter, defaultLimiter } from './lib/rateLimits.js';
 import { env } from './env.js';
 
 export async function buildApp() {
     const app = express();
     app.disable('x-powered-by');
+    // CSP turned off — frontend serves its own CSP headers via its hosting layer.
+    // Skip compression (reverse proxy handles it) and hpp (no array-style query parsing).
+    app.use(helmet({ contentSecurityPolicy: false }));
     app.use(cors({ origin: env.CORS_ORIGINS, credentials: true }));
     app.use(cookieParser());
+
+    // Default rate limit covers everything that follows. Strict per-route limiters wrap
+    // sensitive paths (auth, pdf, ai) below.
+    if (env.NODE_ENV !== 'test') {
+        app.use(defaultLimiter);
+        app.use('/api/auth', authLimiter);
+    }
 
     // Dev quick-login mounted FIRST so its /api/auth/dev/* doesn't get swallowed by BetterAuth's wildcard.
     app.use(devAuthRouter);
@@ -35,6 +47,10 @@ export async function buildApp() {
     app.use(commentsRouter);
     app.use(versionsRouter);
     app.use(aiRouter);
+    if (env.NODE_ENV !== 'test') {
+        app.use('/api/pdf', pdfLimiter);
+        app.use('/api/ai', authLimiter);
+    }
     app.use(pdfRouter);
 
     app.get('/healthz', (_req, res) => res.json({ ok: true }));

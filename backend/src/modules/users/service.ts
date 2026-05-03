@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm';
+import { asc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../../db/client.js';
 import { user, assignment } from '../../db/schema.js';
@@ -19,6 +19,26 @@ export const projectUser = (u: UserRow): UserDtoT => ({
     image: u.image ?? null,
     preferredLocale: (u.preferredLocale ?? 'pl') as UserDtoT['preferredLocale'],
 });
+
+export async function listUsersPaginated(limit: number, offset: number): Promise<UserDtoT[]> {
+    // Project at SQL level so we don't over-fetch onboardingDismissedAt / emailVerified /
+    // isSystem on a list endpoint. limit is bounded at the validator (max 200).
+    const rows = await db.select({
+        id: user.id, email: user.email, name: user.name, systemRole: user.systemRole,
+        competencyTags: user.competencyTags, color: user.color, image: user.image,
+        preferredLocale: user.preferredLocale,
+    }).from(user).orderBy(asc(user.email)).limit(limit).offset(offset);
+    return rows.map((u) => ({
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        systemRole: (u.systemRole ?? null) as UserDtoT['systemRole'],
+        competencyTags: u.competencyTags ?? [],
+        color: u.color ?? '#7c3aed',
+        image: u.image ?? null,
+        preferredLocale: (u.preferredLocale ?? 'pl') as UserDtoT['preferredLocale'],
+    }));
+}
 
 export async function buildMeResponse(userId: string): Promise<MeDtoT> {
     const [full] = await db.select().from(user).where(eq(user.id, userId));
