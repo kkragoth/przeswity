@@ -1,110 +1,31 @@
 import { Router } from 'express';
-import { z } from 'zod';
-import { eq, and, inArray, asc, or, sql } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { db } from '../../db/client.js';
-import { book, assignment, bookYjsState, bookSnapshot, user, bookStageHistory } from '../../db/schema.js';
+import { bookYjsState, bookSnapshot } from '../../db/schema.js';
 import { requireSession, requireProjectManager, requireAdmin, authedHandler } from '../../auth/session.js';
-import { isAdmin, isProjectManager } from '../../lib/permissions.js';
+import { isAdmin } from '../../lib/permissions.js';
 import { AppError } from '../../lib/errors.js';
-import { registry } from '../../openapi/registry.js';
-import { BookDto, BookSummaryDto, CreateBookBody, UpdateBookBody, PatchBookStageBody, PatchBookProgressBody, BookStageHistoryDto } from './schemas.js';
-import { markdownToYDocState, yDocStateToMarkdown } from '@przeswity/editor-schema/markdown';
-import { listVisibleBooks, projectBook } from './service.js';
+import { CreateBookBody, UpdateBookBody, PatchBookStageBody, PatchBookProgressBody } from './schemas.js';
+import { yDocStateToMarkdown } from '@przeswity/editor-schema/markdown';
+import {
+    listVisibleBooks, listAssigneeCounts, listMyRolesByBook, projectBook,
+    createBookWithSeed, updateBookFields, transitionStage, updateProgress,
+    getStageHistory, loadBookOrThrow,
+} from './service.js';
+import { assertCanEditBook, assertCanManageStageOrProgress, assertValidStageTransition } from './policy.js';
 import { getPresence } from '../../collab/presence.js';
-import { isBookStage, canTransitionStage, isValidProgress } from './workflow.js';
 import { env } from '../../env.js';
-import { asByteaInput } from '../../lib/bytes.js';
 import { loadBookAccess, requireBookAccess } from '../../lib/access.js';
+import { book } from '../../db/schema.js';
+import './openapi.js';
 
 export const booksRouter = Router();
 
-registry.registerPath({
-    method: 'get', path: '/api/books',
-    operationId: 'booksList',
-    responses: { 200: { description: 'list', content: { 'application/json': { schema: z.array(BookSummaryDto) } } } },
-});
-registry.registerPath({
-    method: 'get', path: '/api/books/{id}',
-    operationId: 'bookGet',
-    request: { params: z.object({ id: z.string() }) },
-    responses: { 200: { description: 'book', content: { 'application/json': { schema: BookDto } } } },
-});
-registry.registerPath({
-    method: 'post', path: '/api/books',
-    operationId: 'bookCreate',
-    request: { body: { content: { 'application/json': { schema: CreateBookBody } } } },
-    responses: { 200: { description: 'created', content: { 'application/json': { schema: BookDto } } } },
-});
-registry.registerPath({
-    method: 'patch', path: '/api/books/{id}',
-    operationId: 'bookPatch',
-    request: { params: z.object({ id: z.string() }), body: { content: { 'application/json': { schema: UpdateBookBody } } } },
-    responses: { 200: { description: 'updated', content: { 'application/json': { schema: BookDto } } } },
-});
-registry.registerPath({
-    method: 'delete', path: '/api/books/{id}',
-    operationId: 'bookDelete',
-    request: { params: z.object({ id: z.string() }) },
-    responses: { 204: { description: 'deleted' } },
-});
-registry.registerPath({
-    method: 'patch', path: '/api/books/{id}/stage',
-    operationId: 'bookPatchStage',
-    request: { params: z.object({ id: z.string() }), body: { content: { 'application/json': { schema: PatchBookStageBody } } } },
-    responses: { 200: { description: 'updated', content: { 'application/json': { schema: BookDto } } } },
-});
-registry.registerPath({
-    method: 'patch', path: '/api/books/{id}/progress',
-    operationId: 'bookPatchProgress',
-    request: { params: z.object({ id: z.string() }), body: { content: { 'application/json': { schema: PatchBookProgressBody } } } },
-    responses: { 200: { description: 'updated', content: { 'application/json': { schema: BookDto } } } },
-});
-registry.registerPath({
-    method: 'get', path: '/api/books/{id}/stage-history',
-    operationId: 'bookStageHistory',
-    request: { params: z.object({ id: z.string() }) },
-    responses: { 200: { description: 'history', content: { 'application/json': { schema: z.array(BookStageHistoryDto) } } } },
-});
-registry.registerPath({
-    method: 'get', path: '/api/books/{id}/markdown',
-    operationId: 'bookMarkdown',
-    request: { params: z.object({ id: z.string() }) },
-    responses: { 200: { description: 'canonical markdown', content: { 'text/markdown': { schema: z.string() } } } },
-});
-registry.registerPath({
-    method: 'get', path: '/api/books/{id}/snapshots/{snapId}/markdown',
-    operationId: 'bookSnapshotMarkdown',
-    request: { params: z.object({ id: z.string(), snapId: z.string() }) },
-    responses: { 200: { description: 'snapshot markdown', content: { 'text/markdown': { schema: z.string() } } } },
-});
-registry.registerPath({
-    method: 'get', path: '/api/books/{id}/presence',
-    operationId: 'bookPresence',
-    request: { params: z.object({ id: z.string() }) },
-    responses: { 200: { description: 'presence', content: { 'application/json': { schema: z.object({ users: z.array(z.object({ id: z.string(), name: z.string(), color: z.string() })) }) } } } },
-});
-
 booksRouter.get('/api/books', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
-    const myAssignmentRows = await db.select({ bookId: assignment.bookId, role: assignment.role })
-        .from(assignment).where(eq(assignment.userId, me.id));
-    const myRolesByBook = new Map<string, string[]>();
-    for (const r of myAssignmentRows) {
-        myRolesByBook.set(r.bookId, [...(myRolesByBook.get(r.bookId) ?? []), r.role]);
-    }
+    const myRolesByBook = await listMyRolesByBook(me.id);
     const books = await listVisibleBooks(me.id, isAdmin(me.systemRole));
-    const ids = books.map((b) => b.id);
-    const counts = new Map<string, number>();
-    if (ids.length > 0) {
-        const rows = await db.select({ bookId: assignment.bookId, userId: assignment.userId })
-            .from(assignment).where(inArray(assignment.bookId, ids));
-        const distinct = new Map<string, Set<string>>();
-        for (const r of rows) {
-            if (!distinct.has(r.bookId)) distinct.set(r.bookId, new Set());
-            distinct.get(r.bookId)!.add(r.userId);
-        }
-        for (const [k, v] of distinct) counts.set(k, v.size);
-    }
+    const counts = await listAssigneeCounts(books.map((b) => b.id));
     res.json(books.map((b) => ({
         ...projectBook(b),
         myRoles: myRolesByBook.get(b.id) ?? [],
@@ -113,157 +34,49 @@ booksRouter.get('/api/books', requireSession, authedHandler(async (req, res) => 
 }));
 
 booksRouter.get('/api/books/:id', requireSession, authedHandler(async (req, res) => {
-    const me = req.user;
-    const access = await loadBookAccess(req.params.id, me);
+    const access = await loadBookAccess(req.params.id, req.user);
     requireBookAccess(access);
-    const b = access.book;
-    res.json(projectBook(b));
+    res.json(projectBook(access.book));
 }));
 
 booksRouter.post('/api/books', requireSession, requireProjectManager, authedHandler(async (req, res) => {
     const body = CreateBookBody.parse(req.body);
-    const me = req.user;
-    const userIds = [...new Set(body.initialAssignments.map((a) => a.userId))];
-    if (userIds.length > 0) {
-        const found = await db.select({ id: user.id }).from(user).where(inArray(user.id, userIds));
-        const foundSet = new Set(found.map((u) => u.id));
-        const unknown = userIds.filter((id) => !foundSet.has(id));
-        if (unknown.length) throw new AppError('errors.assignment.unknownUsers', 422, `unknown users: ${unknown.join(',')}`);
-    }
-    let yState: Uint8Array | null = null;
-    if (body.initialMarkdown.trim().length > 0) {
-        yState = markdownToYDocState(body.initialMarkdown);
-    }
-    const created = await db.transaction(async (tx) => {
-        const [b] = await tx.insert(book).values({
-            title: body.title,
-            description: body.description,
-            createdById: me.id,
-            initialMarkdown: body.initialMarkdown,
-        }).returning();
-        await tx.insert(bookStageHistory).values({
-            bookId: b.id,
-            fromStage: null,
-            toStage: b.stage,
-            note: 'initial',
-            createdById: me.id,
-        });
-        if (yState) {
-            await tx.insert(bookYjsState).values({ bookId: b.id, state: asByteaInput(yState) });
-        }
-        if (body.initialAssignments.length > 0) {
-            const seen = new Set<string>();
-            const rows = body.initialAssignments.filter((a) => {
-                const k = a.userId + ':' + a.role;
-                if (seen.has(k)) return false;
-                seen.add(k);
-                return true;
-            }).map((a) => ({ bookId: b.id, userId: a.userId, role: a.role }));
-            await tx.insert(assignment).values(rows).onConflictDoNothing();
-        }
-        return b;
-    });
+    const created = await createBookWithSeed(req.user, body);
     res.json(projectBook(created));
 }));
 
 booksRouter.patch('/api/books/:id', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const body = UpdateBookBody.parse(req.body);
-    const [existing] = await db.select().from(book).where(eq(book.id, req.params.id));
-    if (!existing) throw new AppError('errors.book.notFound', 404, 'book not found');
-    const admin = isAdmin(me.systemRole);
-    if (!admin && existing.createdById !== me.id) {
-        throw new AppError('errors.book.forbidden', 403, 'forbidden');
-    }
-    const update: Partial<typeof book.$inferInsert> = { updatedAt: new Date() };
-    if (body.title !== undefined) update.title = body.title;
-    if (body.description !== undefined) update.description = body.description;
-    // TOCTOU guard: re-assert the policy predicate inline so a concurrent owner change
-    // can't slip an UPDATE past the SELECT-time check.
-    const policy = admin ? sql`true` : eq(book.createdById, me.id);
-    const [updated] = await db.update(book).set(update)
-        .where(and(eq(book.id, req.params.id), policy))
-        .returning();
-    if (!updated) throw new AppError('errors.book.forbidden', 409, 'concurrent ownership change');
+    const existing = await loadBookOrThrow(req.params.id);
+    const { admin } = assertCanEditBook(existing.createdById, me);
+    const updated = await updateBookFields(req.params.id, me, admin, body);
     res.json(projectBook(updated));
 }));
 
 booksRouter.patch('/api/books/:id/stage', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
-    if (!isProjectManager(me.systemRole)) {
-        throw new AppError('errors.book.forbidden', 403, 'forbidden');
-    }
+    assertCanManageStageOrProgress(me);
     const body = PatchBookStageBody.parse(req.body);
-    const [existing] = await db.select().from(book).where(eq(book.id, req.params.id));
-    if (!existing) throw new AppError('errors.book.notFound', 404, 'book not found');
-    if (!isBookStage(existing.stage) || !isBookStage(body.stage)) {
-        throw new AppError('errors.book.stage.invalid', 422, 'invalid stage');
-    }
-    if (!canTransitionStage(existing.stage, body.stage)) {
-        throw new AppError('errors.book.stage.transitionForbidden', 422, `cannot transition from ${existing.stage} to ${body.stage}`);
-    }
-    const now = new Date();
-    // TOCTOU guard: pin the from-stage in the WHERE clause so a concurrent transition
-    // can't sneak a write through after we read `existing.stage`.
-    const updated = await db.transaction(async (tx) => {
-        const [u] = await tx.update(book).set({
-            stage: body.stage,
-            stageChangedAt: now,
-            stageDueAt: body.dueAt === undefined ? existing.stageDueAt : (body.dueAt ? new Date(body.dueAt) : null),
-            stageNote: body.note ?? '',
-            updatedAt: now,
-            updatedById: me.id,
-        }).where(and(eq(book.id, req.params.id), eq(book.stage, existing.stage))).returning();
-        if (!u) throw new AppError('errors.book.stage.transitionForbidden', 409, 'concurrent stage change');
-        await tx.insert(bookStageHistory).values({
-            bookId: u.id,
-            fromStage: existing.stage,
-            toStage: body.stage,
-            note: body.note ?? '',
-            createdById: me.id,
-        });
-        return u;
-    });
+    const existing = await loadBookOrThrow(req.params.id);
+    const { from } = assertValidStageTransition(existing.stage, body.stage);
+    const updated = await transitionStage(req.params.id, me, from, body, existing.stageDueAt);
     res.json(projectBook(updated));
 }));
 
 booksRouter.patch('/api/books/:id/progress', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
-    if (!isProjectManager(me.systemRole)) {
-        throw new AppError('errors.book.forbidden', 403, 'forbidden');
-    }
+    assertCanManageStageOrProgress(me);
     const body = PatchBookProgressBody.parse(req.body);
-    if (!isValidProgress(body.progress)) {
-        throw new AppError('errors.book.progress.invalid', 422, 'progress must be integer in range 0..100');
-    }
-    const [existing] = await db.select().from(book).where(eq(book.id, req.params.id));
-    if (!existing) throw new AppError('errors.book.notFound', 404, 'book not found');
-    const [updated] = await db.update(book).set({
-        progress: body.progress,
-        progressMode: body.mode,
-        updatedAt: new Date(),
-        updatedById: me.id,
-    }).where(eq(book.id, req.params.id)).returning();
+    await loadBookOrThrow(req.params.id);
+    const updated = await updateProgress(req.params.id, me, body);
     res.json(projectBook(updated));
 }));
 
 booksRouter.get('/api/books/:id/stage-history', requireSession, authedHandler(async (req, res) => {
-    const me = req.user;
-    const access = await loadBookAccess(req.params.id, me);
+    const access = await loadBookAccess(req.params.id, req.user);
     requireBookAccess(access);
-    const b = access.book;
-    const rows = await db.select().from(bookStageHistory)
-        .where(eq(bookStageHistory.bookId, req.params.id))
-        .orderBy(asc(bookStageHistory.createdAt));
-    res.json(rows.map((r) => ({
-        id: r.id,
-        bookId: r.bookId,
-        fromStage: r.fromStage,
-        toStage: r.toStage,
-        note: r.note,
-        createdById: r.createdById,
-        createdAt: new Date(r.createdAt).toISOString(),
-    })));
+    res.json(await getStageHistory(req.params.id));
 }));
 
 booksRouter.delete('/api/books/:id', requireSession, requireAdmin, authedHandler(async (req, res) => {
@@ -273,24 +86,20 @@ booksRouter.delete('/api/books/:id', requireSession, requireAdmin, authedHandler
 }));
 
 booksRouter.get('/api/books/:id/markdown', requireSession, authedHandler(async (req, res) => {
-    const me = req.user;
-    const access = await loadBookAccess(req.params.id, me);
+    const access = await loadBookAccess(req.params.id, req.user);
     requireBookAccess(access);
-    const b = access.book;
     const [state] = await db.select().from(bookYjsState).where(eq(bookYjsState.bookId, req.params.id));
     res.set('Content-Type', 'text/markdown; charset=utf-8');
     if (!state) {
-        res.send(b.initialMarkdown ?? '');
+        res.send(access.book.initialMarkdown ?? '');
         return;
     }
     res.send(yDocStateToMarkdown(new Uint8Array(state.state)));
 }));
 
 booksRouter.get('/api/books/:id/snapshots/:snapId/markdown', requireSession, authedHandler(async (req, res) => {
-    const me = req.user;
-    const access = await loadBookAccess(req.params.id, me);
+    const access = await loadBookAccess(req.params.id, req.user);
     requireBookAccess(access);
-    const b = access.book;
     const [snap] = await db.select().from(bookSnapshot)
         .where(and(eq(bookSnapshot.id, req.params.snapId), eq(bookSnapshot.bookId, req.params.id)));
     if (!snap) throw new AppError('errors.snapshot.notFound', 404, 'snapshot not found');
@@ -300,9 +109,7 @@ booksRouter.get('/api/books/:id/snapshots/:snapId/markdown', requireSession, aut
 
 booksRouter.get('/api/books/:id/presence', requireSession, authedHandler(async (req, res) => {
     if (!env.PRESENCE_API_ENABLED) throw new AppError('errors.presence.disabled', 501, 'presence api disabled');
-    const me = req.user;
-    const access = await loadBookAccess(req.params.id, me);
+    const access = await loadBookAccess(req.params.id, req.user);
     requireBookAccess(access);
-    const b = access.book;
     res.json({ users: getPresence(req.params.id) });
 }));

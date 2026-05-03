@@ -1,86 +1,45 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '../../db/client.js';
-import { user, assignment } from '../../db/schema.js';
+import { user } from '../../db/schema.js';
 import { auth } from '../../auth/betterAuth.config.js';
 import { requireSession, requireAdmin, requireProjectManager, authedHandler } from '../../auth/session.js';
 import { asyncHandler, AppError } from '../../lib/errors.js';
 import { registry } from '../../openapi/registry.js';
 import { UserDto, MeDto, CreateUserBody, UpdateUserBody, PatchMeBody } from './schemas.js';
+import { projectUser, buildMeResponse } from './service.js';
 
 export const usersRouter = Router();
 
 registry.registerPath({
-    method: 'get', path: '/api/users',
-    operationId: 'usersList',
+    method: 'get', path: '/api/users', operationId: 'usersList',
     responses: { 200: { description: 'list', content: { 'application/json': { schema: z.array(UserDto) } } } },
 });
 registry.registerPath({
-    method: 'post', path: '/api/users',
-    operationId: 'userCreate',
+    method: 'post', path: '/api/users', operationId: 'userCreate',
     request: { body: { content: { 'application/json': { schema: CreateUserBody } } } },
     responses: { 200: { description: 'created', content: { 'application/json': { schema: UserDto } } } },
 });
 registry.registerPath({
-    method: 'patch', path: '/api/users/{id}',
-    operationId: 'userPatch',
+    method: 'patch', path: '/api/users/{id}', operationId: 'userPatch',
     request: { params: z.object({ id: z.string() }), body: { content: { 'application/json': { schema: UpdateUserBody } } } },
     responses: { 200: { description: 'updated', content: { 'application/json': { schema: UserDto } } } },
 });
 registry.registerPath({
-    method: 'delete', path: '/api/users/{id}',
-    operationId: 'userDelete',
+    method: 'delete', path: '/api/users/{id}', operationId: 'userDelete',
     request: { params: z.object({ id: z.string() }) },
     responses: { 204: { description: 'deleted' } },
 });
 registry.registerPath({
-    method: 'get', path: '/api/me',
-    operationId: 'meGet',
+    method: 'get', path: '/api/me', operationId: 'meGet',
     responses: { 200: { description: 'me', content: { 'application/json': { schema: MeDto } } } },
 });
 registry.registerPath({
-    method: 'patch', path: '/api/me',
-    operationId: 'mePatch',
+    method: 'patch', path: '/api/me', operationId: 'mePatch',
     request: { body: { content: { 'application/json': { schema: PatchMeBody } } } },
     responses: { 200: { description: 'me updated', content: { 'application/json': { schema: MeDto } } } },
 });
-
-type UserRow = typeof user.$inferSelect;
-type UserDtoT = z.infer<typeof UserDto>;
-type MeDtoT = z.infer<typeof MeDto>;
-
-const projectUser = (u: UserRow): UserDtoT => ({
-    id: u.id,
-    email: u.email,
-    name: u.name,
-    systemRole: (u.systemRole ?? null) as UserDtoT['systemRole'],
-    competencyTags: u.competencyTags ?? [],
-    color: u.color ?? '#7c3aed',
-    image: u.image ?? null,
-    preferredLocale: (u.preferredLocale ?? 'pl') as UserDtoT['preferredLocale'],
-});
-
-async function buildMeResponse(userId: string): Promise<MeDtoT> {
-    const [full] = await db.select().from(user).where(eq(user.id, userId));
-    if (!full) throw new AppError('errors.user.notFound', 404, 'user not found');
-    // visibleBookCount comes back from SQL; role counts still need each row, but a single
-    // query keeps round-trips at one. Distinct vs non-distinct: book_id can repeat across
-    // role rows for the same book, so DISTINCT matters here.
-    const [counts] = await db.select({
-        visibleBookCount: sql<number>`COUNT(DISTINCT ${assignment.bookId})`,
-    }).from(assignment).where(eq(assignment.userId, userId));
-    const rows = await db.select({ role: assignment.role })
-        .from(assignment).where(eq(assignment.userId, userId));
-    const assignmentRoleCounts: Record<string, number> = {};
-    for (const r of rows) assignmentRoleCounts[r.role] = (assignmentRoleCounts[r.role] ?? 0) + 1;
-    return {
-        ...projectUser(full),
-        visibleBookCount: Number(counts?.visibleBookCount ?? 0),
-        assignmentRoleCounts,
-        onboardingDismissedAt: full.onboardingDismissedAt ?? '',
-    };
-}
 
 usersRouter.get('/api/users', requireSession, requireProjectManager, asyncHandler(async (_req, res) => {
     const rows = await db.select().from(user);
@@ -90,7 +49,6 @@ usersRouter.get('/api/users', requireSession, requireProjectManager, asyncHandle
 usersRouter.post('/api/users', requireSession, requireProjectManager, authedHandler(async (req, res) => {
     const body = CreateUserBody.parse(req.body);
     const me = req.user;
-    // Only admins can create admin users
     if (body.systemRole === 'admin' && me.systemRole !== 'admin') {
         throw new AppError('errors.auth.forbidden', 403, 'only admins can create admin users');
     }

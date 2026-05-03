@@ -1,0 +1,61 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import * as Y from 'yjs';
+import { db } from '../db/client.js';
+import { book, assignment, bookYjsState } from '../db/schema.js';
+import { seedBookId } from './ids.js';
+import { markdownToYDocState } from '@przeswity/editor-schema/markdown';
+import { asByteaInput } from '../lib/bytes.js';
+import { BOOKS } from './data/books.js';
+import { buildSeedThreads } from './data/threads.js';
+import { reseedBookComments, applyThreadsToBookYjs } from './seedThreads.js';
+import type { Role, SeedBook, SeedUser } from './data/types.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const fix = (name: string) => fs.readFileSync(path.join(__dirname, 'fixtures', name), 'utf8');
+
+async function upsertSeedBook(spec: SeedBook, ownerId: string): Promise<string> {
+    const id = seedBookId(spec.slug);
+    const md = fix(spec.fixture);
+    const yState = markdownToYDocState(md);
+
+    const seededDoc = new Y.Doc();
+    Y.applyUpdate(seededDoc, yState);
+
+    await db.insert(book).values({
+        id,
+        title: spec.title,
+        description: spec.description,
+        createdById: ownerId,
+        initialMarkdown: md,
+    }).onConflictDoUpdate({
+        target: book.id,
+        set: { title: spec.title, description: spec.description, initialMarkdown: md },
+    });
+
+    await db.insert(bookYjsState).values({ bookId: id, state: asByteaInput(Y.encodeStateAsUpdate(seededDoc)) })
+        .onConflictDoUpdate({ target: bookYjsState.bookId, set: { state: asByteaInput(yState), updatedAt: new Date() } });
+    return id;
+}
+
+async function upsertAssignment(bookId: string, userId: string, role: Role): Promise<void> {
+    await db.insert(assignment).values({ bookId, userId, role }).onConflictDoNothing();
+}
+
+export async function seedBooks(idByEmail: Map<string, string>, userByEmail: Map<string, SeedUser>): Promise<void> {
+    for (const b of BOOKS) {
+        const ownerId = idByEmail.get(b.ownerEmail);
+        if (!ownerId) { console.warn(`[seed] no owner found for ${b.slug}`); continue; }
+        const bookId = await upsertSeedBook(b, ownerId);
+        const threads = buildSeedThreads(b, idByEmail, userByEmail);
+        await applyThreadsToBookYjs(bookId, threads);
+        await reseedBookComments(bookId, threads);
+        for (const a of b.assignments) {
+            const uid = idByEmail.get(a.email);
+            if (!uid) { console.warn(`[seed] no user for assignment ${a.email}`); continue; }
+            await upsertAssignment(bookId, uid, a.role);
+        }
+        console.log(`[seed] book ${b.slug} (${bookId})`);
+    }
+}
