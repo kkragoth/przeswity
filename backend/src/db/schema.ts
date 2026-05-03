@@ -45,6 +45,9 @@ export const assignment = pgTable('assignment', {
 export const bookYjsState = pgTable('book_yjs_state', {
     bookId: uuid('book_id').primaryKey().references(() => book.id, { onDelete: 'cascade' }),
     state: bytea('state').notNull(),
+    // Tracked alongside `state` to flag pathological growth without scanning bytea on
+    // every list page. See ADR docs/adr/006-book-yjs-state-size.md.
+    sizeBytes: integer('size_bytes').notNull().default(0),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
@@ -57,6 +60,11 @@ export const bookSnapshot = pgTable('book_snapshot', {
     createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (t) => ({ byBook: index('book_snapshot_book_idx').on(t.bookId, t.createdAt) }));
 
+// INVARIANT: (book_id, anchor_id) is intentionally NOT unique. Multiple threads can
+// anchor to the same span — e.g. an editor opens a thread, the author replies, the
+// editor opens a second thread on the same selection covering a different concern.
+// Anchors are best-effort references to ProseMirror marks; they migrate as the doc
+// edits underneath them.
 export const commentThread = pgTable('comment_thread', {
     id: uuid('id').primaryKey().defaultRandom(),
     bookId: uuid('book_id').notNull().references(() => book.id, { onDelete: 'cascade' }),

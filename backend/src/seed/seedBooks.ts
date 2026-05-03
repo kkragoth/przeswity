@@ -34,8 +34,13 @@ async function upsertSeedBook(spec: SeedBook, ownerId: string): Promise<string> 
         set: { title: spec.title, description: spec.description, initialMarkdown: md },
     });
 
-    await db.insert(bookYjsState).values({ bookId: id, state: asByteaInput(Y.encodeStateAsUpdate(seededDoc)) })
-        .onConflictDoUpdate({ target: bookYjsState.bookId, set: { state: asByteaInput(yState), updatedAt: new Date() } });
+    const seededBytes = asByteaInput(Y.encodeStateAsUpdate(seededDoc));
+    const initialBytes = asByteaInput(yState);
+    await db.insert(bookYjsState).values({ bookId: id, state: seededBytes, sizeBytes: seededBytes.byteLength })
+        .onConflictDoUpdate({
+            target: bookYjsState.bookId,
+            set: { state: initialBytes, sizeBytes: initialBytes.byteLength, updatedAt: new Date() },
+        });
     return id;
 }
 

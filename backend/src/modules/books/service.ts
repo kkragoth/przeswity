@@ -1,4 +1,4 @@
-import { eq, inArray, desc, and, asc, sql } from 'drizzle-orm';
+import { eq, inArray, desc, and, asc, sql, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../../db/client.js';
 import { book, assignment, bookStageHistory, bookYjsState, user } from '../../db/schema.js';
@@ -35,22 +35,15 @@ export async function listVisibleBooks(userId: string, admin: boolean): Promise<
     if (admin) {
         return db.select().from(book).orderBy(desc(book.updatedAt));
     }
-    const myAssigned = await db.select({ bookId: assignment.bookId })
-        .from(assignment).where(eq(assignment.userId, userId));
-    const assignedIds = [...new Set(myAssigned.map((r) => r.bookId))];
-    const owned = await db.select().from(book).where(eq(book.createdById, userId));
-    const assigned = assignedIds.length
-        ? await db.select().from(book).where(inArray(book.id, assignedIds))
-        : [];
-    const seen = new Set<string>();
-    const merged: BookRow[] = [];
-    for (const row of [...owned, ...assigned]) {
-        if (seen.has(row.id)) continue;
-        seen.add(row.id);
-        merged.push(row);
-    }
-    merged.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
-    return merged;
+    // Single query via LEFT JOIN: a book is visible if I own it OR I have at least one
+    // assignment row for it. DISTINCT collapses duplicate joins when multiple assignment
+    // rows match the same book.
+    const rows = await db.selectDistinct({ b: book })
+        .from(book)
+        .leftJoin(assignment, and(eq(assignment.bookId, book.id), eq(assignment.userId, userId)))
+        .where(or(eq(book.createdById, userId), sql`${assignment.userId} IS NOT NULL`))
+        .orderBy(desc(book.updatedAt));
+    return rows.map((r) => r.b);
 }
 
 export async function listAssigneeCounts(bookIds: string[]): Promise<Map<string, number>> {
@@ -120,7 +113,8 @@ export async function createBookWithSeed(
                 createdById: me.id,
             });
             if (yState) {
-                await tx.insert(bookYjsState).values({ bookId: b.id, state: asByteaInput(yState) });
+                const initBytes = asByteaInput(yState);
+                await tx.insert(bookYjsState).values({ bookId: b.id, state: initBytes, sizeBytes: initBytes.byteLength });
             }
             if (body.initialAssignments.length > 0) {
                 const rows = dedupAssignments(body.initialAssignments).map((a) => ({ bookId: b.id, userId: a.userId, role: a.role }));

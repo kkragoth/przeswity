@@ -41,18 +41,20 @@ export async function listUsersPaginated(limit: number, offset: number): Promise
 }
 
 export async function buildMeResponse(userId: string): Promise<MeDtoT> {
-    const [full] = await db.select().from(user).where(eq(user.id, userId));
+    // Three queries fired in parallel — same wall-clock as a single query in practice
+    // and avoids Postgres's `COUNT(DISTINCT ...) OVER ()` (feature not supported, 0A000).
+    const [[full], grouped, [counts]] = await Promise.all([
+        db.select().from(user).where(eq(user.id, userId)),
+        db.select({ role: assignment.role, count: sql<number>`COUNT(*)` })
+            .from(assignment).where(eq(assignment.userId, userId)).groupBy(assignment.role),
+        db.select({ visibleBookCount: sql<number>`COUNT(DISTINCT ${assignment.bookId})` })
+            .from(assignment).where(eq(assignment.userId, userId)),
+    ]);
     if (!full) throw new AppError('errors.user.notFound', 404, 'user not found');
-    // visibleBookCount comes back from SQL; role counts still need each row, but a single
-    // query keeps round-trips at one. Distinct: book_id can repeat across role rows for
-    // the same book, so DISTINCT matters.
-    const [counts] = await db.select({
-        visibleBookCount: sql<number>`COUNT(DISTINCT ${assignment.bookId})`,
-    }).from(assignment).where(eq(assignment.userId, userId));
-    const rows = await db.select({ role: assignment.role })
-        .from(assignment).where(eq(assignment.userId, userId));
+
     const assignmentRoleCounts: Record<string, number> = {};
-    for (const r of rows) assignmentRoleCounts[r.role] = (assignmentRoleCounts[r.role] ?? 0) + 1;
+    for (const r of grouped) assignmentRoleCounts[r.role] = Number(r.count);
+
     return {
         ...projectUser(full),
         visibleBookCount: Number(counts?.visibleBookCount ?? 0),

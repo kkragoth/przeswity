@@ -141,8 +141,10 @@ export async function applyThreadsToBookYjs(bookId: string, threads: SeedThread[
     Y.applyUpdate(doc, new Uint8Array(yState[0].state));
     applyThreadsToYDoc(doc, threads);
     const markedDoc = applyThreadMarksToYDoc(doc, threads);
+    const markedBytes = asByteaInput(Y.encodeStateAsUpdate(markedDoc));
     await db.update(bookYjsState).set({
-        state: asByteaInput(Y.encodeStateAsUpdate(markedDoc)),
+        state: markedBytes,
+        sizeBytes: markedBytes.byteLength,
         updatedAt: new Date(),
     }).where(eq(bookYjsState.bookId, bookId));
 }
