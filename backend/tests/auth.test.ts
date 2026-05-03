@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { auth } from '../src/auth/betterAuth';
+import { auth } from '../src/auth/betterAuth.config';
 
 describe('better-auth config', () => {
     it('has email-password enabled', () => {

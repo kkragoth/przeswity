@@ -3,8 +3,8 @@ import { z } from 'zod';
 import { eq, sql } from 'drizzle-orm';
 import { db } from '../../db/client.js';
 import { user, assignment } from '../../db/schema.js';
-import { auth } from '../../auth/betterAuth.js';
-import { requireSession, requireAdmin, requireProjectManager } from '../../auth/session.js';
+import { auth } from '../../auth/betterAuth.config.js';
+import { requireSession, requireAdmin, requireProjectManager, authedHandler } from '../../auth/session.js';
 import { asyncHandler, AppError } from '../../lib/errors.js';
 import { registry } from '../../openapi/registry.js';
 import { UserDto, MeDto, CreateUserBody, UpdateUserBody, PatchMeBody } from './schemas.js';
@@ -46,18 +46,22 @@ registry.registerPath({
     responses: { 200: { description: 'me updated', content: { 'application/json': { schema: MeDto } } } },
 });
 
-const projectUser = (u: typeof user.$inferSelect) => ({
+type UserRow = typeof user.$inferSelect;
+type UserDtoT = z.infer<typeof UserDto>;
+type MeDtoT = z.infer<typeof MeDto>;
+
+const projectUser = (u: UserRow): UserDtoT => ({
     id: u.id,
     email: u.email,
     name: u.name,
-    systemRole: (u.systemRole ?? null) as 'admin' | 'project_manager' | null,
+    systemRole: (u.systemRole ?? null) as UserDtoT['systemRole'],
     competencyTags: u.competencyTags ?? [],
     color: u.color ?? '#7c3aed',
     image: u.image ?? null,
-    preferredLocale: (u.preferredLocale ?? 'pl') as 'pl' | 'en' | 'ua',
+    preferredLocale: (u.preferredLocale ?? 'pl') as UserDtoT['preferredLocale'],
 });
 
-async function buildMeResponse(userId: string) {
+async function buildMeResponse(userId: string): Promise<MeDtoT> {
     const [full] = await db.select().from(user).where(eq(user.id, userId));
     if (!full) throw new AppError('errors.user.notFound', 404, 'user not found');
     // visibleBookCount comes back from SQL; role counts still need each row, but a single
@@ -78,12 +82,12 @@ async function buildMeResponse(userId: string) {
     };
 }
 
-usersRouter.get('/api/users', requireSession, requireProjectManager, asyncHandler(async (_req: any, res: any) => {
+usersRouter.get('/api/users', requireSession, requireProjectManager, asyncHandler(async (_req, res) => {
     const rows = await db.select().from(user);
     res.json(rows.map(projectUser));
 }));
 
-usersRouter.post('/api/users', requireSession, requireProjectManager, asyncHandler(async (req: any, res: any) => {
+usersRouter.post('/api/users', requireSession, requireProjectManager, authedHandler(async (req, res) => {
     const body = CreateUserBody.parse(req.body);
     const me = req.user;
     // Only admins can create admin users
@@ -92,8 +96,9 @@ usersRouter.post('/api/users', requireSession, requireProjectManager, asyncHandl
     }
     try {
         await auth.api.signUpEmail({ body: { email: body.email, password: body.password, name: body.name }, asResponse: true });
-    } catch (e: any) {
-        if (String(e?.message ?? '').toLowerCase().includes('exists')) {
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (msg.toLowerCase().includes('exists')) {
             throw new AppError('errors.user.duplicate', 409, 'user already exists');
         }
         throw e;
@@ -105,7 +110,7 @@ usersRouter.post('/api/users', requireSession, requireProjectManager, asyncHandl
     res.json(projectUser(u));
 }));
 
-usersRouter.patch('/api/users/:id', requireSession, requireAdmin, asyncHandler(async (req: any, res: any) => {
+usersRouter.patch('/api/users/:id', requireSession, requireAdmin, authedHandler(async (req, res) => {
     const body = UpdateUserBody.parse(req.body);
     const update: Partial<typeof user.$inferInsert> = {};
     if (body.name !== undefined) update.name = body.name;
@@ -119,19 +124,19 @@ usersRouter.patch('/api/users/:id', requireSession, requireAdmin, asyncHandler(a
     res.json(projectUser(updated[0]));
 }));
 
-usersRouter.delete('/api/users/:id', requireSession, requireAdmin, asyncHandler(async (req: any, res: any) => {
+usersRouter.delete('/api/users/:id', requireSession, requireAdmin, authedHandler(async (req, res) => {
     const deleted = await db.delete(user).where(eq(user.id, req.params.id)).returning({ id: user.id });
     if (deleted.length === 0) throw new AppError('errors.user.notFound', 404, 'user not found');
     res.status(204).end();
 }));
 
-usersRouter.get('/api/me', requireSession, asyncHandler(async (req: any, res: any) => {
+usersRouter.get('/api/me', requireSession, authedHandler(async (req, res) => {
     res.json(await buildMeResponse(req.user.id));
 }));
 
-usersRouter.patch('/api/me', requireSession, asyncHandler(async (req: any, res: any) => {
+usersRouter.patch('/api/me', requireSession, authedHandler(async (req, res) => {
     const body = PatchMeBody.parse(req.body);
-    const userId: string = req.user.id;
+    const userId = req.user.id;
     const update: Partial<typeof user.$inferInsert> = {};
     if (body.name !== undefined) update.name = body.name;
     if (body.color !== undefined) update.color = body.color;

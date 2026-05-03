@@ -3,7 +3,7 @@ import { authenticate } from '../src/collab/auth';
 import { db, pool } from '../src/db/client';
 import { user, book, assignment, bookYjsState } from '../src/db/schema';
 import { eq } from 'drizzle-orm';
-import { auth } from '../src/auth/betterAuth';
+import { auth } from '../src/auth/betterAuth.config';
 
 async function clear() {
     await db.delete(assignment); await db.delete(bookYjsState); await db.delete(book); await db.delete(user);

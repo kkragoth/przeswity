@@ -1,10 +1,14 @@
-import { auth } from '../auth/betterAuth.js';
+import { auth } from '../auth/betterAuth.config.js';
 import type { Role } from '../lib/permissions.js';
+import type { AuthUser } from '../auth/session.js';
+import { SystemRole } from '../db/auth-schema.js';
 import { env } from '../env.js';
 import { getBookAccessByUserId } from '../lib/access.js';
 
+export type CollabUser = Pick<AuthUser, 'id' | 'name' | 'systemRole'> & Partial<AuthUser>;
+
 export interface CollabContext {
-    user: any;
+    user: CollabUser;
     roles: Role[];
     readOnly: boolean;
 }
@@ -23,7 +27,7 @@ export async function authenticate(data: {
         else if (Array.isArray(v)) headers.set(k, v.join(', '));
     }
     const session = await auth.api.getSession({ headers });
-    const u: any = session?.user ?? null;
+    const u = (session?.user ?? null) as (CollabUser | null);
 
     if (!data.documentName.startsWith('book:')) throw new Error('bad document name');
     const bookId = data.documentName.slice('book:'.length);
@@ -36,7 +40,7 @@ export async function authenticate(data: {
             const probe = await getBookAccessByUserId(bookId, null, null);
             if (probe.kind === 'notFound') throw new Error('book not found');
             return {
-                user: { id: 'dev-ws-anon', name: 'Dev WS User', systemRole: 'admin' },
+                user: { id: 'dev-ws-anon', name: 'Dev WS User', systemRole: SystemRole.Admin },
                 roles: ['editor'],
                 readOnly: false,
             };

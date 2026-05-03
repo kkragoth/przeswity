@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { eq, and, inArray } from 'drizzle-orm';
+import type { InferSelectModel } from 'drizzle-orm';
 import { db } from '../../db/client.js';
 import { assignment, user } from '../../db/schema.js';
-import { requireSession } from '../../auth/session.js';
-import { asyncHandler, AppError } from '../../lib/errors.js';
+import { requireSession, authedHandler } from '../../auth/session.js';
+import { AppError } from '../../lib/errors.js';
 import { loadBookAccess, requireBookAccess } from '../../lib/access.js';
 import { registry } from '../../openapi/registry.js';
 import {
@@ -16,6 +17,9 @@ import {
 } from './schemas.js';
 import { toIsoOrThrow } from '../../lib/dto.js';
 import { userPublicCols } from '../../db/projections.js';
+
+type AssignmentRow = InferSelectModel<typeof assignment>;
+type AssignmentDtoT = z.infer<typeof AssignmentDto>;
 
 export const assignmentsRouter = Router();
 
@@ -44,14 +48,14 @@ registry.registerPath({
     responses: { 204: { description: 'deleted' } },
 });
 
-const projectAssignment = (a: any) => ({
+const projectAssignment = (a: AssignmentRow): AssignmentDtoT => ({
     bookId: a.bookId,
     userId: a.userId,
-    role: a.role,
+    role: a.role as AssignmentDtoT['role'],
     createdAt: toIsoOrThrow(a.createdAt),
 });
 
-assignmentsRouter.get('/api/books/:bookId/assignments', requireSession, asyncHandler(async (req: any, res) => {
+assignmentsRouter.get('/api/books/:bookId/assignments', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const access = await loadBookAccess(req.params.bookId, me);
     requireBookAccess(access);
@@ -63,7 +67,7 @@ assignmentsRouter.get('/api/books/:bookId/assignments', requireSession, asyncHan
     res.json(rows.map((r) => ({ ...projectAssignment(r.a), user: r.u })));
 }));
 
-assignmentsRouter.post('/api/books/:bookId/assignments', requireSession, asyncHandler(async (req: any, res) => {
+assignmentsRouter.post('/api/books/:bookId/assignments', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const access = await loadBookAccess(req.params.bookId, me);
     requireBookAccess(access);
@@ -84,7 +88,7 @@ assignmentsRouter.post('/api/books/:bookId/assignments', requireSession, asyncHa
     res.json(projectAssignment(a));
 }));
 
-assignmentsRouter.post('/api/books/:bookId/assignments/bulk', requireSession, asyncHandler(async (req: any, res) => {
+assignmentsRouter.post('/api/books/:bookId/assignments/bulk', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const access = await loadBookAccess(req.params.bookId, me);
     requireBookAccess(access);
@@ -119,7 +123,7 @@ assignmentsRouter.post('/api/books/:bookId/assignments/bulk', requireSession, as
             .filter((a) => !existingKeys.has(`${a.userId}:${a.role}`))
             .map((a) => ({ bookId: req.params.bookId, userId: a.userId, role: a.role }));
 
-        let created: any[] = [];
+        let created: AssignmentRow[] = [];
         if (toInsert.length > 0) {
             created = await tx.insert(assignment).values(toInsert).onConflictDoNothing().returning();
         }
@@ -135,7 +139,7 @@ assignmentsRouter.post('/api/books/:bookId/assignments/bulk', requireSession, as
     });
 }));
 
-assignmentsRouter.delete('/api/books/:bookId/assignments/:userId/:role', requireSession, asyncHandler(async (req: any, res) => {
+assignmentsRouter.delete('/api/books/:bookId/assignments/:userId/:role', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const access = await loadBookAccess(req.params.bookId, me);
     requireBookAccess(access);

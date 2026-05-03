@@ -4,7 +4,7 @@ import { buildApp } from '../src/app';
 import { db, pool } from '../src/db/client';
 import { user, assignment, book, bookYjsState } from '../src/db/schema';
 import { eq } from 'drizzle-orm';
-import { auth } from '../src/auth/betterAuth';
+import { auth } from '../src/auth/betterAuth.config';
 
 let app: any;
 async function clear() { await db.delete(assignment); await db.delete(bookYjsState); await db.delete(book); await db.delete(user); }

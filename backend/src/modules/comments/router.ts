@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { eq, and, inArray, sql } from 'drizzle-orm';
+import type { InferSelectModel } from 'drizzle-orm';
 import { db } from '../../db/client.js';
 import { user, commentThread, commentMessage } from '../../db/schema.js';
-import { requireSession } from '../../auth/session.js';
-import { asyncHandler, AppError } from '../../lib/errors.js';
+import { requireSession, authedHandler } from '../../auth/session.js';
+import { AppError } from '../../lib/errors.js';
 import { isAdmin } from '../../lib/permissions.js';
 import { loadBookAccess, requireBookAccess } from '../../lib/access.js';
 import { registry } from '../../openapi/registry.js';
@@ -20,6 +21,13 @@ import {
 } from './schemas.js';
 
 export const commentsRouter = Router();
+
+type CommentThreadRow = InferSelectModel<typeof commentThread>;
+type CommentMessageRow = InferSelectModel<typeof commentMessage>;
+type PublicAuthor = { id: string; email: string; name: string; color: string | null; image: string | null };
+type MessageWithAuthor = CommentMessageRow & { author: PublicAuthor };
+type ThreadDto = z.infer<typeof CommentThreadDto>;
+type DtoMentions = ThreadDto['messages'][number]['mentions'];
 
 // ── OpenAPI registrations ──────────────────────────────────────────────────
 
@@ -95,7 +103,7 @@ registry.registerPath({
 
 // ── Shared helpers ─────────────────────────────────────────────────────────
 
-async function loadThreadOrThrow(threadId: string) {
+async function loadThreadOrThrow(threadId: string): Promise<CommentThreadRow> {
     const [t] = await db.select().from(commentThread).where(eq(commentThread.id, threadId));
     if (!t) throw new AppError('errors.comment.notFound', 404, 'thread not found');
     return t;
@@ -103,7 +111,7 @@ async function loadThreadOrThrow(threadId: string) {
 
 // ── Projection helpers ─────────────────────────────────────────────────────
 
-function buildThreadDto(thread: any, messages: any[]): any {
+function buildThreadDto(thread: CommentThreadRow, messages: MessageWithAuthor[]): ThreadDto {
     return {
         id: thread.id,
         bookId: thread.bookId,
@@ -114,21 +122,28 @@ function buildThreadDto(thread: any, messages: any[]): any {
         createdById: thread.createdById,
         createdAt: toIsoOrThrow(thread.createdAt),
         messages: messages
+            .slice()
             .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
             .map((m) => ({
                 id: m.id,
                 threadId: m.threadId,
                 authorId: m.authorId,
                 body: m.body,
-                mentions: m.mentions ?? { userIds: [], roles: [] },
+                mentions: (m.mentions ?? { userIds: [], roles: [] }) as DtoMentions,
                 editedAt: toIso(m.editedAt),
                 createdAt: toIsoOrThrow(m.createdAt),
-                author: m.author,
+                author: {
+                    id: m.author.id,
+                    email: m.author.email,
+                    name: m.author.name,
+                    color: m.author.color ?? '#7c3aed',
+                    image: m.author.image,
+                },
             })),
     };
 }
 
-async function loadThreadWithMessages(threadId: string): Promise<any> {
+async function loadThreadWithMessages(threadId: string): Promise<ThreadDto | null> {
     const [thread] = await db.select().from(commentThread).where(eq(commentThread.id, threadId));
     if (!thread) return null;
     const rows = await db.select({
@@ -137,13 +152,13 @@ async function loadThreadWithMessages(threadId: string): Promise<any> {
     }).from(commentMessage)
         .innerJoin(user, eq(user.id, commentMessage.authorId))
         .where(eq(commentMessage.threadId, threadId));
-    const messages = rows.map((r) => ({ ...r.msg, author: r.author }));
+    const messages: MessageWithAuthor[] = rows.map((r) => ({ ...r.msg, author: r.author }));
     return buildThreadDto(thread, messages);
 }
 
 // ── Routes ─────────────────────────────────────────────────────────────────
 
-commentsRouter.get('/api/books/:bookId/comments', requireSession, asyncHandler(async (req: any, res) => {
+commentsRouter.get('/api/books/:bookId/comments', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const access = await loadBookAccess(req.params.bookId, me);
     requireBookAccess(access);
@@ -175,7 +190,7 @@ commentsRouter.get('/api/books/:bookId/comments', requireSession, asyncHandler(a
         .innerJoin(user, eq(user.id, commentMessage.authorId))
         .where(inArray(commentMessage.threadId, threadIds));
 
-    const messagesByThread = new Map<string, any[]>();
+    const messagesByThread = new Map<string, MessageWithAuthor[]>();
     for (const row of msgRows) {
         const list = messagesByThread.get(row.msg.threadId) ?? [];
         list.push({ ...row.msg, author: row.author });
@@ -185,10 +200,7 @@ commentsRouter.get('/api/books/:bookId/comments', requireSession, asyncHandler(a
     const myRoles: string[] = query.mentionsMe ? access.roles : [];
 
     const result = threads
-        .map((t) => {
-            const msgs = messagesByThread.get(t.id) ?? [];
-            return { thread: t, messages: msgs };
-        })
+        .map((t) => ({ thread: t, messages: messagesByThread.get(t.id) ?? [] }))
         .filter(({ messages }) => {
             if (query.mentionsRole && !messages.some((m) => {
                 const roles: string[] = m.mentions?.roles ?? [];
@@ -209,7 +221,7 @@ commentsRouter.get('/api/books/:bookId/comments', requireSession, asyncHandler(a
     res.json(result);
 }));
 
-commentsRouter.post('/api/books/:bookId/comments', requireSession, asyncHandler(async (req: any, res) => {
+commentsRouter.post('/api/books/:bookId/comments', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const access = await loadBookAccess(req.params.bookId, me);
     requireBookAccess(access);
@@ -233,7 +245,7 @@ commentsRouter.post('/api/books/:bookId/comments', requireSession, asyncHandler(
     res.json(await loadThreadWithMessages(thread.id));
 }));
 
-commentsRouter.post('/api/comments/:threadId/messages', requireSession, asyncHandler(async (req: any, res) => {
+commentsRouter.post('/api/comments/:threadId/messages', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const thread = await loadThreadOrThrow(req.params.threadId);
     const access = await loadBookAccess(thread.bookId, me);
@@ -251,7 +263,7 @@ commentsRouter.post('/api/comments/:threadId/messages', requireSession, asyncHan
     res.json(await loadThreadWithMessages(thread.id));
 }));
 
-commentsRouter.patch('/api/comments/:threadId/messages/:messageId', requireSession, asyncHandler(async (req: any, res) => {
+commentsRouter.patch('/api/comments/:threadId/messages/:messageId', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const thread = await loadThreadOrThrow(req.params.threadId);
     const access = await loadBookAccess(thread.bookId, me);
@@ -272,7 +284,7 @@ commentsRouter.patch('/api/comments/:threadId/messages/:messageId', requireSessi
     res.json(await loadThreadWithMessages(thread.id));
 }));
 
-commentsRouter.post('/api/comments/:threadId/resolve', requireSession, asyncHandler(async (req: any, res) => {
+commentsRouter.post('/api/comments/:threadId/resolve', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const thread = await loadThreadOrThrow(req.params.threadId);
     const access = await loadBookAccess(thread.bookId, me);
@@ -283,7 +295,7 @@ commentsRouter.post('/api/comments/:threadId/resolve', requireSession, asyncHand
     res.json(await loadThreadWithMessages(thread.id));
 }));
 
-commentsRouter.delete('/api/comments/:threadId/messages/:messageId', requireSession, asyncHandler(async (req: any, res) => {
+commentsRouter.delete('/api/comments/:threadId/messages/:messageId', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const thread = await loadThreadOrThrow(req.params.threadId);
     const access = await loadBookAccess(thread.bookId, me);
@@ -313,7 +325,7 @@ commentsRouter.delete('/api/comments/:threadId/messages/:messageId', requireSess
     res.json(await loadThreadWithMessages(thread.id));
 }));
 
-commentsRouter.patch('/api/comments/:threadId/detach', requireSession, asyncHandler(async (req: any, res) => {
+commentsRouter.patch('/api/comments/:threadId/detach', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const thread = await loadThreadOrThrow(req.params.threadId);
     const access = await loadBookAccess(thread.bookId, me);
@@ -326,7 +338,7 @@ commentsRouter.patch('/api/comments/:threadId/detach', requireSession, asyncHand
     res.json(await loadThreadWithMessages(thread.id));
 }));
 
-commentsRouter.patch('/api/comments/:threadId/reattach', requireSession, asyncHandler(async (req: any, res) => {
+commentsRouter.patch('/api/comments/:threadId/reattach', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const thread = await loadThreadOrThrow(req.params.threadId);
     const access = await loadBookAccess(thread.bookId, me);
@@ -337,7 +349,7 @@ commentsRouter.patch('/api/comments/:threadId/reattach', requireSession, asyncHa
 
 // Thread deletion is an explicit owner/admin policy — kept outside Permissions so the
 // role matrix can't silently grant deletion to translators etc. via a future edit.
-commentsRouter.delete('/api/comments/:threadId', requireSession, asyncHandler(async (req: any, res) => {
+commentsRouter.delete('/api/comments/:threadId', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const thread = await loadThreadOrThrow(req.params.threadId);
     const access = await loadBookAccess(thread.bookId, me);

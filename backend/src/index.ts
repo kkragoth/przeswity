@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import { parse } from 'node:url';
-import { WebSocketServer } from 'ws';
+import { WebSocketServer, type WebSocket } from 'ws';
 import { buildApp, devAuthEnabled } from './app.js';
 import { hocuspocus } from './collab/server.js';
 import { env } from './env.js';
@@ -18,7 +18,7 @@ server.on('upgrade', (req, socket, head) => {
         socket.destroy();
         return;
     }
-    wss.handleUpgrade(req, socket, head, (ws: any) => {
+    wss.handleUpgrade(req, socket, head, (ws: WebSocket) => {
         hocuspocus.handleConnection(ws, req);
     });
 });

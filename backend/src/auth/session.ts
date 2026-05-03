@@ -1,5 +1,5 @@
-import type { Request, Response, NextFunction } from 'express';
-import { auth } from './betterAuth.js';
+import type { Request, RequestHandler, Response, NextFunction } from 'express';
+import { auth } from './betterAuth.config.js';
 import { fromNodeHeaders } from 'better-auth/node';
 import { SystemRole } from '../db/auth-schema.js';
 import { AppError } from '../lib/errors.js';
@@ -78,3 +78,21 @@ export function mustUser(req: Request): AuthUser {
     if (!req.user) throw new AppError('errors.auth.unauthenticated', 401, 'unauthenticated');
     return req.user;
 }
+
+// Express's ParamsDictionary keys are typed `string | string[]` to model repeated keys —
+// our routes never use that, so we narrow params to `Record<string, string>` to keep
+// handler call sites free of casts (`req.params.bookId` reads as `string`).
+export type AuthedRequest = Omit<Request, 'params' | 'user'> & {
+    user: AuthUser;
+    sessionId: string;
+    params: Record<string, string>;
+};
+
+// Wraps a handler that depends on `requireSession` having run. Asserts `req.user` is
+// present at runtime (defence-in-depth) so handlers can read `req.user.id` without `!`.
+export const authedHandler = (
+    fn: (req: AuthedRequest, res: Response, next: NextFunction) => unknown | Promise<unknown>,
+): RequestHandler => (req, res, next) => {
+    if (!req.user) return next(new AppError('errors.auth.unauthenticated', 401, 'unauthenticated'));
+    Promise.resolve(fn(req as unknown as AuthedRequest, res, next)).catch(next);
+};

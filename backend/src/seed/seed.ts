@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 import * as Y from 'yjs';
 import { db, pool } from '../db/client.js';
 import { user, book, assignment, bookYjsState, commentThread, commentMessage } from '../db/schema.js';
-import { auth } from '../auth/betterAuth.js';
+import { auth } from '../auth/betterAuth.config.js';
 import { DEV_PASSWORD } from './devPassword.js';
 import { seedBookId } from './ids.js';
 import { buildProseMirrorSchema, PROSEMIRROR_FIELD } from '@przeswity/editor-schema';

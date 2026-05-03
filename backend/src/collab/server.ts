@@ -2,7 +2,7 @@
 // the Hocuspocus document store are process-local. Multi-process deployments must set
 // PRESENCE_API_ENABLED=false and accept that collab presence/cursors are partial per pod
 // until a Redis-backed store lands.
-import { Hocuspocus } from '@hocuspocus/server';
+import { Hocuspocus, type onAuthenticatePayload } from '@hocuspocus/server';
 import { authenticate } from './auth.js';
 import { persistence } from './persistence.js';
 import { presenceExtension, presenceHeartbeat } from './presence.js';
@@ -12,7 +12,7 @@ const extensions = [persistence, attributionExtension, presenceExtension, presen
 
 export const hocuspocus = new Hocuspocus({
     extensions,
-    async onAuthenticate(data: any) {
+    async onAuthenticate(data: onAuthenticatePayload) {
         const ctx = await authenticate({
             documentName: data.documentName,
             requestHeaders: data.requestHeaders,
@@ -24,4 +24,4 @@ export const hocuspocus = new Hocuspocus({
     },
 });
 
-console.log('[collab] extensions:', extensions.map((e) => (e as any).constructor?.name ?? typeof e).join(', '));
+console.log('[collab] extensions:', extensions.map((e) => (e as { constructor?: { name?: string } }).constructor?.name ?? typeof e).join(', '));

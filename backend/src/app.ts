@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { toNodeHandler } from 'better-auth/node';
-import { auth } from './auth/betterAuth.js';
+import { auth } from './auth/betterAuth.config.js';
 import { devAuthRouter, devAuthEnabled } from './auth/devSignIn.js';
 import { docsRouter } from './openapi/docs.js';
 import { usersRouter } from './modules/users/router.js';
@@ -17,6 +17,7 @@ import { env } from './env.js';
 
 export async function buildApp() {
     const app = express();
+    app.disable('x-powered-by');
     app.use(cors({ origin: env.CORS_ORIGINS, credentials: true }));
     app.use(cookieParser());
 

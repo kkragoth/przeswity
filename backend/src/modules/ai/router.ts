@@ -27,7 +27,7 @@ registry.registerPath({
     responses: { 200: { description: 'suggestions', content: { 'application/json': { schema: ProofreadResponse } } } },
 });
 
-aiRouter.post('/api/ai/proofread', requireSession, asyncHandler(async (req: any, res: any) => {
+aiRouter.post('/api/ai/proofread', requireSession, asyncHandler(async (req, res) => {
     const body = ProofreadBody.parse(req.body);
     // Stage 1 stub: return canned suggestions if the text contains common Polish errors
     const suggestions: { range: { from: number; to: number }; replacement: string; reason: string }[] = [];

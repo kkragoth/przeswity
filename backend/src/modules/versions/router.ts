@@ -3,8 +3,8 @@ import { z } from 'zod';
 import { eq, and, desc } from 'drizzle-orm';
 import { db } from '../../db/client.js';
 import { bookSnapshot, bookYjsState, user } from '../../db/schema.js';
-import { requireSession } from '../../auth/session.js';
-import { asyncHandler, AppError } from '../../lib/errors.js';
+import { requireSession, authedHandler } from '../../auth/session.js';
+import { AppError } from '../../lib/errors.js';
 import { loadBookAccess, requireBookAccess } from '../../lib/access.js';
 import { registry } from '../../openapi/registry.js';
 import { SnapshotSummaryDto, CreateSnapshotBody } from './schemas.js';
@@ -39,7 +39,7 @@ registry.registerPath({
     responses: { 204: { description: 'deleted' } },
 });
 
-versionsRouter.get('/api/books/:bookId/snapshots', requireSession, asyncHandler(async (req: any, res: any) => {
+versionsRouter.get('/api/books/:bookId/snapshots', requireSession, authedHandler(async (req, res) => {
     const access = await loadBookAccess(req.params.bookId, req.user);
     requireBookAccess(access);
     const rows = await db.select({
@@ -55,7 +55,7 @@ versionsRouter.get('/api/books/:bookId/snapshots', requireSession, asyncHandler(
     })));
 }));
 
-versionsRouter.post('/api/books/:bookId/snapshots', requireSession, asyncHandler(async (req: any, res: any) => {
+versionsRouter.post('/api/books/:bookId/snapshots', requireSession, authedHandler(async (req, res) => {
     const access = await loadBookAccess(req.params.bookId, req.user);
     requireBookAccess(access);
     // Snapshot-create is "any assignee or higher" — not a role-matrix question. Owner +
@@ -79,7 +79,7 @@ versionsRouter.post('/api/books/:bookId/snapshots', requireSession, asyncHandler
     });
 }));
 
-versionsRouter.get('/api/books/:bookId/snapshots/:id/state', requireSession, asyncHandler(async (req: any, res: any) => {
+versionsRouter.get('/api/books/:bookId/snapshots/:id/state', requireSession, authedHandler(async (req, res) => {
     const access = await loadBookAccess(req.params.bookId, req.user);
     requireBookAccess(access);
     const [snap] = await db.select().from(bookSnapshot).where(
@@ -90,7 +90,7 @@ versionsRouter.get('/api/books/:bookId/snapshots/:id/state', requireSession, asy
     res.send(Buffer.from(snap.state));
 }));
 
-versionsRouter.delete('/api/books/:bookId/snapshots/:id', requireSession, asyncHandler(async (req: any, res: any) => {
+versionsRouter.delete('/api/books/:bookId/snapshots/:id', requireSession, authedHandler(async (req, res) => {
     const access = await loadBookAccess(req.params.bookId, req.user);
     requireBookAccess(access);
     if (!access.isAdmin && !access.isOwner) throw new AppError('errors.book.forbidden', 403, 'forbidden');

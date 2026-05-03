@@ -26,7 +26,7 @@ registry.registerPath({
     responses: { 200: { description: 'extracted', content: { 'application/json': { schema: PdfExtractResponse } } } },
 });
 
-pdfRouter.post('/api/pdf/extract', requireSession, upload.single('file'), asyncHandler(async (req: any, res: any) => {
+pdfRouter.post('/api/pdf/extract', requireSession, upload.single('file'), asyncHandler(async (req, res) => {
     if (!req.file) throw new AppError('errors.pdf.noFile', 400, 'file required');
     // Lazy import to avoid pdf-parse self-test running at module load time
     const pdfParse = (await import('pdf-parse')).default;

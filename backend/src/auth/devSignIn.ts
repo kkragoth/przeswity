@@ -1,7 +1,7 @@
 import express, { Router, type Request, type Response } from 'express';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
-import { auth } from './betterAuth.js';
+import { auth } from './betterAuth.config.js';
 import { db } from '../db/client.js';
 import { user } from '../db/auth-schema.js';
 import { env } from '../env.js';

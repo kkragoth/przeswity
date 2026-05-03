@@ -3,9 +3,9 @@ import { z } from 'zod';
 import { eq, and, inArray, asc, or, sql } from 'drizzle-orm';
 import { db } from '../../db/client.js';
 import { book, assignment, bookYjsState, bookSnapshot, user, bookStageHistory } from '../../db/schema.js';
-import { requireSession, requireProjectManager, requireAdmin } from '../../auth/session.js';
+import { requireSession, requireProjectManager, requireAdmin, authedHandler } from '../../auth/session.js';
 import { isAdmin, isProjectManager } from '../../lib/permissions.js';
-import { asyncHandler, AppError } from '../../lib/errors.js';
+import { AppError } from '../../lib/errors.js';
 import { registry } from '../../openapi/registry.js';
 import { BookDto, BookSummaryDto, CreateBookBody, UpdateBookBody, PatchBookStageBody, PatchBookProgressBody, BookStageHistoryDto } from './schemas.js';
 import { markdownToYDocState, yDocStateToMarkdown } from '@przeswity/editor-schema/markdown';
@@ -84,7 +84,7 @@ registry.registerPath({
     responses: { 200: { description: 'presence', content: { 'application/json': { schema: z.object({ users: z.array(z.object({ id: z.string(), name: z.string(), color: z.string() })) }) } } } },
 });
 
-booksRouter.get('/api/books', requireSession, asyncHandler(async (req: any, res: any) => {
+booksRouter.get('/api/books', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const myAssignmentRows = await db.select({ bookId: assignment.bookId, role: assignment.role })
         .from(assignment).where(eq(assignment.userId, me.id));
@@ -112,7 +112,7 @@ booksRouter.get('/api/books', requireSession, asyncHandler(async (req: any, res:
     })));
 }));
 
-booksRouter.get('/api/books/:id', requireSession, asyncHandler(async (req: any, res: any) => {
+booksRouter.get('/api/books/:id', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const access = await loadBookAccess(req.params.id, me);
     requireBookAccess(access);
@@ -120,7 +120,7 @@ booksRouter.get('/api/books/:id', requireSession, asyncHandler(async (req: any, 
     res.json(projectBook(b));
 }));
 
-booksRouter.post('/api/books', requireSession, requireProjectManager, asyncHandler(async (req: any, res: any) => {
+booksRouter.post('/api/books', requireSession, requireProjectManager, authedHandler(async (req, res) => {
     const body = CreateBookBody.parse(req.body);
     const me = req.user;
     const userIds = [...new Set(body.initialAssignments.map((a) => a.userId))];
@@ -166,7 +166,7 @@ booksRouter.post('/api/books', requireSession, requireProjectManager, asyncHandl
     res.json(projectBook(created));
 }));
 
-booksRouter.patch('/api/books/:id', requireSession, asyncHandler(async (req: any, res: any) => {
+booksRouter.patch('/api/books/:id', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const body = UpdateBookBody.parse(req.body);
     const [existing] = await db.select().from(book).where(eq(book.id, req.params.id));
@@ -188,7 +188,7 @@ booksRouter.patch('/api/books/:id', requireSession, asyncHandler(async (req: any
     res.json(projectBook(updated));
 }));
 
-booksRouter.patch('/api/books/:id/stage', requireSession, asyncHandler(async (req: any, res: any) => {
+booksRouter.patch('/api/books/:id/stage', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     if (!isProjectManager(me.systemRole)) {
         throw new AppError('errors.book.forbidden', 403, 'forbidden');
@@ -227,7 +227,7 @@ booksRouter.patch('/api/books/:id/stage', requireSession, asyncHandler(async (re
     res.json(projectBook(updated));
 }));
 
-booksRouter.patch('/api/books/:id/progress', requireSession, asyncHandler(async (req: any, res: any) => {
+booksRouter.patch('/api/books/:id/progress', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     if (!isProjectManager(me.systemRole)) {
         throw new AppError('errors.book.forbidden', 403, 'forbidden');
@@ -247,7 +247,7 @@ booksRouter.patch('/api/books/:id/progress', requireSession, asyncHandler(async 
     res.json(projectBook(updated));
 }));
 
-booksRouter.get('/api/books/:id/stage-history', requireSession, asyncHandler(async (req: any, res: any) => {
+booksRouter.get('/api/books/:id/stage-history', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const access = await loadBookAccess(req.params.id, me);
     requireBookAccess(access);
@@ -266,13 +266,13 @@ booksRouter.get('/api/books/:id/stage-history', requireSession, asyncHandler(asy
     })));
 }));
 
-booksRouter.delete('/api/books/:id', requireSession, requireAdmin, asyncHandler(async (req: any, res: any) => {
+booksRouter.delete('/api/books/:id', requireSession, requireAdmin, authedHandler(async (req, res) => {
     const deleted = await db.delete(book).where(eq(book.id, req.params.id)).returning({ id: book.id });
     if (deleted.length === 0) throw new AppError('errors.book.notFound', 404, 'not found');
     res.status(204).end();
 }));
 
-booksRouter.get('/api/books/:id/markdown', requireSession, asyncHandler(async (req: any, res: any) => {
+booksRouter.get('/api/books/:id/markdown', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const access = await loadBookAccess(req.params.id, me);
     requireBookAccess(access);
@@ -286,7 +286,7 @@ booksRouter.get('/api/books/:id/markdown', requireSession, asyncHandler(async (r
     res.send(yDocStateToMarkdown(new Uint8Array(state.state)));
 }));
 
-booksRouter.get('/api/books/:id/snapshots/:snapId/markdown', requireSession, asyncHandler(async (req: any, res: any) => {
+booksRouter.get('/api/books/:id/snapshots/:snapId/markdown', requireSession, authedHandler(async (req, res) => {
     const me = req.user;
     const access = await loadBookAccess(req.params.id, me);
     requireBookAccess(access);
@@ -298,7 +298,7 @@ booksRouter.get('/api/books/:id/snapshots/:snapId/markdown', requireSession, asy
     res.send(yDocStateToMarkdown(new Uint8Array(snap.state)));
 }));
 
-booksRouter.get('/api/books/:id/presence', requireSession, asyncHandler(async (req: any, res: any) => {
+booksRouter.get('/api/books/:id/presence', requireSession, authedHandler(async (req, res) => {
     if (!env.PRESENCE_API_ENABLED) throw new AppError('errors.presence.disabled', 501, 'presence api disabled');
     const me = req.user;
     const access = await loadBookAccess(req.params.id, me);
