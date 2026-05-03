@@ -32,7 +32,18 @@ export const CreateBookBody = z.object({
     initialAssignments: z.array(z.object({
         userId: z.string(),
         role: BookRoleEnum,
-    })).max(50).default([]),
+    })).max(50).default([])
+        // Reject dup (userId, role) pairs explicitly. The DB has onConflictDoNothing as a
+        // safety net but silently dropping client-sent rows is a confusing 200; 400 here.
+        .refine((rows) => {
+            const seen = new Set<string>();
+            for (const r of rows) {
+                const k = `${r.userId}:${r.role}`;
+                if (seen.has(k)) return false;
+                seen.add(k);
+            }
+            return true;
+        }, { message: 'duplicate (userId, role) entries' }),
 }).openapi('CreateBookBody');
 
 export const UpdateBookBody = z.object({

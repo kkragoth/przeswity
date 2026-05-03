@@ -6,9 +6,8 @@ import { Hocuspocus, type onAuthenticatePayload } from '@hocuspocus/server';
 import { authenticate } from './auth.js';
 import { persistence } from './persistence.js';
 import { presenceExtension, presenceHeartbeat } from './presence.js';
-import { attributionExtension } from './lastEditor.js';
 
-const extensions = [persistence, attributionExtension, presenceExtension, presenceHeartbeat];
+const extensions = [persistence, presenceExtension, presenceHeartbeat];
 
 export const hocuspocus = new Hocuspocus({
     extensions,

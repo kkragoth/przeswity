@@ -34,8 +34,10 @@ async function signIn(email: string) {
 async function seedOwnerAndBook() {
     const owner = await createUser('owner@test.com', { systemRole: 'project_manager' });
     const { cookie } = await signIn('owner@test.com');
+    // initialMarkdown non-empty so the book has a Yjs state row — snapshot creation
+    // requires it (router returns 409 when nothing has been written yet).
     const r = await request(app).post('/api/books').set('Cookie', cookie)
-        .send({ title: 'TestBook', description: '', initialMarkdown: '', initialAssignments: [] }).expect(200);
+        .send({ title: 'TestBook', description: '', initialMarkdown: 'hello', initialAssignments: [] }).expect(200);
     return { owner, bookId: r.body.id, cookie };
 }
 

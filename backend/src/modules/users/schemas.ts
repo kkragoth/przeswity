@@ -23,7 +23,9 @@ export const MeDto = UserDto.extend({
 export const CreateUserBody = z.object({
     email: z.string().email(),
     name: z.string().min(1),
-    password: z.string().min(8),
+    // 72 = bcrypt hard limit; better-auth uses bcrypt under the hood. Keeping the cap
+    // explicit here means we 400 before the auth layer truncates silently.
+    password: z.string().min(8).max(72),
     systemRole: SystemRoleEnum.default(null),
     competencyTags: z.array(z.string()).default([]),
 }).openapi('CreateUserBody');

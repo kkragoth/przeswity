@@ -64,7 +64,12 @@ versionsRouter.post('/api/books/:bookId/snapshots', requireSession, authedHandle
     if (!canCreate) throw new AppError('errors.book.forbidden', 403, 'forbidden');
     const body = CreateSnapshotBody.parse(req.body);
     const [yState] = await db.select().from(bookYjsState).where(eq(bookYjsState.bookId, req.params.bookId));
-    const stateBytes = yState ? yState.state : Buffer.alloc(0);
+    if (!yState?.state) {
+        // No Yjs state yet — snapshot would be a placeholder zero-byte payload that's
+        // useless to restore from. 409 instead of letting clients accumulate phantom rows.
+        throw new AppError('errors.snapshot.emptyState', 409, 'cannot snapshot before any document edits');
+    }
+    const stateBytes = yState.state;
     const [snap] = await db.insert(bookSnapshot).values({
         bookId: req.params.bookId,
         label: body.label,

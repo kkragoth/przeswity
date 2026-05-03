@@ -85,6 +85,12 @@ const dedupAssignments = (input: CreateBody['initialAssignments']): { userId: st
     });
 };
 
+// Postgres FK violation → SQLSTATE 23503. A concurrent user delete between our existence
+// check and the assignment insert would land here; we translate to 409 so the caller can
+// retry instead of seeing an opaque 500.
+const isForeignKeyViolation = (e: unknown): boolean =>
+    typeof e === 'object' && e !== null && (e as { code?: string }).code === '23503';
+
 export async function createBookWithSeed(
     me: { id: string },
     body: CreateBody,
@@ -98,29 +104,36 @@ export async function createBookWithSeed(
     }
     const yState = body.initialMarkdown.trim().length > 0 ? markdownToYDocState(body.initialMarkdown) : null;
 
-    return db.transaction(async (tx) => {
-        const [b] = await tx.insert(book).values({
-            title: body.title,
-            description: body.description,
-            createdById: me.id,
-            initialMarkdown: body.initialMarkdown,
-        }).returning();
-        await tx.insert(bookStageHistory).values({
-            bookId: b.id,
-            fromStage: null,
-            toStage: b.stage,
-            note: 'initial',
-            createdById: me.id,
+    try {
+        return await db.transaction(async (tx) => {
+            const [b] = await tx.insert(book).values({
+                title: body.title,
+                description: body.description,
+                createdById: me.id,
+                initialMarkdown: body.initialMarkdown,
+            }).returning();
+            await tx.insert(bookStageHistory).values({
+                bookId: b.id,
+                fromStage: null,
+                toStage: b.stage,
+                note: 'initial',
+                createdById: me.id,
+            });
+            if (yState) {
+                await tx.insert(bookYjsState).values({ bookId: b.id, state: asByteaInput(yState) });
+            }
+            if (body.initialAssignments.length > 0) {
+                const rows = dedupAssignments(body.initialAssignments).map((a) => ({ bookId: b.id, userId: a.userId, role: a.role }));
+                await tx.insert(assignment).values(rows).onConflictDoNothing();
+            }
+            return b;
         });
-        if (yState) {
-            await tx.insert(bookYjsState).values({ bookId: b.id, state: asByteaInput(yState) });
+    } catch (e) {
+        if (isForeignKeyViolation(e)) {
+            throw new AppError('errors.assignment.userRaceCondition', 409, 'one or more assignees disappeared mid-create');
         }
-        if (body.initialAssignments.length > 0) {
-            const rows = dedupAssignments(body.initialAssignments).map((a) => ({ bookId: b.id, userId: a.userId, role: a.role }));
-            await tx.insert(assignment).values(rows).onConflictDoNothing();
-        }
-        return b;
-    });
+        throw e;
+    }
 }
 
 export async function updateBookFields(

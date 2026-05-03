@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { BookRoleEnum } from '../../lib/permissions.js';
 
 const Mentions = z.object({
-    userIds: z.array(z.string()).default([]),
-    roles: z.array(BookRoleEnum).default([]),
+    userIds: z.array(z.string()).max(50).default([]),
+    roles: z.array(BookRoleEnum).max(50).default([]),
 });
 
 export const CommentAuthor = z.object({
@@ -38,19 +38,19 @@ export const CommentThreadDto = z.object({
 }).openapi('CommentThread');
 
 export const CreateThreadBody = z.object({
-    anchorId: z.string().min(1),
-    quote: z.string().default(''),
-    body: z.string().min(1),
+    anchorId: z.string().min(1).max(256),
+    quote: z.string().max(2000).default(''),
+    body: z.string().min(1).max(8000),
     mentions: Mentions.optional(),
 }).openapi('CreateThreadBody');
 
 export const CreateReplyBody = z.object({
-    body: z.string().min(1),
+    body: z.string().min(1).max(8000),
     mentions: Mentions.optional(),
 }).openapi('CreateReplyBody');
 
 export const EditMessageBody = z.object({
-    body: z.string().min(1),
+    body: z.string().min(1).max(8000),
     mentions: Mentions.optional(),
 }).openapi('EditMessageBody');
 
