@@ -17,7 +17,7 @@
 }
 .thread.is-resolved {
   opacity: 0.7;
-  background: white;
+  background: var(--bg-paper);
 }
 .thread-quote {
   font-style: italic;
@@ -72,7 +72,7 @@
 .bulk-actions button,
 .version-actions button,
 .export-dropdown button {
-  background: white;
+  background: var(--bg-paper);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 4px 10px;
@@ -121,7 +121,7 @@
   border-radius: 999px;
   min-width: 16px;
   text-align: center;
-  border: 2px solid white;
+  border: 2px solid var(--bg-elev);
 }
 
 /* Reactions */
@@ -175,7 +175,7 @@
   top: 100%;
   left: 0;
   margin-top: 4px;
-  background: white;
+  background: var(--bg-paper);
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: var(--shadow);
@@ -235,7 +235,7 @@
   left: 0;
   right: 0;
   bottom: calc(100% + 4px);
-  background: white;
+  background: var(--bg-paper);
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: var(--shadow);
@@ -278,8 +278,8 @@
   font-weight: 500;
 }
 .mention-role {
-  background: #fde68a;
-  color: #92400e;
+  background: var(--ochre-soft);
+  color: var(--ochre);
 }
 
 /* Comment filters */
@@ -301,7 +301,7 @@
   font-size: 11px;
   font-weight: 500;
   border: 1px solid var(--border);
-  background: white;
+  background: var(--bg-paper);
   color: var(--text-muted);
   cursor: pointer;
   transition: background 0.12s, color 0.12s, border-color 0.12s;
@@ -322,7 +322,7 @@
   border-radius: 6px;
   padding: 4px 6px;
   font-size: 11px;
-  background: white;
+  background: var(--bg-paper);
   min-width: 0;
   color: var(--text-muted);
 }
@@ -377,7 +377,7 @@
   font-weight: 700;
 }
 .thread {
-  background: white;
+  background: var(--bg-paper);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 10px 12px;
@@ -648,16 +648,16 @@
 /* Comment pulse */
 @keyframes comment-pulse {
   0% {
-    background: #fef3c7;
-    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.55);
+    background: var(--comment-mark-bg);
+    box-shadow: 0 0 0 0 var(--comment-mark-pulse-ring);
   }
   60% {
-    background: #fde68a;
-    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+    background: var(--comment-mark-bg-strong);
+    box-shadow: 0 0 0 8px transparent;
   }
   100% {
-    background: #fef3c7;
-    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+    background: var(--comment-mark-bg);
+    box-shadow: 0 0 0 0 transparent;
   }
 }
 .comment-anchor.comment-pulse {

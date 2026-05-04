@@ -139,9 +139,75 @@
   --d-fast:    120ms;
   --d-mid:     220ms;
   --d-slow:    320ms;
+
+  /* ---------- Inline marks (comments, mentions) ---------- */
+  --comment-mark-bg:        #fef3c7;
+  --comment-mark-bg-strong: #fde68a;
+  --comment-mark-border:    #f59e0b;
+  --comment-mark-text:      var(--text);
+  --comment-mark-pulse-ring: rgba(245, 158, 11, 0.55);
+
+  /* ---------- Subtle ring used on avatars / chips ---------- */
+  --shadow-rim: rgba(15, 23, 42, 0.08);
+
+  /* ---------- Page chrome (paginated sheets) ----------
+     Gap matches the canvas (--bg) so the strip between pages reads as
+     empty space; border is the soft page border so the page outline
+     blends with the sheet rather than the canvas. */
+  --page-gap-bg:     var(--bg);
+  --page-gap-border: var(--border-soft);
 }
 
-/* ---------- Dark mode (prepared, not yet wired) ---------- */
+/* ---------- Paper-white (sunset / aged paper, low-glare) ---------- */
+[data-theme='paper-white'] {
+  --bg:           #efe4c5;
+  --bg-elev:      #f6ecd0;
+  --bg-paper:     #faf2db;
+  --bg-sunken:    #e2d5ad;
+  --bg-tint:      #ebdfb5;
+
+  --border:        #d2bf8a;
+  --border-strong: #b8a168;
+  --border-soft:   #ddca97;
+
+  --text:        #3a2c19;
+  --text-muted:  #6a5a3a;
+  --text-subtle: #8b7a55;
+  --text-on-accent: #faf2db;
+
+  --accent:       #963a16;
+  --accent-hover: #ad461b;
+  --accent-soft:  #ecd2a7;
+  --accent-ring:  rgba(150, 58, 22, 0.32);
+
+  --ochre:        #8a5a10;
+  --ochre-soft:   #ecd9a3;
+
+  --comment-mark-bg:        #ecd9a3;
+  --comment-mark-bg-strong: #d9bf72;
+  --comment-mark-border:    #b07a18;
+  --comment-mark-text:      #3a2c19;
+  --comment-mark-pulse-ring: rgba(176, 122, 24, 0.55);
+
+  --shadow-rim: rgba(70, 45, 15, 0.10);
+
+  --page-gap-bg:     var(--bg);
+  --page-gap-border: var(--border-soft);
+
+  --shadow-paper-1:
+    0 1px 1px rgba(90, 60, 20, 0.06),
+    0 2px 4px rgba(90, 60, 20, 0.06);
+  --shadow-paper-2:
+    0 1px 2px rgba(90, 60, 20, 0.07),
+    0 4px 12px rgba(90, 60, 20, 0.10),
+    0 12px 32px rgba(90, 60, 20, 0.08);
+  --shadow-paper-3:
+    0 2px 4px rgba(90, 60, 20, 0.08),
+    0 8px 24px rgba(90, 60, 20, 0.13),
+    0 24px 48px rgba(90, 60, 20, 0.11);
+}
+
+/* ---------- Dark mode ---------- */
 [data-theme='dark'] {
   --bg:           #1a1815;
   --bg-elev:      #221f1b;
@@ -162,6 +228,20 @@
   --accent-hover: #d4576b;
   --accent-soft:  #3a1d22;
   --accent-ring:  rgba(197, 65, 88, 0.32);
+
+  --ochre:        #d4a236;
+  --ochre-soft:   #3a2f1c;
+
+  --comment-mark-bg:        rgba(245, 158, 11, 0.22);
+  --comment-mark-bg-strong: rgba(245, 158, 11, 0.42);
+  --comment-mark-border:    #d99a3a;
+  --comment-mark-text:      var(--text);
+  --comment-mark-pulse-ring: rgba(245, 158, 11, 0.45);
+
+  --shadow-rim: rgba(0, 0, 0, 0.45);
+
+  --page-gap-bg:     var(--bg);
+  --page-gap-border: var(--border-soft);
 
   --shadow-paper-1: 0 1px 1px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.3);
   --shadow-paper-2: 0 1px 2px rgba(0,0,0,0.35), 0 4px 12px rgba(0,0,0,0.4), 0 12px 32px rgba(0,0,0,0.3);
@@ -184,6 +264,21 @@ body,
 button {
   font: inherit;
   color: inherit;
+}
+
+/* Theme-aware baseline for form controls. Component styles can still
+   override; this just stops user-agent white showing through in
+   paper-white / dark themes when a component forgot to set color/bg. */
+input,
+select,
+textarea {
+  color: var(--text);
+  background-color: var(--bg-paper);
+  caret-color: var(--text);
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-subtle);
 }
 
 /* ---------- Editor host shell ---------- */

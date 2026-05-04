@@ -6,7 +6,7 @@
   position: absolute;
   right: 0;
   top: calc(100% + 4px);
-  background: white;
+  background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: var(--shadow);

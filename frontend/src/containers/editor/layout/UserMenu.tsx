@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 
 import { Avatar } from '@/editor/shell/Avatar';
-import { RoleBadge } from '@/components/badges/RoleBadge';
 import { authClient } from '@/auth/client';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 
@@ -24,7 +23,6 @@ export function UserMenu() {
         <DropdownMenuPrimitive.Root>
             <DropdownMenuPrimitive.Trigger asChild>
                 <button type="button" className="topbar-avatar-trigger" aria-label={user.name}>
-                    <RoleBadge role={user.role} />
                     <Avatar name={user.name} color={user.color} size="sm" />
                 </button>
             </DropdownMenuPrimitive.Trigger>

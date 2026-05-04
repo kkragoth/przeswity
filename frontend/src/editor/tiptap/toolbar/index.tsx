@@ -9,6 +9,7 @@ import { TextFormattingZone } from '@/editor/tiptap/toolbar/TextFormattingZone';
 import { BlockFormattingZone } from '@/editor/tiptap/toolbar/BlockFormattingZone';
 import { InsertZone } from '@/editor/tiptap/toolbar/InsertZone';
 import { PaneToggleZone, Divider } from '@/editor/tiptap/toolbar/PaneToggleZone';
+import { ZoomControl } from '@/editor/tiptap/toolbar/ZoomControl';
 import { useEditorLive } from '@/containers/editor/session/LiveProvider';
 import { useSession } from '@/containers/editor/SessionStoreProvider';
 import { LeftTab } from '@/containers/editor/layout/LeftPane';
@@ -68,6 +69,8 @@ export function Toolbar({ editor }: ToolbarProps) {
                 <InsertZone editor={editor} />
 
                 <div className="tb-spacer" />
+                <ZoomControl />
+                <Divider />
                 <PaneToggleZone />
                 <button
                     type="button"

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Editor } from '@tiptap/react';
+import { readEffectiveZoom } from '@/contexts/EditorZoomContext';
 
 export interface HoveredBlock {
   pos: number
@@ -36,9 +37,10 @@ export function useBlockHover(
                 if (!block || !dom.contains(block)) return;
                 const blockRect = block.getBoundingClientRect();
                 const pageRect = page.getBoundingClientRect();
+                const zoom = readEffectiveZoom(page);
                 try {
                     const pos = view.posAtDOM(block, 0);
-                    setHovered({ pos, top: blockRect.top - pageRect.top });
+                    setHovered({ pos, top: (blockRect.top - pageRect.top) / zoom });
                 } catch {
                     /* DOM not in editor */
                 }

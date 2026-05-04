@@ -14,6 +14,8 @@
   padding: 5px 8px;
   font: inherit;
   font-size: 13px;
+  background: var(--bg-paper);
+  color: var(--text);
 }
 .glossary-actions {
   display: flex;
@@ -22,7 +24,7 @@
 }
 .glossary-actions button {
   flex: 1;
-  background: white;
+  background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 5px 10px;
@@ -39,7 +41,7 @@
   cursor: not-allowed;
 }
 .glossary-entry {
-  background: white;
+  background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px 10px;
@@ -74,7 +76,7 @@
   margin-top: 6px;
 }
 .glossary-buttons button {
-  background: white;
+  background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 3px 8px;

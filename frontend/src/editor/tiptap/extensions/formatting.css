@@ -3,7 +3,7 @@
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  background: white;
+  background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: var(--shadow);
@@ -30,7 +30,7 @@
   gap: 2px;
 }
 .special-char {
-  background: white;
+  background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 4px;
   padding: 6px 0;
@@ -53,7 +53,7 @@
   display: none;
   top: calc(100% + 4px);
   left: 0;
-  background: white;
+  background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 6px;
   box-shadow: var(--shadow);
@@ -74,7 +74,7 @@
 .tb-color-clear {
   width: 22px;
   height: 22px;
-  background: white;
+  background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 4px;
   cursor: pointer;

@@ -6,7 +6,7 @@
   max-width: 320px;
   max-height: 360px;
   overflow-y: auto;
-  background: white;
+  background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow:
@@ -47,7 +47,7 @@
   padding: 4px;
 }
 .slash-item.is-active .slash-icon {
-  background: white;
+  background: var(--bg-elev);
   color: var(--accent);
 }
 .slash-text {

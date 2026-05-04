@@ -1,5 +1,12 @@
 {
     "appName": "Prześwity",
+    "theme": {
+        "label": "Тема",
+        "light": "Світла",
+        "paperWhite": "Паперова",
+        "dark": "Темна",
+        "toggle": "Тема: {{current}}"
+    },
     "nav": {
         "home": "Головна",
         "books": "Книги",

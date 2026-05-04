@@ -25,7 +25,8 @@
   padding: 6px 8px;
   font: inherit;
   font-size: 13px;
-  background: white;
+  background: var(--bg-paper);
+  color: var(--text);
 }
 .meta-field textarea {
   resize: vertical;

@@ -143,7 +143,7 @@
   font-family: inherit;
 }
 .toc-item:hover {
-  background: white;
+  background: var(--bg-elev);
   color: var(--accent);
 }
 .toc-level-1 {

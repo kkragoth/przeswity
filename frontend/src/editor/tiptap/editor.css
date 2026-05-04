@@ -19,11 +19,23 @@
     flex: 1 1 0;
     min-height: 0;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: auto;
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
     padding: var(--sp-12) var(--sp-6) var(--sp-16);
     background: var(--bg);
+}
+
+/* ---------- Zoom frame ----------
+   Wraps `.editor-page` so the document can be visually scaled with
+   `transform: scale(var(--editor-zoom))` without affecting PaginationPlus's
+   layout math. The frame's width/height are set in JS to match the scaled
+   visual size so scrollbars reflect what the user sees.
+*/
+.editor-zoom-frame {
+    margin: 0 auto;
+    flex-shrink: 0;
+    position: relative;
 }
 
 /* ---------- Page wrapper ----------
@@ -32,18 +44,35 @@
 */
 .editor-page {
     position: relative;
-    width: fit-content; /* shrink to PaginationPlus page width so margin:auto centers it */
-    margin: 0 auto;
-    max-width: 100%;
+    width: fit-content; /* shrink to PaginationPlus page width */
+}
+
+.editor-zoom-frame > .editor-page {
+    transform: scale(var(--editor-zoom, 1));
+    transform-origin: top left;
 }
 
 /* Paper sheet — PaginationPlus styles the inter-page gap; the page itself
-   (the [data-rm-pagination] editor) needs the paper background. */
+   (the [data-rm-pagination] editor) needs the paper background.
+   PaginationPlus also writes the page outline as inline
+   `border: 1px solid var(--rm-page-gap-border-color)` and sets that custom
+   property inline to a hardcoded hex. We override the custom property with
+   !important so the outline follows the theme. */
 .rm-with-pagination {
     background: var(--bg-paper);
-    border: 1px solid var(--border-soft);
     border-radius: var(--r-2);
     box-shadow: var(--shadow-paper-1);
+    --rm-page-gap-border-color: var(--page-gap-border) !important;
+    border-color: var(--page-gap-border) !important;
+}
+
+/* PaginationPlus writes hardcoded hex colors to inline styles for the
+   inter-page gap. Force them to follow the theme tokens so the strip
+   between pages matches the canvas background. */
+.rm-pagination-gap {
+    background-color: var(--page-gap-bg) !important;
+    border-left-color: var(--page-gap-bg) !important;
+    border-right-color: var(--page-gap-bg) !important;
 }
 
 /* ---------- Content typography ----------
@@ -236,5 +265,14 @@
     .editor-page {
         margin: 0;
         width: 100%;
+    }
+
+    .editor-zoom-frame {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    .editor-zoom-frame > .editor-page {
+        transform: none;
     }
 }

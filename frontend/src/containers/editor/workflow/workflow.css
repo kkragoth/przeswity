@@ -3,7 +3,7 @@
   position: absolute;
   right: 0;
   top: calc(100% + 4px);
-  background: white;
+  background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: var(--shadow);
@@ -15,7 +15,7 @@
 }
 .template-item {
   text-align: left;
-  background: white;
+  background: var(--bg-elev);
   border: none;
   padding: 8px 10px;
   border-radius: 6px;
@@ -44,7 +44,7 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 24px;
-  background: white;
+  background: var(--bg-elev);
   padding: 24px;
 }
 .shortcut-group {

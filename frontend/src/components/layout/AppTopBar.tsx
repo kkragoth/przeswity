@@ -4,6 +4,7 @@ import { LanguageSwitcher } from '@/i18n/LanguageSwitcher';
 import type { SessionUser } from '@/auth/types';
 import { canAccessAdmin, canAccessCoordinator } from '@/lib/auth';
 import { UserMenu } from '@/components/layout/UserMenu';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 
 interface AppTopBarProps {
     user: SessionUser;
@@ -34,6 +35,7 @@ export function AppTopBar({ user }: AppTopBarProps) {
             <div className="topbar-spacer" />
             <div className="topbar-right">
                 <LanguageSwitcher />
+                <ThemeToggle />
                 <UserMenu user={user} />
             </div>
         </header>

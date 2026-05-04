@@ -6,6 +6,8 @@ import type { Editor } from '@tiptap/react';
 import { BookTitleMenu } from '@/containers/editor/layout/BookTitleMenu';
 import { UserMenu } from '@/containers/editor/layout/UserMenu';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
+import { RoleBadge } from '@/components/badges/RoleBadge';
 
 export interface TopBarProps {
     editor: Editor | null;
@@ -13,7 +15,7 @@ export interface TopBarProps {
 
 export function TopBar({ editor }: TopBarProps) {
     const { t } = useTranslation('editor');
-    const { bookTitle } = useEditorSession();
+    const { user } = useEditorSession();
 
     return (
         <header className="topbar">
@@ -28,9 +30,11 @@ export function TopBar({ editor }: TopBarProps) {
                 <Link to="/books" className="topbar-breadcrumb-link">{t('topbar.booksLink')}</Link>
                 <ChevronRight size={12} className="topbar-breadcrumb-sep" aria-hidden="true" />
                 <BookTitleMenu editor={editor} />
+                <RoleBadge role={user.role} />
             </nav>
             <div className="topbar-spacer" />
             <div className="topbar-right">
+                <ThemeToggle />
                 <UserMenu />
             </div>
         </header>

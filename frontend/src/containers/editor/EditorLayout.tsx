@@ -16,6 +16,7 @@ import { useNarrowLayout } from '@/containers/editor/hooks/useNarrowLayout';
 import { PaneState, paneClass, usePaneStore } from '@/containers/editor/session/paneStore';
 import { useEditor } from '@/containers/editor/session/LiveProvider';
 import { useSession, useSessionStore } from '@/containers/editor/SessionStoreProvider';
+import { EditorZoomProvider } from '@/contexts/EditorZoomContext';
 import type { CollabBundle } from '@/editor/collab/yDoc';
 
 interface EditorLayoutProps {
@@ -60,7 +61,7 @@ export function EditorLayout({ collab }: EditorLayoutProps) {
     };
 
     return (
-        <div className={hostClassName}>
+        <EditorZoomProvider className={hostClassName}>
             <TopBar editor={editor} />
             <main className="main-grid">
                 <LeftPane editor={editor} />
@@ -106,6 +107,6 @@ export function EditorLayout({ collab }: EditorLayoutProps) {
                 />
             ) : null}
             {shortcutsOpen ? <ShortcutsModal /> : null}
-        </div>
+        </EditorZoomProvider>
     );
 }

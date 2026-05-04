@@ -87,6 +87,12 @@
         "templates": "Templates",
         "ariaLabel": "Editor toolbar",
         "removeHighlight": "Remove highlight",
+        "zoom": {
+            "label": "Zoom",
+            "in": "Zoom in",
+            "out": "Zoom out",
+            "reset": "Reset zoom"
+        },
         "style": {
             "body": "Body",
             "h1": "Heading 1",

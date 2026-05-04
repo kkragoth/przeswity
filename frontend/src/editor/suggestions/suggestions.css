@@ -46,8 +46,9 @@
   color: var(--track-color, #9ca3af);
 }
 .comment-anchor {
-  background: #fef3c7;
-  border-bottom: 2px solid #f59e0b;
+  background: var(--comment-mark-bg);
+  border-bottom: 2px solid var(--comment-mark-border);
+  color: var(--comment-mark-text);
   cursor: pointer;
   border-radius: 1px;
 }

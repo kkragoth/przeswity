@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EditorContent } from '@tiptap/react';
 
@@ -24,6 +24,7 @@ import { createEditorContext } from '@/editor/tiptap/editorContext';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { useEditorLive, useSetEditor } from '@/containers/editor/session/LiveProvider';
 import { useSession } from '@/containers/editor/SessionStoreProvider';
+import { useEditorZoom } from '@/contexts/EditorZoomContext';
 
 export function EditorView({
     collab,
@@ -89,6 +90,23 @@ export function EditorView({
     const showHeaderFooterBar = editor && headerFooterFocus.kind !== HeaderFooterKind.None;
     const showDragHandle = editor && hoveredBlock && canEditOrSuggest;
 
+    const { zoom } = useEditorZoom();
+    const pageRef = useRef<HTMLDivElement | null>(null);
+    const frameRef = useRef<HTMLDivElement | null>(null);
+    useLayoutEffect(() => {
+        const page = pageRef.current;
+        const frame = frameRef.current;
+        if (!page || !frame) return;
+        const apply = () => {
+            frame.style.width = `${page.offsetWidth * zoom}px`;
+            frame.style.height = `${page.offsetHeight * zoom}px`;
+        };
+        apply();
+        const ro = new ResizeObserver(apply);
+        ro.observe(page);
+        return () => ro.disconnect();
+    }, [zoom]);
+
     return (
         <div className={`editor-shell${suggestingMode ? ' is-suggesting' : ''}`}>
             {showHeaderFooterBar ? (
@@ -101,24 +119,30 @@ export function EditorView({
                 />
             ) : null}
             <div className="editor-scroll">
-                <div className="editor-page" onMouseDown={(e) => focusOnEmptyClick(e, editor, canEditOrSuggest)}>
-                    <EditorContent editor={editor} />
-                    <CommentAnchors
-                        editor={editor}
-                        doc={collab.doc}
-                        activeCommentId={activeCommentId}
-                        onSelect={onActiveCommentChange}
-                    />
-                    {showDragHandle ? (
-                        <DragHandle
+                <div className="editor-zoom-frame" ref={frameRef}>
+                    <div
+                        className="editor-page"
+                        ref={pageRef}
+                        onMouseDown={(e) => focusOnEmptyClick(e, editor, canEditOrSuggest)}
+                    >
+                        <EditorContent editor={editor} />
+                        <CommentAnchors
                             editor={editor}
-                            hovered={hoveredBlock}
-                            dragStateRef={dragStateRef}
-                            onClickMenu={(pos, anchor) => blockMenu.openFor(anchor, pos)}
-                            onDragEnd={resetDrag}
+                            doc={collab.doc}
+                            activeCommentId={activeCommentId}
+                            onSelect={onActiveCommentChange}
                         />
-                    ) : null}
-                    {dropTop !== null ? <div className="drop-indicator" style={{ top: dropTop }} /> : null}
+                        {showDragHandle ? (
+                            <DragHandle
+                                editor={editor}
+                                hovered={hoveredBlock}
+                                dragStateRef={dragStateRef}
+                                onClickMenu={(pos, anchor) => blockMenu.openFor(anchor, pos)}
+                                onDragEnd={resetDrag}
+                            />
+                        ) : null}
+                        {dropTop !== null ? <div className="drop-indicator" style={{ top: dropTop }} /> : null}
+                    </div>
                 </div>
             </div>
             {editor ? (

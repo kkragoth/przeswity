@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import { COMMENT_PIN_GAP_PX } from '@/editor/constants';
+import { readEffectiveZoom } from '@/contexts/EditorZoomContext';
 
 export interface PinAnchor {
     id: string;
@@ -17,7 +18,7 @@ export interface OpenThread {
     replies: number;
 }
 
-function placePins(dom: HTMLElement, pageRect: DOMRect, openThreads: OpenThread[]): PinAnchor[] {
+function placePins(dom: HTMLElement, pageRect: DOMRect, zoom: number, openThreads: OpenThread[]): PinAnchor[] {
     const placed: PinAnchor[] = [];
     const seen = new Set<string>();
     for (const th of openThreads) {
@@ -26,7 +27,7 @@ function placePins(dom: HTMLElement, pageRect: DOMRect, openThreads: OpenThread[
         if (!span) continue;
         seen.add(th.id);
         const r = span.getBoundingClientRect();
-        placed.push({ ...th, top: r.top - pageRect.top });
+        placed.push({ ...th, top: (r.top - pageRect.top) / zoom });
     }
     placed.sort((a, b) => a.top - b.top);
     for (let i = 1; i < placed.length; i++) {
@@ -53,7 +54,7 @@ export function useCommentPinPositions(editor: Editor | null, openThreads: OpenT
                 const dom = editor.view.dom as HTMLElement;
                 const page = dom.closest('.editor-page') as HTMLElement | null;
                 if (!page) return;
-                setPins(placePins(dom, page.getBoundingClientRect(), openThreads));
+                setPins(placePins(dom, page.getBoundingClientRect(), readEffectiveZoom(page), openThreads));
             });
         };
         compute();

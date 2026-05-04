@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
 import type { Editor } from '@tiptap/react';
 import { BLOCK_DROP_MIDPOINT_RATIO } from '@/editor/constants';
+import { readEffectiveZoom } from '@/contexts/EditorZoomContext';
 
 export interface DragState {
   from: number
@@ -84,9 +85,10 @@ export function useBlockDragOver(
 
             const blockRect = blockEl.getBoundingClientRect();
             const pageRect = page.getBoundingClientRect();
+            const zoom = readEffectiveZoom(page);
             const dropBefore = isDropAbove(e.clientY, blockRect);
             const insertAt = dropBefore ? blockStart : blockEnd;
-            const indicatorTop = (dropBefore ? blockRect.top : blockRect.bottom) - pageRect.top;
+            const indicatorTop = ((dropBefore ? blockRect.top : blockRect.bottom) - pageRect.top) / zoom;
 
             const { from, to } = dragStateRef.current;
             if (insertAt >= from && insertAt <= to) {

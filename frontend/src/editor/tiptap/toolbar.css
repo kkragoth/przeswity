@@ -39,6 +39,32 @@
     flex-shrink: 0;
 }
 
+/* ---------- Zoom control ---------- */
+.tb-zoom {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+.tb-zoom-percent {
+    min-width: 44px;
+    height: 28px;
+    padding: 0 6px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--r-2);
+    font-size: var(--fs-sm);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background var(--d-fast) var(--ease-out), color var(--d-fast) var(--ease-out);
+    flex-shrink: 0;
+}
+.tb-zoom-percent:hover {
+    background: var(--bg-tint);
+    color: var(--text);
+}
+
 /* ---------- Common button ---------- */
 .tb-btn {
     display: inline-flex;
