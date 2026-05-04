@@ -16,6 +16,6 @@
 @import '../containers/editor/glossary/glossary.css';
 @import '../containers/editor/outline/outline.css';
 @import '../containers/editor/meta/meta.css';
-@import './workflow/workflow.css';
+@import '../containers/editor/workflow/workflow.css';
 @import './io/io.css';
 @import '../containers/editor/layout/editor-skeleton.css';
