@@ -6,7 +6,7 @@ import { shallow } from 'zustand/shallow';
 import { useCommentThreads } from '@/editor/comments/useCommentThreads';
 import { CommentStatus } from '@/editor/comments/types';
 import { buildCandidates } from '@/editor/comments/mentionCandidates';
-import { CommentFilters } from './components/CommentFilters';
+import { CommentsSidebarHeader } from './components/CommentsSidebarHeader';
 import { OpenCommentList } from './components/OpenCommentList';
 import { ResolvedCommentList } from './components/ResolvedCommentList';
 import { CommentsViewProvider } from './components/CommentsViewContext';
@@ -98,13 +98,7 @@ export function CommentsSidebar(props: CommentsSidebarProps) {
     return (
         <CommentsViewProvider value={viewValue}>
             <div className={`sidebar comments-sidebar${activeCommentId ? ' has-active' : ''}`}>
-                <div className="comments-header">
-                    <span className="sidebar-title sidebar-title-inline">
-                        {t('comments.tabs.comments')}{' '}
-                        <span className="comment-count-pill">{openCount}</span>
-                    </span>
-                </div>
-                <CommentFilters totalOpen={openCount} allAuthors={allAuthors} />
+                <CommentsSidebarHeader openCount={openCount} allAuthors={allAuthors} />
                 {visible.length === 0 ? (
                     <div className="sidebar-empty">
                         {threads.length === 0 ? t('comments.empty') : t('comments.noMatch')}
