@@ -15,31 +15,57 @@ independent:
 
 **`src/containers/editor/`** — React shell. Owns React state, layout, routing
 between panels, and the hooks that bridge Yjs observations into React renders.
-Entry points are `EditorHost.tsx` (lifecycle gating) and `EditorLayout.tsx`
-(slot-based CSS grid). Sub-components live under `components/`:
+Entry point is `index.tsx` (`EditorHost`, lifecycle gating). Editor chrome
+lives under `layout/`; per-feature UI lives under `<feature>/` modules:
 
-    components/comments/     comment threads, replies, reactions, mention textarea
-    components/glossary/     GlossaryPanel
-    components/meta/         MetaPanel
-    components/outline/      OutlineSidebar
-    components/peers/        PeerAvatarStack
-    components/status/       SyncMini
-    components/suggestions/  SuggestionsSidebar
-    components/versions/     VersionsPanel, VersionDiffModal, diff views
-    components/workflow/     ShortcutsModal
+    index.tsx               EditorHost (lifecycle gating + provider stack)
+    layout/                 TopBar, LeftPane, RightPane, StatusBar,
+                            BookTitleMenu, UserMenu, PageJumper,
+                            EditorSkeleton, EmptyState
+    session/                editor-wide state — sessionStore, liveStore,
+                            paneStore + SessionProvider, LiveProvider
+    hooks/                  editor-wide hooks (collab, export, fonts, etc.)
 
-Hooks under `hooks/` own React-level state; none of them import from
-`@/editor/tiptap/` internals.
+    comments/               comment threads, replies, reactions, mentions
+    versions/               VersionsPanel, snapshots, diff views
+    glossary/               GlossaryPanel
+    meta/                   MetaPanel
+    outline/                OutlineSidebar
+    suggestions/            SuggestionsSidebar
+    peers/                  PeerAvatarStack
+    status/                 SyncMini
+    workflow/               ShortcutsModal (no panel — modal only)
+
+### Feature module shape
+
+Each `<feature>/` is a self-contained module:
+
+    <feature>/
+        index.tsx           panel / sidebar / modal mount point
+        components/         internal pieces — private to the feature
+        hooks/              feature-local hooks
+        store/              feature-local zustand store + provider (if any)
+        __tests__/          unit tests + harnesses
+        <feature>.css       styles owned by the UI surface
+
+External callers import the feature via `@/containers/editor/<feature>` —
+its `index.tsx`. **A feature module's `components/` folder is private**:
+external code must not import from `@/containers/editor/<feature>/components/`.
+Cross-feature reuse means promoting the component to `src/components/` or
+to a shared editor location. Inside a feature, sibling files use relative
+imports (`./components/Foo`, `../store/Bar`) to signal the boundary.
+
+Hooks under `hooks/` (top-level, not per-feature) own editor-wide state; none
+of them import from `@/editor/tiptap/` internals.
 
 **`src/editor/`** — Domain logic. No React component state. Sub-domains:
 
-    collab/       yDoc (CollabBundle factory), syncStatus, peerCursor
-    comments/     Comment ADT, threadOps, reactions, color, mentions
-    glossary/     glossaryOps, useGlossaryEntries, GlossaryHighlight extension
-    meta/         metaOps, useDocumentMeta
-    versions/     diffDoc, readOnlyExtensions, types
+    collab/       yDoc (CollabBundle factory), syncStatus, peerCursor, types
+    comments/     Comment ADT, threadOps, reactions, color, mentions, format
+    glossary/     format, GlossaryHighlight extension
+    versions/     diffDoc, buildDiffDocument, readOnlyExtensions, types
     suggestions/  SuggestionMode, suggestionOps, TrackChange extension
-    io/           DOCX export (docx/), Markdown, typography
+    io/           DOCX export (docx/), Markdown, typography, readingStats
     ai/           aiOps
 
 **`src/editor/tiptap/`** — Tiptap extensions, toolbar, slash commands,
@@ -88,13 +114,13 @@ Domain code lives in `@/editor/comments/`:
 - `mentions.tsx` — `buildCandidates` and `renderBodyWithMentions` helpers.
 - `types.ts` — shared TypeScript types.
 
-UI lives in `@/containers/editor/components/comments/`. Container hooks
+UI lives in `@/containers/editor/comments/`. Container hooks
 (`useCommentThreads`, `useCommentOps`, `useCommentCallbacks`,
 `useCommentDrafts`, `useMentionDetection`) bridge Yjs observations to React.
 
 ## Versions
 
-`useVersions(doc, user, editor, bookId)` in `hooks/useVersions.ts`:
+`useVersions(doc, user, editor, bookId)` in `versions/hooks/useVersions.ts`:
 
 - Persists `VersionSnapshot[]` to `localStorage` under key
   `przeswity.versions:<bookId>` via `useLocalStorageState` with
