@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { requireSession } from '../../auth/session.js';
-import { asyncHandler } from '../../lib/errors.js';
+import { asyncHandler, AppError } from '../../lib/errors.js';
 import { registry } from '../../openapi/registry.js';
+import { env } from '../../env.js';
 
 export const aiRouter = Router();
 
@@ -27,25 +28,37 @@ registry.registerPath({
     responses: { 200: { description: 'suggestions', content: { 'application/json': { schema: ProofreadResponse } } } },
 });
 
-aiRouter.post('/api/ai/proofread', requireSession, asyncHandler(async (req, res) => {
-    const body = ProofreadBody.parse(req.body);
-    // Stage 1 stub: return canned suggestions if the text contains common Polish errors
-    const suggestions: { range: { from: number; to: number }; replacement: string; reason: string }[] = [];
-    // Find " ktore " (should be "które") as a fake suggestion
-    const t = body.text;
-    const lower = t.toLowerCase();
+type Suggestion = z.infer<typeof AiSuggestion>;
+
+// Canned dev-only proofreader. Detects the common Polish typo "ktore" → "które" and,
+// if no real issue surfaces, returns one tautological suggestion so the editor wiring
+// remains exercisable. Real provider integration replaces this entire branch.
+function stubProofread(text: string): Suggestion[] {
+    const suggestions: Suggestion[] = [];
+    const lower = text.toLowerCase();
     let idx = 0;
     while ((idx = lower.indexOf('ktore', idx)) !== -1) {
-        suggestions.push({ range: { from: idx, to: idx + 5 }, replacement: 'które', reason: 'Niepoprawna pisownia — brak znaku diakrytycznego.' });
+        suggestions.push({
+            range: { from: idx, to: idx + 5 },
+            replacement: 'które',
+            reason: 'Niepoprawna pisownia — brak znaku diakrytycznego.',
+        });
         idx += 5;
     }
-    if (suggestions.length === 0 && t.length > 30) {
-        // Always offer at least one canned suggestion so the editor wiring is exercisable
+    if (suggestions.length === 0 && text.length > 30) {
         suggestions.push({
-            range: { from: 0, to: Math.min(10, t.length) },
-            replacement: t.slice(0, Math.min(10, t.length)),
+            range: { from: 0, to: Math.min(10, text.length) },
+            replacement: text.slice(0, Math.min(10, text.length)),
             reason: 'AI: brak sugestii — tekst wygląda poprawnie. (Stage 1 stub)',
         });
     }
-    res.json({ suggestions });
+    return suggestions;
+}
+
+aiRouter.post('/api/ai/proofread', requireSession, asyncHandler(async (req, res) => {
+    if (env.AI_PROVIDER === 'none') {
+        throw new AppError('errors.ai.notImplemented', 501, 'AI provider not configured');
+    }
+    const body = ProofreadBody.parse(req.body);
+    res.json({ suggestions: stubProofread(body.text) });
 }));

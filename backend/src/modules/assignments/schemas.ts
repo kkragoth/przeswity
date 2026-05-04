@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import { BookRoleEnum } from '../../lib/permissions.js';
 
-const RoleEnum = z.enum(['translator', 'author', 'editor', 'proofreader', 'typesetter', 'coordinator']);
+const RoleEnum = BookRoleEnum;
 
 export const AssignmentDto = z.object({
     bookId: z.string(),

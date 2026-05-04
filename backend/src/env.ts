@@ -21,6 +21,9 @@ const Schema = z.object({
     PRESENCE_API_ENABLED: z.string().default('true').transform((s) => s.toLowerCase() === 'true'),
     // Required by seed and dev-auth flows. Refused in production via the refine below.
     DEV_SEED_PASSWORD: z.string().min(8).optional(),
+    // 'none' (default) returns 501 from /api/ai/*. 'stub' returns the canned suggestions
+    // used by the editor in development. Real provider hookup lands behind a third value.
+    AI_PROVIDER: z.enum(['none', 'stub']).default('none'),
 }).superRefine((v, ctx) => {
     if (v.CORS_ORIGINS.length === 0) {
         ctx.addIssue({ code: 'custom', path: ['CORS_ORIGINS'], message: 'CORS_ORIGINS must list at least one origin' });

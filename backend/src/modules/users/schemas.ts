@@ -1,7 +1,10 @@
 import { z } from 'zod';
 import { registry } from '../../openapi/registry.js';
+import { SystemRoleEnum as SystemRoleEnumBase } from '../../lib/permissions.js';
 
-export const SystemRoleEnum = z.enum(['admin', 'project_manager']).nullable();
+// Re-exported with `.nullable()` baked in — DB stores null for "no system role". The
+// underlying enum lives in lib/permissions; this file only adds the nullability concern.
+export const SystemRoleEnum = SystemRoleEnumBase.nullable();
 
 export const UserDto = z.object({
     id: z.string(),
