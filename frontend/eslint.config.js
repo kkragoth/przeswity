@@ -40,8 +40,23 @@ export default [
         },
     },
     {
+        // Editor feature modules are intentionally private — intra-feature
+        // relative imports signal "this is internal to the feature" and make
+        // each module portable. Override the global ban on `../` here.
+        files: ['src/containers/editor/*/**/*.{ts,tsx}'],
+        rules: {
+            "no-restricted-syntax": [
+                "error",
+                {
+                    "selector": "JSXText[value=/[A-Z][a-z]+ /]",
+                    "message": "Hardcoded text in JSX — wrap in t().",
+                },
+            ],
+        },
+    },
+    {
         // T-62 — guard against re-introducing deleted comment hooks/context.
-        files: ['src/containers/editor/components/comments/**/*.{ts,tsx}'],
+        files: ['src/containers/editor/comments/**/*.{ts,tsx}'],
         languageOptions: { parser: tsParser, parserOptions: { ecmaFeatures: { jsx: true } } },
         plugins: { '@typescript-eslint': tseslint, 'react-hooks': reactHooks },
         rules: {
