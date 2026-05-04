@@ -1,6 +1,6 @@
 import { createStore, type StoreApi } from 'zustand/vanilla';
 
-import type { Peer } from '@/containers/editor/hooks/usePeers';
+import type { Peer } from '@/containers/editor/peers/hooks/usePeers';
 import type { SuggestingModeState } from '@/containers/editor/suggestions/hooks/useSuggestingMode';
 
 /**

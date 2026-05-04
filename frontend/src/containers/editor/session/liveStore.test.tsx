@@ -25,7 +25,7 @@ import {
 } from '@/containers/editor/session/LiveProvider';
 import { Role, type User } from '@/editor/identity/types';
 import type { CollabBundle } from '@/editor/collab/yDoc';
-import type { Peer } from '@/containers/editor/hooks/usePeers';
+import type { Peer } from '@/containers/editor/peers/hooks/usePeers';
 
 const TEST_USER: User = { id: 'u1', name: 'Alice', role: Role.Editor, color: '#222' };
 
