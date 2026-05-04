@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Cloud, CloudOff, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { SyncStatus } from '@/containers/editor/hooks/useConnectionStatus';
+import { SyncStatus } from './hooks/useConnectionStatus';
 
 interface SyncMiniProps {
     status: SyncStatus;

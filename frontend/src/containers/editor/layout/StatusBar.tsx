@@ -4,11 +4,11 @@ import { formatReadingMinutes } from '@/editor/app/readingStats';
 import { wordTargetFillColor, wordTargetPercentClamped, wordTargetPercentRounded } from '@/lib/wordTarget';
 import { useReadingStats } from '@/containers/editor/hooks/useReadingStats';
 import { useTargetWords } from '@/containers/editor/hooks/useTargetWords';
-import { useConnectionStatus } from '@/containers/editor/hooks/useConnectionStatus';
+import { useConnectionStatus } from '@/containers/editor/status/hooks/useConnectionStatus';
 import { usePageNavigation } from '@/containers/editor/outline/hooks/usePageNavigation';
 import { PeerAvatarStack } from '@/containers/editor/peers';
 import { PageJumper } from '@/containers/editor/layout/PageJumper';
-import { SyncMini } from '@/containers/editor/components/status/SyncMini';
+import { SyncMini } from '@/containers/editor/status';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { useEditorLive } from '@/containers/editor/session/LiveProvider';
 
