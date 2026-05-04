@@ -1,7 +1,7 @@
 import { createStore, type StoreApi } from 'zustand/vanilla';
 
 import type { Peer } from '@/containers/editor/hooks/usePeers';
-import type { SuggestingModeState } from '@/containers/editor/hooks/useSuggestingMode';
+import type { SuggestingModeState } from '@/containers/editor/suggestions/hooks/useSuggestingMode';
 
 /**
  * Per-session live signal store (T-20, plan §2.C).

@@ -10,7 +10,7 @@ import type { Editor } from '@tiptap/react';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
 
 import { usePeers } from '@/containers/editor/hooks/usePeers';
-import { useSuggestingMode } from '@/containers/editor/hooks/useSuggestingMode';
+import { useSuggestingMode } from '@/containers/editor/suggestions/hooks/useSuggestingMode';
 import { createLiveStore, type LiveState, type LiveStore } from '@/containers/editor/session/liveStore';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 
