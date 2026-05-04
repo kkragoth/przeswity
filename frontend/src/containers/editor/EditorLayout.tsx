@@ -1,0 +1,111 @@
+import { useEffect } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
+import { EditorView } from '@/editor/tiptap';
+import { FindReplaceBar } from '@/editor/tiptap/find/FindReplaceBar';
+import { Toolbar } from '@/editor/tiptap/toolbar';
+import { useGlossary } from '@/containers/editor/glossary/hooks/useGlossary';
+import { ShortcutsModal } from '@/containers/editor/workflow/ShortcutsModal';
+import { TopBar } from '@/containers/editor/layout/TopBar';
+import { LeftPane } from '@/containers/editor/layout/LeftPane';
+import { RightPane, RightTab } from '@/containers/editor/layout/RightPane';
+import { StatusBar } from '@/containers/editor/layout/StatusBar';
+import { useDocumentKeyDown } from '@/containers/editor/hooks/useDocumentKeyDown';
+import { useNarrowLayout } from '@/containers/editor/hooks/useNarrowLayout';
+import { PaneState, paneClass, usePaneStore } from '@/containers/editor/session/paneStore';
+import { useEditor } from '@/containers/editor/session/LiveProvider';
+import { useSession, useSessionStore } from '@/containers/editor/SessionStoreProvider';
+import type { CollabBundle } from '@/editor/collab/yDoc';
+
+interface EditorLayoutProps {
+    collab: CollabBundle
+}
+
+export function EditorLayout({ collab }: EditorLayoutProps) {
+    const { t } = useTranslation('editor');
+    const editor = useEditor();
+    const sessionStore = useSessionStore();
+    const shortcutsOpen = useSession((s) => s.shortcutsOpen);
+
+    const left = usePaneStore((s) => s.left);
+    const right = usePaneStore((s) => s.right);
+    const expandPane = usePaneStore((s) => s.expand);
+    const showSide = usePaneStore((s) => s.showSide);
+    const dismissBoth = usePaneStore((s) => s.dismissBoth);
+
+    const narrow = useNarrowLayout();
+    const glossaryEntries = useGlossary(collab.doc);
+    useDocumentKeyDown();
+
+    useEffect(() => {
+        if (!editor) return;
+        editor.view.dispatch(editor.state.tr.setMeta('glossaryHighlight/refresh', true));
+    }, [editor, glossaryEntries]);
+
+    const hostClassName = ['editor-host', paneClass('left', left), paneClass('right', right)].join(' ');
+
+    const handleActiveCommentChange = (id: string | null) => {
+        sessionStore.getState().setActiveComment(id);
+        if (id) {
+            sessionStore.getState().setRightTab(RightTab.Comments);
+            expandPane('right');
+        }
+    };
+
+    const handleCreateComment = (id: string, quote: string) => {
+        sessionStore.getState().enqueuePendingComment({ id, quote });
+        sessionStore.getState().setRightTab(RightTab.Comments);
+        expandPane('right');
+    };
+
+    return (
+        <div className={hostClassName}>
+            <TopBar editor={editor} />
+            <main className="main-grid">
+                <LeftPane editor={editor} />
+                {left === PaneState.Hidden ? (
+                    <button
+                        type="button"
+                        className="pane-handle pane-handle-left"
+                        title={t('pane.expand')}
+                        onClick={() => showSide('left', narrow)}
+                    >
+                        <ChevronRight size={14} />
+                    </button>
+                ) : null}
+                <section className="center-pane">
+                    {editor ? <Toolbar editor={editor} /> : null}
+                    <EditorView
+                        collab={collab}
+                        glossaryEntries={glossaryEntries}
+                        onActiveCommentChange={handleActiveCommentChange}
+                        onCreateComment={handleCreateComment}
+                    />
+                    <FindReplaceBar editor={editor} />
+                    <StatusBar editor={editor} />
+                </section>
+                <RightPane editor={editor} />
+                {right === PaneState.Hidden ? (
+                    <button
+                        type="button"
+                        className="pane-handle pane-handle-right"
+                        title={t('pane.expand')}
+                        onClick={() => showSide('right', narrow)}
+                    >
+                        <ChevronLeft size={14} />
+                    </button>
+                ) : null}
+            </main>
+            {narrow && (left === PaneState.Expanded || right === PaneState.Expanded) ? (
+                <button
+                    type="button"
+                    className="pane-backdrop"
+                    aria-label={t('pane.close')}
+                    onClick={dismissBoth}
+                />
+            ) : null}
+            {shortcutsOpen ? <ShortcutsModal /> : null}
+        </div>
+    );
+}
