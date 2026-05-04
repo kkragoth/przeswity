@@ -3,18 +3,7 @@ import type { Editor } from '@tiptap/react';
 import { useTranslation } from 'react-i18next';
 import { acceptSuggestion, rejectSuggestion, SuggestionType } from '@/editor/suggestions/suggestionOps';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
-
-interface SuggestionEntry {
-  type: SuggestionType
-  suggestionId: string
-  authorId: string
-  authorName: string
-  authorColor: string
-  timestamp: number
-  text: string
-  from: number
-  to: number
-}
+import { SuggestionItem, type SuggestionEntry } from './components/SuggestionItem';
 
 interface SuggestionsSidebarProps {
   editor: Editor | null
@@ -84,6 +73,10 @@ export function SuggestionsSidebar({ editor }: SuggestionsSidebarProps) {
     const acceptAll = () => entries.forEach(accept);
     const rejectAll = () => entries.forEach(reject);
 
+    const select = (e: SuggestionEntry) => {
+        editor.chain().focus().setTextSelection({ from: e.from, to: e.to }).run();
+    };
+
     return (
         <div className="sidebar suggestions-sidebar">
             <div className="sidebar-title">{t('suggestions.sidebarTitle', { count: entries.length })}</div>
@@ -102,47 +95,14 @@ export function SuggestionsSidebar({ editor }: SuggestionsSidebarProps) {
                         </div>
                     )}
                     {entries.map((e) => (
-                        <div
+                        <SuggestionItem
                             key={e.suggestionId}
-                            className={`suggestion suggestion-${e.type}`}
-                            style={{ borderLeftColor: e.authorColor }}
-                            onClick={() => {
-                                editor.chain().focus().setTextSelection({ from: e.from, to: e.to }).run();
-                            }}
-                        >
-                            <div className="suggestion-meta">
-                                <span style={{ color: e.authorColor }}>● {e.authorName}</span>
-                                <span className="suggestion-type">
-                                    {e.type === SuggestionType.Insertion ? t('suggestions.inserted') : t('suggestions.deleted')}
-                                </span>
-                                <span className="suggestion-time">
-                                    {new Date(e.timestamp).toLocaleTimeString()}
-                                </span>
-                            </div>
-                            <div className={`suggestion-text suggestion-text-${e.type}`}>{e.text}</div>
-                            {perms.canResolveSuggestion && (
-                                <div className="suggestion-actions">
-                                    <button
-                                        type="button"
-                                        onClick={(ev) => {
-                                            ev.stopPropagation();
-                                            accept(e);
-                                        }}
-                                    >
-                                        {t('suggestions.accept')}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={(ev) => {
-                                            ev.stopPropagation();
-                                            reject(e);
-                                        }}
-                                    >
-                                        {t('suggestions.reject')}
-                                    </button>
-                                </div>
-                            )}
-                        </div>
+                            entry={e}
+                            canResolve={perms.canResolveSuggestion}
+                            onSelect={select}
+                            onAccept={accept}
+                            onReject={reject}
+                        />
                     ))}
                 </>
             )}
