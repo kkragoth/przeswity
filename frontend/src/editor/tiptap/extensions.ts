@@ -15,7 +15,7 @@ import TableHeader from '@tiptap/extension-table-header';
 import { PaginationPlus } from 'tiptap-pagination-plus';
 import type { HeaderClickEvent, FooterClickEvent } from 'tiptap-pagination-plus';
 
-import { Comment } from '@/editor/comments/Comment';
+import { Comment } from '@/editor/comments/CommentMark';
 import { Insertion, Deletion } from '@/editor/suggestions/TrackChange';
 import { DiffBlockAttr } from '@/editor/suggestions/DiffBlockAttr';
 import { SuggestionMode } from '@/editor/suggestions/SuggestionMode';
