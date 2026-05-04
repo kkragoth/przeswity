@@ -1,5 +1,5 @@
 import { ALL_ROLES } from '@/editor/identity/types';
-import { MentionKind, type MentionCandidate } from '@/containers/editor/comments/hooks/useMentionDetection';
+import { MentionKind, type MentionCandidate } from '@/editor/comments/types';
 
 export function buildCandidates(peers: { name: string }[], selfName: string): MentionCandidate[] {
     const namesSeen = new Set<string>();

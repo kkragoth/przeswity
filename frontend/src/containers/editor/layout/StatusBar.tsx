@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { Editor } from '@tiptap/react';
-import { formatReadingMinutes } from '@/editor/app/readingStats';
+import { formatReadingMinutes } from '@/editor/io/readingStats';
 import { wordTargetFillColor, wordTargetPercentClamped, wordTargetPercentRounded } from '@/lib/wordTarget';
 import { useReadingStats } from '@/containers/editor/hooks/useReadingStats';
 import { useTargetWords } from '@/containers/editor/hooks/useTargetWords';

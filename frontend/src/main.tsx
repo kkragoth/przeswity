@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { RouterProvider } from '@tanstack/react-router';
 import './styles/globals.css';
 import '@/editor/styles/tokens.css';
-import '@/editor/app/topbar.css';
+import '@/components/layout/topbar.css';
 import './i18n';
 import '@/api/client';
 import { router } from '@/app/router';

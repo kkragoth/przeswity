@@ -5,6 +5,16 @@ export enum CommentStatus {
     Resolved = 'resolved',
 }
 
+export enum MentionKind {
+    User = 'user',
+    Role = 'role',
+}
+
+export interface MentionCandidate {
+  display: string
+  kind: MentionKind
+}
+
 export interface CommentThread {
   id: string
   authorId: string

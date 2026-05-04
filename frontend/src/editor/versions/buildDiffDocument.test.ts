@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildInlineLines, buildSbsRows } from '@/editor/diff/buildDiffDocument';
+import { buildInlineLines, buildSbsRows } from '@/editor/versions/buildDiffDocument';
 
 describe('buildInlineLines', () => {
     it('no change — all lines are eq', () => {

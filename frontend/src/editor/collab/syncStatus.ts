@@ -1,5 +1,5 @@
 import type { HocuspocusProvider } from '@hocuspocus/provider';
-import type { HocuspocusProviderRuntime } from '@/editor/yjs/types';
+import type { HocuspocusProviderRuntime } from '@/editor/collab/types';
 
 export enum SyncStatus {
     Online = 'online',

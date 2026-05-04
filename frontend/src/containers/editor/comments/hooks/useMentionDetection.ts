@@ -1,14 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 
-export enum MentionKind {
-    User = 'user',
-    Role = 'role',
-}
+import { MentionKind, type MentionCandidate } from '@/editor/comments/types';
 
-export interface MentionCandidate {
-    display: string
-    kind: MentionKind
-}
+export { MentionKind, type MentionCandidate };
 
 export function useMentionDetection(candidates: MentionCandidate[]) {
     const [picker, setPicker] = useState<{ from: number; query: string } | null>(null);

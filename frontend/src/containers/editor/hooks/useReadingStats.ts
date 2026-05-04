@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Editor } from '@tiptap/react';
-import { computeReadingStats } from '@/editor/app/readingStats';
+import { computeReadingStats } from '@/editor/io/readingStats';
 
 export interface ReadingStatsSummary {
   sentences: number

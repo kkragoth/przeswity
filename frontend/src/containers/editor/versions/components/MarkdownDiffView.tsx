@@ -1,7 +1,7 @@
 import { Fragment, useMemo, type ReactNode } from 'react';
 import type { JSONNode } from '@/editor/versions/diffDoc';
 import { nodeToMarkdown } from '@/editor/io/markdown';
-import { buildInlineLines, buildSbsRows, LineKind, type DiffLine } from '@/editor/diff/buildDiffDocument';
+import { buildInlineLines, buildSbsRows, LineKind, type DiffLine } from '@/editor/versions/buildDiffDocument';
 
 export interface MarkdownDiffViewProps {
     diffJson: JSONNode;
