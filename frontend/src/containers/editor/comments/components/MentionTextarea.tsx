@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import { ALL_ROLES } from '@/editor/identity/types';
 import { useMentionDetection, type MentionCandidate } from '../hooks/useMentionDetection';
+import { MentionPopover } from './MentionPopover';
 
 export type { MentionCandidate } from '../hooks/useMentionDetection';
 
@@ -95,21 +96,12 @@ export function MentionTextarea({
                 onClick={onClick}
             />
             {picker && filtered.length > 0 && (
-                <div className="mention-picker" onMouseDown={(e) => e.preventDefault()}>
-                    {filtered.slice(0, 8).map((c, i) => (
-                        <button
-                            type="button"
-                            key={c.kind + c.display}
-                            className={`mention-pick${i === activeIdx ? ' is-active' : ''}`}
-                            onMouseEnter={() => setActiveIdx(i)}
-                            onClick={() => insertMention(c.display)}
-                        >
-                            <span className="mention-pick-symbol">@</span>
-                            <span className="mention-pick-name">{c.display}</span>
-                            <span className="mention-pick-kind">{c.kind}</span>
-                        </button>
-                    ))}
-                </div>
+                <MentionPopover
+                    candidates={filtered}
+                    activeIdx={activeIdx}
+                    onHover={setActiveIdx}
+                    onSelect={insertMention}
+                />
             )}
         </div>
     );
