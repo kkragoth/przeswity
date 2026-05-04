@@ -16,7 +16,7 @@ import { PaginationPlus } from 'tiptap-pagination-plus';
 import type { HeaderClickEvent, FooterClickEvent } from 'tiptap-pagination-plus';
 
 import { Comment } from '@/editor/comments/CommentMark';
-import { Insertion, Deletion } from '@/editor/suggestions/TrackChange';
+import { Insertion, Deletion } from '@/editor/suggestions/trackChangeMarks';
 import { DiffBlockAttr } from '@/editor/suggestions/DiffBlockAttr';
 import { SuggestionMode } from '@/editor/suggestions/SuggestionMode';
 import { SmartPaste } from '@/editor/tiptap/extensions/SmartPaste';
