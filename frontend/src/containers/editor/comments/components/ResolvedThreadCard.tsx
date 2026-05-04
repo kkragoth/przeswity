@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
 import { Avatar } from '@/editor/shell/Avatar';
-import { authorColor } from '@/editor/comments/color';
+import { authorColor } from '@/editor/comments/authorColor';
 import { renderBodyWithMentions } from './MentionTextarea';
 import { useConfirmDialog } from '@/components/feedback/useConfirmDialog';
 import { ConfirmDialogHost } from '@/components/feedback/ConfirmDialogHost';

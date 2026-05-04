@@ -4,7 +4,7 @@ import * as Y from 'yjs';
 import { useTranslation } from 'react-i18next';
 import { useThreads } from '@/editor/comments/useThreads';
 import { CommentStatus } from '@/editor/comments/types';
-import { authorColor } from '@/editor/comments/color';
+import { authorColor } from '@/editor/comments/authorColor';
 import { Avatar } from '@/editor/shell/Avatar';
 import { COMMENT_PIN_GAP_PX } from '@/editor/constants';
 

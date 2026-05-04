@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Avatar } from '@/editor/shell/Avatar';
-import { authorColor } from '@/editor/comments/color';
+import { authorColor } from '@/editor/comments/authorColor';
 import { withStop } from '@/utils/react/withStop';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { useSession } from '@/containers/editor/SessionStoreProvider';
