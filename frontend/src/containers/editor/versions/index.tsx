@@ -6,6 +6,7 @@ import type { VersionSnapshot } from '@/editor/versions/types';
 import type { JSONNode } from '@/editor/versions/diffDoc';
 import { VersionDiffModal } from './components/VersionDiffModal';
 import { VersionsList } from './components/VersionsList';
+import { VersionsPanelHeader } from './components/VersionsPanelHeader';
 import { useAutoSnapshot } from './hooks/useAutoSnapshot';
 import { useVersions } from './hooks/useVersions';
 import { useConfirmDialog } from '@/components/feedback/useConfirmDialog';
@@ -58,24 +59,14 @@ export function VersionsPanel({ editor }: VersionsPanelProps) {
     return (
         <>
             <div className="sidebar versions-panel">
-                <div className="sidebar-title">{t('pane.versions')}</div>
-                <div className="version-create">
-                    <input
-                        type="text"
-                        placeholder={t('versions.labelPlaceholder')}
-                        value={versionsApi.label}
-                        onChange={(e) => versionsApi.setLabel(e.target.value)}
-                    />
-                    <button
-                        type="button"
-                        onClick={() => {
-                            const saved = versionsApi.snapshot(false);
-                            toast(t('versions.snapshotSaved', { label: saved.label }), ToastKind.Success);
-                        }}
-                    >
-                        {t('versions.createSnapshot')}
-                    </button>
-                </div>
+                <VersionsPanelHeader
+                    label={versionsApi.label}
+                    onLabelChange={versionsApi.setLabel}
+                    onCreate={() => {
+                        const saved = versionsApi.snapshot(false);
+                        toast(t('versions.snapshotSaved', { label: saved.label }), ToastKind.Success);
+                    }}
+                />
 
                 {compareSourceId ? (
                     <div className="compare-banner">
