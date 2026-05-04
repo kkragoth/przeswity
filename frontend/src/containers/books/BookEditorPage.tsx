@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { EditorHost } from '@/containers/editor/EditorHost';
+import { EditorHost } from '@/containers/editor';
 import { EditorSkeleton } from '@/containers/editor/layout/EditorSkeleton';
 import { useBookContext } from '@/hooks/api/useBookContext';
 
