@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import * as Y from 'yjs';
 import { useTranslation } from 'react-i18next';
-import { useThreads } from '@/editor/comments/useThreads';
+import { useCommentThreads } from '@/editor/comments/useCommentThreads';
 import { CommentStatus } from '@/editor/comments/types';
 import { authorColor } from '@/editor/comments/authorColor';
 import { Avatar } from '@/editor/shell/Avatar';
@@ -30,13 +30,13 @@ interface OpenThread {
     replies: number;
 }
 
-function threadChangeKey(threads: ReturnType<typeof useThreads>): string {
+function threadChangeKey(threads: ReturnType<typeof useCommentThreads>): string {
     return threads.map((t) => `${t.id}:${t.status}:${t.replies.length}`).join(',');
 }
 
 export function CommentAnchors({ editor, doc, activeCommentId, onSelect }: CommentAnchorsProps) {
     const { t } = useTranslation('editor');
-    const threads = useThreads(doc);
+    const threads = useCommentThreads(doc);
     const [pins, setPins] = useState<PinAnchor[]>([]);
 
     const changeKey = threadChangeKey(threads);

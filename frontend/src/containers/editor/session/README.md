@@ -73,7 +73,7 @@ re-render when that field changes.
 Every multi-step y-doc mutation performed inside a store action MUST be wrapped
 in `doc.transact(() => { ... })`. This is required, not optional. yjs notifies
 every subscriber after each individual mutation; without `transact`, deep
-observers (notably `useThreads`) see intermediate states and emit one render per
+observers (notably `useCommentThreads`) see intermediate states and emit one render per
 step. Composed comment actions like `submitInitialBody`, `submitReply`,
 `editSubmit`, `resolveThread`, `removeThread`, and `flushPending` perform two or
 more y-doc writes plus a draft mutation — all of those go inside a single

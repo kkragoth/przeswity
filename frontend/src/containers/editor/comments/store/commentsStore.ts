@@ -17,12 +17,12 @@ import { assertNever } from '@/lib/assert';
  *
  * Owns transient comment-side UI state (filter, drafts, edit target) and the
  * composed mutator actions. Every action that touches the y-doc runs inside
- * a single `doc.transact(...)` so subscribers (`observeDeep`, `useThreads`)
+ * a single `doc.transact(...)` so subscribers (`observeDeep`, `useCommentThreads`)
  * see exactly one logical event per user-facing operation, even when the
  * action also clears a draft (T-51).
  *
  * Thread DATA itself lives in the y-doc (via `getThreadMap(doc)`) and is
- * surfaced separately by `useThreads(doc)`; this store does NOT mirror it.
+ * surfaced separately by `useCommentThreads(doc)`; this store does NOT mirror it.
  */
 
 export enum CommentStatusFilter {

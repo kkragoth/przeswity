@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import * as Y from 'yjs';
 import type { CommentThread } from './types';
 
-export function useThreads(doc: Y.Doc): CommentThread[] {
+export function useCommentThreads(doc: Y.Doc): CommentThread[] {
     const [threads, setThreads] = useState<CommentThread[]>([]);
     useEffect(() => {
         const map = doc.getMap('comments') as Y.Map<CommentThread>;

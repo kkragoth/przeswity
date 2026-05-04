@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { Editor } from '@tiptap/react';
 import { shallow } from 'zustand/shallow';
 
-import { useThreads } from '@/editor/comments/useThreads';
+import { useCommentThreads } from '@/editor/comments/useCommentThreads';
 import { CommentStatus } from '@/editor/comments/types';
 import { buildCandidates } from '@/editor/comments/mentionCandidates';
 import { CommentFilters } from './components/CommentFilters';
@@ -42,7 +42,7 @@ export function CommentsSidebar(props: CommentsSidebarProps) {
     const commentsStore = useCommentsStore();
     const filter = useComments(selectFilter, shallow);
     const doc = collab.doc;
-    const threads = useThreads(doc);
+    const threads = useCommentThreads(doc);
 
     const visible = useMemo(() => selectVisible(threads, filter, user), [threads, filter, user]);
     const { open, resolved } = useMemo(() => selectOpenResolved(visible), [visible]);
