@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { EditorHost } from '@/containers/editor/EditorHost';
-import { EditorSkeleton } from '@/containers/editor/components/EditorSkeleton';
+import { EditorSkeleton } from '@/containers/editor/layout/EditorSkeleton';
 import { useBookContext } from '@/hooks/api/useBookContext';
 
 export function BookEditorPage({ bookId }: { bookId: string }) {

@@ -18,4 +18,4 @@
 @import './meta/meta.css';
 @import './workflow/workflow.css';
 @import './io/io.css';
-@import '../containers/editor/components/editor-skeleton.css';
+@import '../containers/editor/layout/editor-skeleton.css';

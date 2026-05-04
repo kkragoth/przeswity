@@ -7,7 +7,7 @@ import { useTargetWords } from '@/containers/editor/hooks/useTargetWords';
 import { useConnectionStatus } from '@/containers/editor/hooks/useConnectionStatus';
 import { usePageNavigation } from '@/containers/editor/hooks/usePageNavigation';
 import { PeerAvatarStack } from '@/containers/editor/components/peers/PeerAvatarStack';
-import { PageJumper } from '@/containers/editor/components/PageJumper';
+import { PageJumper } from '@/containers/editor/layout/PageJumper';
 import { SyncMini } from '@/containers/editor/components/status/SyncMini';
 import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
 import { useEditorLive } from '@/containers/editor/EditorLiveProvider';

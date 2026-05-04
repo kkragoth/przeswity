@@ -7,8 +7,8 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { LeftTab } from '@/containers/editor/components/LeftPane';
-import { RightTab } from '@/containers/editor/components/RightPane';
+import { LeftTab } from '@/containers/editor/layout/LeftPane';
+import { RightTab } from '@/containers/editor/layout/RightPane';
 import { createSessionStore } from '@/containers/editor/stores/createSessionStore';
 
 describe('createSessionStore', () => {

@@ -3,8 +3,8 @@ import { Link } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
 
-import { BookTitleMenu } from '@/containers/editor/components/BookTitleMenu';
-import { UserMenu } from '@/containers/editor/components/UserMenu';
+import { BookTitleMenu } from '@/containers/editor/layout/BookTitleMenu';
+import { UserMenu } from '@/containers/editor/layout/UserMenu';
 import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
 
 export interface TopBarProps {

@@ -1,7 +1,7 @@
 import { createStore, type StoreApi } from 'zustand/vanilla';
 
-import { LeftTab } from '@/containers/editor/components/LeftPane';
-import { RightTab } from '@/containers/editor/components/RightPane';
+import { LeftTab } from '@/containers/editor/layout/LeftPane';
+import { RightTab } from '@/containers/editor/layout/RightPane';
 
 /**
  * Per-session transient UI store (T-40, plan §2.A).

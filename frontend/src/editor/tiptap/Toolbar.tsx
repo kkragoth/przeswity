@@ -11,8 +11,8 @@ import { InsertZone } from '@/editor/tiptap/toolbar/InsertZone';
 import { PaneToggleZone, Divider } from '@/editor/tiptap/toolbar/PaneToggleZone';
 import { useEditorLive } from '@/containers/editor/EditorLiveProvider';
 import { useSession } from '@/containers/editor/SessionStoreProvider';
-import { LeftTab } from '@/containers/editor/components/LeftPane';
-import { RightTab } from '@/containers/editor/components/RightPane';
+import { LeftTab } from '@/containers/editor/layout/LeftPane';
+import { RightTab } from '@/containers/editor/layout/RightPane';
 import { useNarrowLayout } from '@/containers/editor/hooks/useNarrowLayout';
 
 export interface ToolbarProps {

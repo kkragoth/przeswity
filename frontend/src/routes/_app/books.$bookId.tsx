@@ -1,7 +1,7 @@
 import '@/editor/styles.css';
 import { createFileRoute } from '@tanstack/react-router';
 import { lazy, Suspense } from 'react';
-import { EditorSkeleton } from '@/containers/editor/components/EditorSkeleton';
+import { EditorSkeleton } from '@/containers/editor/layout/EditorSkeleton';
 
 const BookEditorPage = lazy(async () => import('@/containers/books/BookEditorPage').then((m) => ({ default: m.BookEditorPage })));
 

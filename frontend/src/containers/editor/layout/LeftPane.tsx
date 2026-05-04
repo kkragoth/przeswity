@@ -14,7 +14,7 @@ import { VersionsPanel } from '@/containers/editor/components/versions/VersionsP
 import { GlossaryPanel } from '@/containers/editor/components/glossary/GlossaryPanel';
 import { MetaPanel } from '@/containers/editor/components/meta/MetaPanel';
 import { useEditorHeadings } from '@/containers/editor/hooks/useEditorHeadings';
-import { EmptyState } from '@/containers/editor/components/EmptyState';
+import { EmptyState } from '@/containers/editor/layout/EmptyState';
 import { usePaneStore } from '@/containers/editor/stores/paneStore';
 import { useSession } from '@/containers/editor/SessionStoreProvider';
 
