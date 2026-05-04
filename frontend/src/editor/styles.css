@@ -5,9 +5,11 @@
 @import './identity/identity.css';
 @import './shell/shell.css';
 @import './tiptap/editor.css';
+@import './tiptap/canvas/canvas.css';
 @import './tiptap/toolbar.css';
 @import './tiptap/blocks/blocks.css';
-@import './tiptap/formatting/formatting.css';
+@import './tiptap/extensions/formatting.css';
+@import './tiptap/headerFooter/headerFooter.css';
 @import './tiptap/slash/slash.css';
 @import './tiptap/find/find.css';
 @import '../containers/editor/comments/comments.css';

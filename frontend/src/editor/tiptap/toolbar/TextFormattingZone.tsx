@@ -1,7 +1,7 @@
 import type { Editor } from '@tiptap/react';
 import { Bold, Italic, Underline, Strikethrough, Code } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { TbBtn, HighlightBtn } from '@/editor/tiptap/ToolbarPrimitives';
+import { TbBtn, HighlightBtn } from '@/editor/tiptap/toolbar/Primitives';
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 const M = isMac ? '⌘' : 'Ctrl';

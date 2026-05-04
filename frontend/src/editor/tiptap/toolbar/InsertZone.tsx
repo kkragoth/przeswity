@@ -1,8 +1,8 @@
 import type { Editor } from '@tiptap/react';
 import { Link2, Undo2, Redo2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { TbBtn } from '@/editor/tiptap/ToolbarPrimitives';
-import { SpecialCharsMenu } from '@/editor/tiptap/formatting/SpecialCharsMenu';
+import { TbBtn } from '@/editor/tiptap/toolbar/Primitives';
+import { SpecialCharsMenu } from '@/editor/tiptap/toolbar/SpecialCharsMenu';
 import { useLinkPromptDialog } from '@/components/feedback/useLinkPromptDialog';
 import { LinkPromptDialog } from '@/components/feedback/LinkPromptDialog';
 

@@ -5,7 +5,7 @@
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import { Lock, Highlighter } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { HIGHLIGHT_PALETTE } from '@/editor/tiptap/formatting/Highlight';
+import { HIGHLIGHT_PALETTE } from '@/editor/tiptap/extensions/Highlight';
 
 // ── Tooltip ──────────────────────────────────────────────────────────────────
 

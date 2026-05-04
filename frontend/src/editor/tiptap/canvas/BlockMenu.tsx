@@ -1,7 +1,7 @@
 import type { Editor } from '@tiptap/react';
 import { ContextMenu } from '@/editor/shell/ContextMenu';
 import { deleteBlock, duplicateBlock, moveBlock } from '@/editor/tiptap/blocks/blockOps';
-import type { useBlockMenu } from '@/editor/tiptap/hooks/useBlockMenu';
+import type { useBlockMenu } from '@/editor/tiptap/blocks/useBlockMenu';
 
 export function BlockMenu({ state, editor, t }: { state: ReturnType<typeof useBlockMenu>; editor: Editor; t: (...args: any[]) => string }) {
     if (!state.openAt) return null;

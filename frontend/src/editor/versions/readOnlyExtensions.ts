@@ -7,7 +7,7 @@ import TaskItem from '@tiptap/extension-task-item';
 import { Insertion, Deletion } from '@/editor/suggestions/TrackChange';
 import { DiffBlockAttr } from '@/editor/suggestions/DiffBlockAttr';
 import { Comment } from '@/editor/comments/Comment';
-import { Highlight } from '@/editor/tiptap/formatting/Highlight';
+import { Highlight } from '@/editor/tiptap/extensions/Highlight';
 
 export const READ_ONLY_EXTENSIONS = [
     StarterKit.configure({ undoRedo: false }),

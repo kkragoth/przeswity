@@ -1,0 +1,34 @@
+/* Canvas overlays — pieces rendered above the editor surface
+   (BubbleToolbar, BlockMenu, DragHandle). Carved out of editor.css. */
+
+/* ---------- Bubble menu ---------- */
+.bubble-menu-wrap {
+    z-index: var(--z-popover);
+}
+.bubble-menu {
+    display: flex;
+    gap: 2px;
+    background: var(--text);
+    border-radius: var(--r-2);
+    padding: 4px;
+    box-shadow: var(--shadow-paper-2);
+}
+
+.bubble-menu button {
+    background: transparent;
+    border: none;
+    color: var(--text-on-accent);
+    padding: 4px 8px;
+    border-radius: var(--r-2);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.bubble-menu button:hover {
+    background: rgba(255, 255, 255, 0.10);
+}
+
+.bubble-menu button.is-active {
+    background: rgba(255, 255, 255, 0.20);
+}

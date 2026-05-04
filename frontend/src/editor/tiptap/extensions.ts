@@ -19,12 +19,12 @@ import { Comment } from '@/editor/comments/Comment';
 import { Insertion, Deletion } from '@/editor/suggestions/TrackChange';
 import { DiffBlockAttr } from '@/editor/suggestions/DiffBlockAttr';
 import { SuggestionMode } from '@/editor/suggestions/SuggestionMode';
-import { SmartPaste } from '@/editor/tiptap/formatting/SmartPaste';
-import { SmartTypography } from '@/editor/tiptap/formatting/SmartTypography';
-import { Highlight } from '@/editor/tiptap/formatting/Highlight';
+import { SmartPaste } from '@/editor/tiptap/extensions/SmartPaste';
+import { SmartTypography } from '@/editor/tiptap/extensions/SmartTypography';
+import { Highlight } from '@/editor/tiptap/extensions/Highlight';
 import { FindReplace } from '@/editor/tiptap/find/FindReplace';
-import { Footnote } from '@/editor/tiptap/blocks/Footnote';
-import { TableOfContents } from '@/editor/tiptap/blocks/Toc';
+import { Footnote } from '@/editor/tiptap/extensions/Footnote';
+import { TableOfContents } from '@/editor/tiptap/extensions/TableOfContents';
 import { SlashCommand } from '@/editor/tiptap/slash/SlashCommand';
 import type { SlashTriggerInfo } from '@/editor/tiptap/slash/SlashCommand';
 import { GlossaryHighlight } from '@/editor/glossary/GlossaryHighlight';
@@ -37,7 +37,7 @@ import {
     A4_MARGIN_PX,
     PAGE_GAP_BORDER_COLOR,
     PAGE_BREAK_BACKGROUND,
-} from '@/editor/constants';
+} from './constants';
 
 const A4_PAGE = {
     pageHeight: A4_PAGE_HEIGHT_PX,

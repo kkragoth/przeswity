@@ -3,11 +3,11 @@ import { useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { EditorView } from '@/editor/tiptap/EditorView';
+import { EditorView } from '@/editor/tiptap';
 import { FindReplaceBar } from '@/editor/tiptap/find/FindReplaceBar';
 import { useToast } from '@/editor/shell/useToast';
 import type { User, Role } from '@/editor/identity/types';
-import { Toolbar } from '@/editor/tiptap/Toolbar';
+import { Toolbar } from '@/editor/tiptap/toolbar';
 import { useGlossary } from '@/containers/editor/glossary/hooks/useGlossary';
 import { ShortcutsModal } from '@/containers/editor/workflow/ShortcutsModal';
 import { TopBar } from '@/containers/editor/layout/TopBar';

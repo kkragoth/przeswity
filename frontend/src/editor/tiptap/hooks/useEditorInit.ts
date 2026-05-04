@@ -5,7 +5,7 @@ import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import { buildExtensions } from '@/editor/tiptap/extensions';
 import type { CollabBundle } from '@/editor/collab/yDoc';
 import type { User } from '@/editor/identity/types';
-import type { DragState } from '@/editor/tiptap/hooks/useBlockDragDrop';
+import type { DragState } from '@/editor/tiptap/blocks/useBlockDragDrop';
 import type { SlashTriggerInfo } from '@/editor/tiptap/slash/SlashCommand';
 import type { EditorContextHandle } from '@/editor/tiptap/editorContext';
 

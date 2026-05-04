@@ -1,4 +1,4 @@
-import { ModeToggle } from '@/editor/tiptap/ToolbarPrimitives';
+import { ModeToggle } from '@/editor/tiptap/toolbar/Primitives';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { useEditorLive } from '@/containers/editor/session/LiveProvider';
 

@@ -1,7 +1,7 @@
 import type { Editor } from '@tiptap/react';
 import { List, ListOrdered, ListChecks } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { TbBtn } from '@/editor/tiptap/ToolbarPrimitives';
+import { TbBtn } from '@/editor/tiptap/toolbar/Primitives';
 
 interface BlockFormattingZoneProps {
     editor: Editor;

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import '@/editor/tiptap/header-footer-bar.css';
+import './headerFooter.css';
 
 export enum HeaderFooterKind {
     None = 'none',

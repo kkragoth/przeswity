@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Editor } from '@tiptap/react';
 import type { CollabBundle } from '@/editor/collab/yDoc';
-import { HeaderFooterKind } from '@/editor/tiptap/HeaderFooterBar';
+import { HeaderFooterKind } from '@/editor/tiptap/headerFooter/HeaderFooterBar';
 import type { EditorContextHandle } from '@/editor/tiptap/editorContext';
 
 export type HeaderFooterFocus =

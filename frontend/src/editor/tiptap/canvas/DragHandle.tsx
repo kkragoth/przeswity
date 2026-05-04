@@ -1,6 +1,6 @@
 import type { Editor } from '@tiptap/react';
-import type { HoveredBlock } from '@/editor/tiptap/hooks/useBlockHover';
-import type { DragState } from '@/editor/tiptap/hooks/useBlockDragDrop';
+import type { HoveredBlock } from '@/editor/tiptap/blocks/useBlockHover';
+import type { DragState } from '@/editor/tiptap/blocks/useBlockDragDrop';
 import type { MutableRefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
