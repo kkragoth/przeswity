@@ -3,7 +3,7 @@ import { StepMap, Transform } from 'prosemirror-transform';
 import { ChangeSet } from 'prosemirror-changeset';
 
 import type { JSONNode } from '@/editor/types';
-import { DIFF_BLOCK_TYPES } from '@/editor/suggestions/DiffBlockAttr';
+import { DIFF_BLOCK_TYPES } from '@/editor/suggestions/blockDiffAttribute';
 export type { JSONNode } from '@/editor/types';
 
 const BLOCK_TYPES = new Set<string>(DIFF_BLOCK_TYPES);

@@ -5,7 +5,7 @@ import TextAlign from '@tiptap/extension-text-align';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import { Insertion, Deletion } from '@/editor/suggestions/trackChangeMarks';
-import { DiffBlockAttr } from '@/editor/suggestions/DiffBlockAttr';
+import { DiffBlockAttr } from '@/editor/suggestions/blockDiffAttribute';
 import { Comment } from '@/editor/comments/CommentMark';
 import { Highlight } from '@/editor/tiptap/extensions/Highlight';
 
