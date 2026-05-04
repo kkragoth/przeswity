@@ -13,7 +13,7 @@
 @import '../containers/editor/comments/comments.css';
 @import './suggestions/suggestions.css';
 @import '../containers/editor/versions/versions.css';
-@import './glossary/glossary.css';
+@import '../containers/editor/glossary/glossary.css';
 @import '../containers/editor/outline/outline.css';
 @import './meta/meta.css';
 @import './workflow/workflow.css';

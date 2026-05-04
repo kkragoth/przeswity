@@ -11,7 +11,7 @@ import {
 
 import { OutlineSidebar } from '@/containers/editor/outline';
 import { VersionsPanel } from '@/containers/editor/versions';
-import { GlossaryPanel } from '@/containers/editor/components/glossary/GlossaryPanel';
+import { GlossaryPanel } from '@/containers/editor/glossary';
 import { MetaPanel } from '@/containers/editor/components/meta/MetaPanel';
 import { useEditorHeadings } from '@/containers/editor/outline/hooks/useEditorHeadings';
 import { EmptyState } from '@/containers/editor/layout/EmptyState';

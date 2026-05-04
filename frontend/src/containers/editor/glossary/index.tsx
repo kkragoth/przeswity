@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { makeId } from '@/editor/utils';
 
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
-import { useGlossary, type StoredEntry } from '@/containers/editor/components/glossary/useGlossary';
+import { useGlossary, type StoredEntry } from './hooks/useGlossary';
 
 export function GlossaryPanel() {
     const { t } = useTranslation('editor');

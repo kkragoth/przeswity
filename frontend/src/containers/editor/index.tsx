@@ -8,7 +8,7 @@ import { FindReplaceBar } from '@/editor/tiptap/find/FindReplaceBar';
 import { useToast } from '@/editor/shell/useToast';
 import type { User, Role } from '@/editor/identity/types';
 import { Toolbar } from '@/editor/tiptap/Toolbar';
-import { useGlossary } from '@/containers/editor/components/glossary/useGlossary';
+import { useGlossary } from '@/containers/editor/glossary/hooks/useGlossary';
 import { ShortcutsModal } from '@/containers/editor/components/workflow/ShortcutsModal';
 import { TopBar } from '@/containers/editor/layout/TopBar';
 import { LeftPane } from '@/containers/editor/layout/LeftPane';
