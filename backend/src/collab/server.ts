@@ -6,6 +6,7 @@ import { Hocuspocus, type onAuthenticatePayload } from '@hocuspocus/server';
 import { authenticate } from './auth.js';
 import { persistence } from './persistence.js';
 import { presenceExtension, presenceHeartbeat } from './presence.js';
+import { log } from '../lib/log.js';
 
 const extensions = [persistence, presenceExtension, presenceHeartbeat];
 
@@ -23,4 +24,6 @@ export const hocuspocus = new Hocuspocus({
     },
 });
 
-console.log('[collab] extensions:', extensions.map((e) => (e as { constructor?: { name?: string } }).constructor?.name ?? typeof e).join(', '));
+const extensionNames = extensions
+    .map((e) => (e as { constructor?: { name?: string } }).constructor?.name ?? typeof e);
+log.info('collab extensions loaded', { count: extensionNames.length, extensions: extensionNames });

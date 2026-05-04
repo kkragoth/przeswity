@@ -73,7 +73,7 @@ commentsRouter.patch('/api/comments/:threadId/messages/:messageId', requireSessi
     const [msg] = await db.select().from(commentMessage).where(
         and(eq(commentMessage.id, req.params.messageId), eq(commentMessage.threadId, thread.id)),
     );
-    if (!msg) throw new AppError('errors.comment.notFound', 404, 'message not found');
+    if (!msg) throw new AppError('errors.comment.notFound', 404, 'message not found', { threadId: thread.id, messageId: req.params.messageId });
     assertCanEditMessage(msg.authorId, me);
 
     const body = EditMessageBody.parse(req.body);
@@ -105,7 +105,7 @@ commentsRouter.delete('/api/comments/:threadId/messages/:messageId', requireSess
     const [msg] = await db.select().from(commentMessage).where(
         and(eq(commentMessage.id, req.params.messageId), eq(commentMessage.threadId, thread.id)),
     );
-    if (!msg) throw new AppError('errors.comment.notFound', 404, 'message not found');
+    if (!msg) throw new AppError('errors.comment.notFound', 404, 'message not found', { threadId: thread.id, messageId: req.params.messageId });
     assertCanDeleteMessage(msg.authorId, me);
 
     // Atomic delete + conditional thread cleanup. Avoids the SELECT-then-DELETE race

@@ -4,6 +4,7 @@ import * as Y from 'yjs';
 import { db } from '../db/client.js';
 import { commentThread, commentMessage, bookYjsState } from '../db/schema.js';
 import { asByteaInput } from '../lib/bytes.js';
+import { log } from '../lib/log.js';
 import { buildProseMirrorSchema, PROSEMIRROR_FIELD } from '@przeswity/editor-schema';
 import { prosemirrorJSONToYDoc, yDocToProsemirrorJSON } from 'y-prosemirror';
 import type { SeedThread } from './data/types.js';
@@ -125,7 +126,7 @@ function applyThreadMarksToYDoc(sourceDoc: Y.Doc, threads: SeedThread[]): Y.Doc 
     for (const t of threads) {
         const marked = addCommentMark(json, t.originalQuote, t.id);
         if (!marked) {
-            console.warn(`[seed] comment quote not found for ${t.id}: ${t.originalQuote}`);
+            log.warn('seed: comment quote not found', { threadId: t.id, quote: t.originalQuote });
         }
     }
     const schema = buildProseMirrorSchema();

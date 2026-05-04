@@ -3,6 +3,7 @@ import type { Role } from '../lib/permissions.js';
 import type { AuthUser } from '../auth/session.js';
 import { SystemRole } from '../db/auth-schema.js';
 import { env } from '../env.js';
+import { log } from '../lib/log.js';
 import { getBookAccessByUserId } from '../lib/access.js';
 
 export type CollabUser = Pick<AuthUser, 'id' | 'name' | 'systemRole'> & Partial<AuthUser>;
@@ -19,6 +20,7 @@ export async function authenticate(data: {
 }): Promise<CollabContext> {
     const origin = data.requestHeaders.origin;
     if (typeof origin === 'string' && !env.CORS_ORIGINS.includes(origin)) {
+        log.warn('collab origin rejected', { origin, allowed: env.CORS_ORIGINS });
         throw new Error('forbidden: origin');
     }
     const headers = new Headers();

@@ -7,6 +7,7 @@ import { book, assignment, bookYjsState } from '../db/schema.js';
 import { seedBookId } from './ids.js';
 import { markdownToYDocState } from '@przeswity/editor-schema/markdown';
 import { asByteaInput } from '../lib/bytes.js';
+import { log } from '../lib/log.js';
 import { BOOKS } from './data/books.js';
 import { buildSeedThreads } from './data/threads.js';
 import { reseedBookComments, applyThreadsToBookYjs } from './seedThreads.js';
@@ -51,16 +52,16 @@ async function upsertAssignment(bookId: string, userId: string, role: Role): Pro
 export async function seedBooks(idByEmail: Map<string, string>, userByEmail: Map<string, SeedUser>): Promise<void> {
     for (const b of BOOKS) {
         const ownerId = idByEmail.get(b.ownerEmail);
-        if (!ownerId) { console.warn(`[seed] no owner found for ${b.slug}`); continue; }
+        if (!ownerId) { log.warn('seed: missing owner', { slug: b.slug, ownerEmail: b.ownerEmail }); continue; }
         const bookId = await upsertSeedBook(b, ownerId);
         const threads = buildSeedThreads(b, idByEmail, userByEmail);
         await applyThreadsToBookYjs(bookId, threads);
         await reseedBookComments(bookId, threads);
         for (const a of b.assignments) {
             const uid = idByEmail.get(a.email);
-            if (!uid) { console.warn(`[seed] no user for assignment ${a.email}`); continue; }
+            if (!uid) { log.warn('seed: missing assignee', { slug: b.slug, email: a.email }); continue; }
             await upsertAssignment(bookId, uid, a.role);
         }
-        console.log(`[seed] book ${b.slug} (${bookId})`);
+        log.info('seed book upserted', { slug: b.slug, bookId });
     }
 }

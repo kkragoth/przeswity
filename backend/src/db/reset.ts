@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { Pool } from 'pg';
 import { env } from '../env.js';
+import { log } from '../lib/log.js';
 
 const pool = new Pool({ connectionString: env.DATABASE_URL });
 await pool.query(`
@@ -11,4 +12,4 @@ await pool.query(`
     GRANT ALL ON SCHEMA public TO public;
 `);
 await pool.end();
-console.log('database reset');
+log.info('database reset');

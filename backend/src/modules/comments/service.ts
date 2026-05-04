@@ -9,7 +9,7 @@ import { CommentsListQuery } from './schemas.js';
 
 export async function loadThreadOrThrow(threadId: string): Promise<CommentThreadRow> {
     const [t] = await db.select().from(commentThread).where(eq(commentThread.id, threadId));
-    if (!t) throw new AppError('errors.comment.notFound', 404, 'thread not found');
+    if (!t) throw new AppError('errors.comment.notFound', 404, 'thread not found', { threadId });
     return t;
 }
 

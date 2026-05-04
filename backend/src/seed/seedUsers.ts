@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { user } from '../db/schema.js';
 import { auth } from '../auth/betterAuth.config.js';
+import { log } from '../lib/log.js';
 import { getDevSeedPassword } from './devPassword.js';
 import { USERS } from './data/users.js';
 import type { SeedUser } from './data/types.js';
@@ -15,7 +16,7 @@ async function upsertSeedUser(spec: SeedUser): Promise<void> {
             ?? '';
         const msg = e instanceof Error ? e.message : '';
         if (code !== 'USER_ALREADY_EXISTS' && !msg.toUpperCase().includes('ALREADY')) {
-            console.warn(`[seed] signUpEmail for ${spec.email} threw:`, code || msg);
+            log.warn('seed signUpEmail failed', { email: spec.email, code: code || msg });
         }
     }
     await db.update(user).set({
@@ -30,7 +31,7 @@ async function upsertSeedUser(spec: SeedUser): Promise<void> {
 export async function seedUsers(): Promise<{ idByEmail: Map<string, string>; userByEmail: Map<string, SeedUser> }> {
     for (const u of USERS) {
         await upsertSeedUser(u);
-        console.log(`[seed] user ${u.email}`);
+        log.info('seed user upserted', { email: u.email });
     }
     const allUsers = await db.select().from(user);
     return {
