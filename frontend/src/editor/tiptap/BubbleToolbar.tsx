@@ -12,7 +12,12 @@ export function BubbleToolbar({ editor, canComment, onAddComment }: BubbleToolba
     const { t } = useTranslation('editor');
 
     return (
-        <BubbleMenu editor={editor}>
+        <BubbleMenu
+            editor={editor}
+            appendTo={() => document.body}
+            options={{ strategy: 'fixed', placement: 'top' }}
+            className="bubble-menu-wrap"
+        >
             <div className="bubble-menu">
                 <button
                     type="button"

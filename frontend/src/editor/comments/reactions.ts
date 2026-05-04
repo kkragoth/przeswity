@@ -1,3 +1,5 @@
+export const QUICK_REACTIONS = ['👍', '❤️', '🎉', '✅', '🤔', '❓', '🚀'] as const;
+
 /**
  * Pure helper for toggling a user's presence on an emoji reaction.
  * Adding when absent, removing when present; cleans up empty arrays.

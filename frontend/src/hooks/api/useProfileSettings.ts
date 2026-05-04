@@ -1,26 +1,25 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { meGetOptions, mePatchMutation, meGetQueryKey } from '@/api/generated/@tanstack/react-query.gen';
 import type { PatchMeBody } from '@/api/generated/types.gen';
 import { useInvalidate } from '@/hooks/api/cache/useInvalidate';
+import { useFormState } from '@/hooks/useFormState';
+
+const INITIAL = { name: '', color: '#888888', image: '' };
 
 export function useProfileSettings() {
     const invalidateMe = useInvalidate(meGetQueryKey);
-    const { data: me } = useQuery({
-        ...meGetOptions(),
-    });
+    const { data: me } = useQuery({ ...meGetOptions() });
+    const { values, setValues, setField } = useFormState(INITIAL);
 
-    const [values, setValues] = useState({ name: '', color: '#888888', image: '' });
     useEffect(() => {
         if (!me) return;
         setValues({ name: me.name, color: me.color, image: me.image ?? '' });
-    }, [me]);
+    }, [me, setValues]);
 
     const mutation = useMutation({
         ...mePatchMutation(),
-        onSuccess: async () => {
-            await invalidateMe();
-        },
+        onSuccess: async () => { await invalidateMe(); },
     });
 
     const submit = () => {
@@ -37,12 +36,5 @@ export function useProfileSettings() {
         return values.name !== me.name || values.color !== me.color || values.image !== (me.image ?? '');
     }, [me, values]);
 
-    return {
-        me,
-        values,
-        setField: (name: 'name' | 'color' | 'image', value: string) => setValues((prev) => ({ ...prev, [name]: value })),
-        save: submit,
-        isSaving: mutation.isPending,
-        isDirty,
-    };
+    return { me, values, setField, save: submit, isSaving: mutation.isPending, isDirty };
 }

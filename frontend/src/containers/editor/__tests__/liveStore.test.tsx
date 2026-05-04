@@ -107,7 +107,7 @@ describe('EditorLiveProvider — peers fan-out (T-24)', () => {
 
         act(() => {
             root.render(
-                <EditorSessionProvider user={TEST_USER} bookId="b" collab={collab} toast={() => {}}>
+                <EditorSessionProvider user={TEST_USER} bookId="b" bookTitle="Test" collab={collab} toast={() => {}}>
                     <EditorLiveProvider>
                         <harness.Tree />
                     </EditorLiveProvider>
@@ -135,7 +135,7 @@ describe('EditorLiveProvider — peers fan-out (T-24)', () => {
 
         act(() => {
             root.render(
-                <EditorSessionProvider user={TEST_USER} bookId="b" collab={collab} toast={() => {}}>
+                <EditorSessionProvider user={TEST_USER} bookId="b" bookTitle="Test" collab={collab} toast={() => {}}>
                     <EditorLiveProvider>
                         <harness.Tree />
                     </EditorLiveProvider>

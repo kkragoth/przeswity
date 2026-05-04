@@ -1,6 +1,7 @@
 import { memo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { previewBody } from '@/editor/comments/format';
 import { ThreadComposeForm } from '@/containers/editor/components/comments/thread/ThreadComposeForm';
 import { ThreadHeader } from '@/containers/editor/components/comments/thread/ThreadHeader';
 import { ThreadEditor } from '@/containers/editor/components/comments/thread/ThreadEditor';
@@ -12,14 +13,6 @@ import { useIsActiveComment } from '@/containers/editor/components/comments/useI
 import { useComments } from '@/containers/editor/CommentsStoreProvider';
 import { selectInitialDraft } from '@/containers/editor/stores/commentsSelectors';
 import { useSession, useSessionStore } from '@/containers/editor/SessionStoreProvider';
-
-const PREVIEW_MAX = 90;
-
-function previewBody(body: string): string {
-    const single = body.replace(/\s+/g, ' ').trim();
-    if (single.length <= PREVIEW_MAX) return single;
-    return single.slice(0, PREVIEW_MAX - 1) + '…';
-}
 
 interface CommentThreadCardProps {
     threadId: string;

@@ -218,6 +218,9 @@
 }
 
 /* ---------- Bubble menu ---------- */
+.bubble-menu-wrap {
+    z-index: var(--z-popover);
+}
 .bubble-menu {
     display: flex;
     gap: 2px;

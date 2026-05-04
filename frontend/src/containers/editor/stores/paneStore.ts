@@ -58,5 +58,11 @@ export const usePaneStore = create<PaneStore>()(
     ),
 );
 
+const STATE_SUFFIX: Record<PaneState, string> = {
+    [PaneState.Expanded]: 'open',
+    [PaneState.Rail]: 'rail',
+    [PaneState.Hidden]: 'hidden',
+};
+
 export const paneClass = (side: PaneSide, state: PaneState): string =>
-    state === PaneState.Expanded ? `pane-${side}-open` : `pane-${side}-${state}`;
+    `pane-${side}-${STATE_SUFFIX[state]}`;

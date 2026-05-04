@@ -1,32 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import * as Y from 'yjs';
 import { useTranslation } from 'react-i18next';
-import type { GlossaryEntry } from '@/editor/glossary/GlossaryHighlight';
 import { makeId } from '@/editor/utils';
 
 import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
-
-interface StoredEntry extends GlossaryEntry {
-  id: string
-  updatedAt: number
-}
-
-export function useGlossary(doc: Y.Doc): StoredEntry[] {
-    const [entries, setEntries] = useState<StoredEntry[]>([]);
-    useEffect(() => {
-        const map = doc.getMap('glossary') as Y.Map<StoredEntry>;
-        const update = () => {
-            const out: StoredEntry[] = [];
-            map.forEach((v) => out.push(v));
-            out.sort((a, b) => a.term.localeCompare(b.term));
-            setEntries(out);
-        };
-        update();
-        map.observe(update);
-        return () => map.unobserve(update);
-    }, [doc]);
-    return entries;
-}
+import { useGlossary, type StoredEntry } from '@/containers/editor/components/glossary/useGlossary';
 
 export function GlossaryPanel() {
     const { t } = useTranslation('editor');

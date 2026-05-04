@@ -10,27 +10,40 @@ import { BlockFormattingZone } from '@/editor/tiptap/toolbar/BlockFormattingZone
 import { InsertZone } from '@/editor/tiptap/toolbar/InsertZone';
 import { PaneToggleZone, Divider } from '@/editor/tiptap/toolbar/PaneToggleZone';
 import { useEditorLive } from '@/containers/editor/EditorLiveProvider';
+import { useSession } from '@/containers/editor/SessionStoreProvider';
+import { LeftTab } from '@/containers/editor/components/LeftPane';
+import { RightTab } from '@/containers/editor/components/RightPane';
+import { useNarrowLayout } from '@/containers/editor/hooks/useNarrowLayout';
 
 export interface ToolbarProps {
     editor: Editor;
-    leftPaneTab: string;
-    rightPaneTab: string;
-    onToggleLeftPane: () => void;
-    onToggleRightPane: () => void;
 }
 
-export function Toolbar({
-    editor,
-    leftPaneTab,
-    rightPaneTab,
-    onToggleLeftPane,
-    onToggleRightPane,
-}: ToolbarProps) {
+export function Toolbar({ editor }: ToolbarProps) {
     const { t } = useTranslation('editor');
+    const leftTab = useSession((s) => s.leftTab);
+    const rightTab = useSession((s) => s.rightTab);
+    const togglePane = usePaneStore((s) => s.toggle);
     const leftExpanded = usePaneStore((s) => s.left === PaneState.Expanded);
     const rightExpanded = usePaneStore((s) => s.right === PaneState.Expanded);
-    // Narrow selector — only this hook re-renders when suggesting toggles.
+    const narrow = useNarrowLayout();
     const suggestingMode = useEditorLive((s) => s.suggesting.effective);
+
+    const leftTabLabels: Record<LeftTab, string> = {
+        [LeftTab.Outline]: t('pane.outline'),
+        [LeftTab.Versions]: t('pane.versions'),
+        [LeftTab.Glossary]: t('pane.glossary'),
+        [LeftTab.Meta]: t('pane.meta'),
+        [LeftTab.Files]: t('pane.files'),
+    };
+    const rightTabLabels: Record<RightTab, string> = {
+        [RightTab.Comments]: t('pane.comments'),
+        [RightTab.Suggestions]: t('pane.suggestions'),
+    };
+    const leftPaneTab = leftTabLabels[leftTab];
+    const rightPaneTab = rightTabLabels[rightTab];
+    const onToggleLeftPane = () => togglePane('left', narrow);
+    const onToggleRightPane = () => togglePane('right', narrow);
 
     return (
         <TooltipPrimitive.Provider delayDuration={400}>
@@ -54,6 +67,7 @@ export function Toolbar({
                 <Divider />
                 <InsertZone editor={editor} />
 
+                <div className="tb-spacer" />
                 <PaneToggleZone />
                 <button
                     type="button"

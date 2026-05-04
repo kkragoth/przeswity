@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { Editor } from '@tiptap/react';
@@ -7,7 +6,6 @@ import { useEditorLive } from '@/containers/editor/EditorLiveProvider';
 
 const VISIBLE_LIMIT = 4;
 const IDLE_AFTER_MS = 30_000;
-const TICK_MS = 5_000;
 
 function initials(name: string): string {
     const parts = name.trim().split(/\s+/).slice(0, 2);
@@ -54,12 +52,7 @@ function PeerAvatar({ peer, editor, now }: { peer: Peer; editor: Editor | null; 
 export function PeerAvatarStack({ editor }: { editor: Editor | null }) {
     const { t } = useTranslation('editor');
     const peers = useEditorLive((s) => s.peers);
-    const [now, setNow] = useState(() => Date.now());
-
-    useEffect(() => {
-        const id = window.setInterval(() => setNow(Date.now()), TICK_MS);
-        return () => window.clearInterval(id);
-    }, []);
+    const now = Date.now();
 
     if (peers.length === 0) return null;
 

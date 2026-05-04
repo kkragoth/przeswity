@@ -30,3 +30,8 @@ export function requireRole(
     }
     return user;
 }
+
+export const protectedBeforeLoad =
+    (predicate: (u: SessionUser) => boolean) =>
+    ({ context }: { context: RouteContextLike }) =>
+        requireRole(context, predicate);

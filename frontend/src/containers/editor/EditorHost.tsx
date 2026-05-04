@@ -8,10 +8,10 @@ import { FindReplaceBar } from '@/editor/tiptap/find/FindReplaceBar';
 import { useToast } from '@/editor/shell/useToast';
 import type { User, Role } from '@/editor/identity/types';
 import { Toolbar } from '@/editor/tiptap/Toolbar';
-import { useGlossary } from '@/containers/editor/components/glossary/GlossaryPanel';
+import { useGlossary } from '@/containers/editor/components/glossary/useGlossary';
 import { ShortcutsModal } from '@/containers/editor/components/workflow/ShortcutsModal';
 import { TopBar } from '@/containers/editor/components/TopBar';
-import { LeftPane, LeftTab } from '@/containers/editor/components/LeftPane';
+import { LeftPane } from '@/containers/editor/components/LeftPane';
 import { RightPane, RightTab } from '@/containers/editor/components/RightPane';
 import { StatusBar } from '@/containers/editor/components/StatusBar';
 import { useDocumentKeyDown } from '@/containers/editor/hooks/useDocumentKeyDown';
@@ -42,11 +42,11 @@ function EditorSession({ bookId, bookTitle, user, collab }: {
 }) {
     const toast = useToast();
     return (
-        <EditorSessionProvider user={user} bookId={bookId} collab={collab} toast={toast.show}>
+        <EditorSessionProvider user={user} bookId={bookId} bookTitle={bookTitle} collab={collab} toast={toast.show}>
             <EditorLiveProvider>
                 <SessionStoreProvider>
                     <CommentsStoreProvider>
-                        <EditorSessionUI bookTitle={bookTitle} collab={collab} />
+                        <EditorSessionUI collab={collab} />
                     </CommentsStoreProvider>
                 </SessionStoreProvider>
             </EditorLiveProvider>
@@ -54,47 +54,26 @@ function EditorSession({ bookId, bookTitle, user, collab }: {
     );
 }
 
-function EditorSessionUI({ bookTitle, collab }: { bookTitle: string; collab: CollabBundle }) {
+function EditorSessionUI({ collab }: { collab: CollabBundle }) {
     const { t } = useTranslation('editor');
     const editor = useEditor();
     const sessionStore = useSessionStore();
-    const leftTab = useSession((s) => s.leftTab);
-    const rightTab = useSession((s) => s.rightTab);
     const shortcutsOpen = useSession((s) => s.shortcutsOpen);
 
     const left = usePaneStore((s) => s.left);
     const right = usePaneStore((s) => s.right);
     const expandPane = usePaneStore((s) => s.expand);
     const showSide = usePaneStore((s) => s.showSide);
-    const togglePane = usePaneStore((s) => s.toggle);
     const dismissBoth = usePaneStore((s) => s.dismissBoth);
 
     const narrow = useNarrowLayout();
     const glossaryEntries = useGlossary(collab.doc);
     useDocumentKeyDown();
 
-    const expandLeft = () => showSide('left', narrow);
-    const expandRight = () => showSide('right', narrow);
-    const toggleLeft = () => togglePane('left', narrow);
-    const toggleRight = () => togglePane('right', narrow);
-    const drawerOpen = narrow && (left === PaneState.Expanded || right === PaneState.Expanded);
-
     useEffect(() => {
         if (!editor) return;
         editor.view.dispatch(editor.state.tr.setMeta('glossaryHighlight/refresh', true));
     }, [editor, glossaryEntries]);
-
-    const leftTabLabels: Record<LeftTab, string> = {
-        [LeftTab.Outline]: t('pane.outline'),
-        [LeftTab.Versions]: t('pane.versions'),
-        [LeftTab.Glossary]: t('pane.glossary'),
-        [LeftTab.Meta]: t('pane.meta'),
-        [LeftTab.Files]: t('pane.files'),
-    };
-    const rightTabLabels: Record<RightTab, string> = {
-        [RightTab.Comments]: t('pane.comments'),
-        [RightTab.Suggestions]: t('pane.suggestions'),
-    };
 
     const hostClassName = ['editor-host', paneClass('left', left), paneClass('right', right)].join(' ');
 
@@ -114,10 +93,7 @@ function EditorSessionUI({ bookTitle, collab }: { bookTitle: string; collab: Col
 
     return (
         <div className={hostClassName}>
-            <TopBar
-                bookTitle={bookTitle}
-                editor={editor}
-            />
+            <TopBar editor={editor} />
             <main className="main-grid">
                 <LeftPane editor={editor} />
                 {left === PaneState.Hidden ? (
@@ -125,21 +101,13 @@ function EditorSessionUI({ bookTitle, collab }: { bookTitle: string; collab: Col
                         type="button"
                         className="pane-handle pane-handle-left"
                         title={t('pane.expand')}
-                        onClick={expandLeft}
+                        onClick={() => showSide('left', narrow)}
                     >
                         <ChevronRight size={14} />
                     </button>
                 ) : null}
                 <section className="center-pane">
-                    {editor ? (
-                        <Toolbar
-                            editor={editor}
-                            leftPaneTab={leftTabLabels[leftTab]}
-                            rightPaneTab={rightTabLabels[rightTab]}
-                            onToggleLeftPane={toggleLeft}
-                            onToggleRightPane={toggleRight}
-                        />
-                    ) : null}
+                    {editor ? <Toolbar editor={editor} /> : null}
                     <EditorView
                         collab={collab}
                         glossaryEntries={glossaryEntries}
@@ -155,13 +123,13 @@ function EditorSessionUI({ bookTitle, collab }: { bookTitle: string; collab: Col
                         type="button"
                         className="pane-handle pane-handle-right"
                         title={t('pane.expand')}
-                        onClick={expandRight}
+                        onClick={() => showSide('right', narrow)}
                     >
                         <ChevronLeft size={14} />
                     </button>
                 ) : null}
             </main>
-            {drawerOpen ? (
+            {narrow && (left === PaneState.Expanded || right === PaneState.Expanded) ? (
                 <button
                     type="button"
                     className="pane-backdrop"

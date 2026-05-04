@@ -148,7 +148,6 @@ containers/editor/
             VersionsList.tsx
             VersionSnapshot.tsx
             VersionDiffModal.tsx
-            DiffMarkdownView.tsx
             DiffRichView.tsx
             MarkdownDiffView.tsx
         hooks/
@@ -158,6 +157,8 @@ containers/editor/
 
     glossary/
         index.tsx                   # was components/glossary/GlossaryPanel.tsx
+        hooks/
+            useGlossary.ts          # was components/glossary/useGlossary.ts
         glossary.css                # was editor/glossary/glossary.css
 
     meta/
@@ -223,6 +224,9 @@ editor/
         reactions.ts
         reactions.test.ts
         color.ts
+        format.ts                   # previewBody helper — pure domain
+        mentionCandidates.ts        # was containers/editor/components/comments/mentionCandidates.ts
+                                    #   (pure logic, no React — belongs in domain layer)
         types.ts
         useThreads.ts               # Yjs→React bridge — domain-side
         # comments.css moved to containers/editor/comments/
@@ -312,6 +316,10 @@ are noise.
 Run in order. Each phase is a separate commit. Each phase ends with `tsc` clean
 and `vitest run` green before moving on.
 
+**Working directory.** All shell snippets in this document assume the cwd is
+`frontend/` (so `src/...` resolves correctly). If you're at the repo root,
+either `cd frontend` first, or prefix every `src/` path with `frontend/`.
+
 ### Phase 0 — Prep
 
 1. Confirm clean working tree (or stash). The committed baseline must be
@@ -337,6 +345,12 @@ Pure mechanical move. No content changes.
 5. Verify: `pnpm typecheck`, `pnpm test`.
 
 ### Phase 2 — Consolidate session state into `session/`
+
+> **Atomicity warning.** Steps 2 and 4 below produce a transient broken-imports
+> state (files moved, callers not yet rewritten). Treat steps 1–4 as a single
+> atomic commit. Do **not** stop or push between them. If you have to pause,
+> revert with `git checkout .` and restart the phase from step 1 — never leave
+> the working tree halfway through.
 
 1. `mkdir -p containers/editor/session`
 2. Moves:
@@ -393,9 +407,19 @@ For each `<feature>`:
 2. Move the panel/main file from
    `containers/editor/components/<feature>/<MainComponent>.tsx` to
    `containers/editor/<feature>/index.tsx`. Keep its exported component name.
+   **Exception — `workflow`:** there is no panel mount point. Move
+   `components/workflow/ShortcutsModal.tsx` to
+   `containers/editor/workflow/ShortcutsModal.tsx` and skip the
+   `index.tsx` rename. The feature folder has no `index.tsx`.
+   **Exception — `comments`:** also leave `CommentAnchors.tsx` at the
+   feature root (`containers/editor/comments/CommentAnchors.tsx`),
+   not under `components/`. It's a separately-mounted overlay (see caveat
+   below); `components/` is reserved for pieces only the sidebar uses.
 3. Move all sibling files from `containers/editor/components/<feature>/` into
    `containers/editor/<feature>/components/` (or `hooks/` if it's a hook file
-   like `useThread.ts`, `useIsActiveComment.ts`).
+   like `useThread.ts`, `useIsActiveComment.ts`). For comments, exclude
+   `CommentAnchors.tsx` from this step — it goes to the feature root per
+   step 2.
 4. For comments specifically, also move:
    - `containers/editor/CommentsStoreProvider.tsx` → `comments/store/`
    - `containers/editor/stores/createCommentsStore.ts` → `comments/store/commentsStore.ts`
@@ -403,10 +427,17 @@ For each `<feature>`:
    - `containers/editor/stores/commentsStore.test.ts` → `comments/__tests__/commentsStore.test.ts`
    - `containers/editor/__tests__/helpers/commentHarness.tsx` → `comments/__tests__/commentHarness.tsx`
    - `containers/editor/hooks/useMentionDetection.ts` → `comments/hooks/useMentionDetection.ts`
+   - `containers/editor/components/comments/mentionCandidates.ts` →
+     `editor/comments/mentionCandidates.ts` (NOTE: this crosses into the
+     domain layer — the file is pure logic, no React, so it belongs in
+     `editor/`. Update the one importer
+     `containers/editor/comments/index.tsx` (formerly `CommentsSidebar.tsx`).
 5. For versions: also move
    `containers/editor/hooks/{useVersions,useAutoSnapshot}.ts` → `versions/hooks/`.
 6. For outline: also move
    `containers/editor/hooks/{useEditorHeadings,usePageNavigation}.ts` → `outline/hooks/`.
+   For glossary: also move
+   `containers/editor/components/glossary/useGlossary.ts` → `glossary/hooks/useGlossary.ts`.
 7. For suggestions: also move
    `containers/editor/hooks/useSuggestingMode.ts` → `suggestions/hooks/`.
 8. For peers: also move
@@ -424,17 +455,16 @@ For each `<feature>`:
 12. Delete the now-empty `containers/editor/components/<feature>/` folder.
 13. Run `pnpm typecheck && pnpm test` before committing.
 
-**Caveat for comments:** `CommentAnchors.tsx` is mounted by `EditorHost`
-(over the editor canvas as overlay pins), not by `CommentsSidebar`. Export it
-as a **named export** from `containers/editor/comments/index.tsx`, e.g.:
-```ts
-export { CommentsSidebar as default, CommentsSidebar } from './CommentsSidebar';
-export { CommentAnchors } from './CommentAnchors';
-```
-Or keep `CommentAnchors.tsx` at the feature root (not under `components/`)
-since it has its own external mount point — the README should mention this.
-Recommended: keep at feature root. `components/` is for "internal pieces only
-the panel uses".
+**Caveat for comments:** `CommentAnchors.tsx` is mounted by
+`editor/tiptap/EditorView.tsx` (over the editor canvas as overlay pins),
+not by `CommentsSidebar`. Per step 2 above, keep `CommentAnchors.tsx` at
+the feature root (`containers/editor/comments/CommentAnchors.tsx`) so it
+has its own visible top-level entry point. Importers update from
+`@/containers/editor/components/comments/CommentAnchors` to
+`@/containers/editor/comments/CommentAnchors`. Affected importer:
+`editor/tiptap/EditorView.tsx` (and post-rename — see layout-extended.md
+— `editor/tiptap/index.tsx`). `components/` stays reserved for
+"internal pieces only the sidebar uses".
 
 ### Phase 5 — Tidy `src/editor/`
 
@@ -597,6 +627,14 @@ grep -rn "from '@/containers/editor" src/editor/
 - Touching `editor/tiptap/` substructure.
 - Promoting or demoting any component to/from `src/components/`.
 - Changing zustand store shape or selector signatures.
+- **`UserMenu` deduplication.** Two near-identical files exist:
+  `containers/editor/components/UserMenu.tsx` (used by editor TopBar) and
+  `components/layout/UserMenu.tsx` (used by global AppTopBar). This PR
+  moves the editor's copy to `containers/editor/layout/UserMenu.tsx`
+  (Phase 1) without merging the two. Deduplicating them — collapsing to
+  the global `components/layout/UserMenu.tsx` and deleting the editor
+  copy — is a separate task that requires verifying both call sites
+  render identical UI.
 
 These are valid future tasks; bundling them with the move would make the diff
 unreviewable.

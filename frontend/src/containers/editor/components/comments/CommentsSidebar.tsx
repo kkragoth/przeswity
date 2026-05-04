@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Editor } from '@tiptap/react';
 import { shallow } from 'zustand/shallow';
 
 import { useThreads } from '@/editor/comments/useThreads';
 import { CommentStatus } from '@/editor/comments/types';
-import { buildCandidates } from '@/containers/editor/components/comments/MentionTextarea';
+import { buildCandidates } from '@/containers/editor/components/comments/mentionCandidates';
 import { CommentFilters } from '@/containers/editor/components/comments/CommentFilters';
 import { OpenCommentList } from '@/containers/editor/components/comments/OpenCommentList';
 import { ResolvedCommentList } from '@/containers/editor/components/comments/ResolvedCommentList';
@@ -43,7 +43,6 @@ export function CommentsSidebar(props: CommentsSidebarProps) {
     const filter = useComments(selectFilter, shallow);
     const doc = collab.doc;
     const threads = useThreads(doc);
-    const cardsRef = useRef<Record<string, HTMLDivElement | null>>({});
 
     const visible = useMemo(() => selectVisible(threads, filter, user), [threads, filter, user]);
     const { open, resolved } = useMemo(() => selectOpenResolved(visible), [visible]);
@@ -65,7 +64,7 @@ export function CommentsSidebar(props: CommentsSidebarProps) {
 
     useEffect(() => {
         if (!activeCommentId) return;
-        const el = cardsRef.current[activeCommentId];
+        const el = document.querySelector(`[data-thread-id="${activeCommentId}"]`);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, [activeCommentId]);
 
@@ -112,7 +111,7 @@ export function CommentsSidebar(props: CommentsSidebarProps) {
                     </div>
                 ) : null}
                 {showOpen ? (
-                    <OpenCommentList threadIds={openIds} cardsRef={cardsRef} />
+                    <OpenCommentList threadIds={openIds} />
                 ) : null}
                 {showResolved ? (
                     <ResolvedCommentList

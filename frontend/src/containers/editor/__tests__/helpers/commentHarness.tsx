@@ -66,6 +66,7 @@ export function mountCommentSidebar(): CommentHarness {
             <EditorSessionProvider
                 user={TEST_USER}
                 bookId="test-book"
+                bookTitle="Test Book"
                 collab={collab}
                 toast={() => {}}
             >

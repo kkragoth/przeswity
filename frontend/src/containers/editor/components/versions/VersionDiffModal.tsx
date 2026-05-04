@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { diffStats, type JSONNode } from '@/editor/versions/diffDoc';
 import { DiffRichView } from '@/containers/editor/components/versions/DiffRichView';
-import { DiffMarkdownView } from '@/containers/editor/components/versions/DiffMarkdownView';
+import { MarkdownDiffView } from '@/containers/editor/components/versions/MarkdownDiffView';
 
 const enum ViewMode {
     Rich = 'rich',
@@ -100,7 +100,7 @@ export function VersionDiffModal({
                             useSbs={useSbs}
                         />
                     ) : (
-                        <DiffMarkdownView
+                        <MarkdownDiffView
                             diffJson={diffJson}
                             olderJson={olderJson}
                             newerJson={newerJson}

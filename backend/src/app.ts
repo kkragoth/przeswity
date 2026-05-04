@@ -30,11 +30,15 @@ export async function buildApp() {
     // sensitive paths (auth, pdf, ai) below.
     if (env.NODE_ENV !== 'test') {
         app.use(defaultLimiter);
-        app.use('/api/auth', authLimiter);
     }
 
-    // Dev quick-login mounted FIRST so its /api/auth/dev/* doesn't get swallowed by BetterAuth's wildcard.
+    // Dev quick-login mounted before authLimiter so React StrictMode + HMR re-fetches
+    // don't trip the 5/min auth budget. Also kept above BetterAuth's /api/auth/* wildcard.
     app.use(devAuthRouter);
+
+    if (env.NODE_ENV !== 'test') {
+        app.use('/api/auth', authLimiter);
+    }
 
     // BetterAuth wildcard handler must run BEFORE express.json() globally — it parses its own bodies.
     app.all('/api/auth/*', toNodeHandler(auth));

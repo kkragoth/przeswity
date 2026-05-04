@@ -7,6 +7,11 @@ dev:
 dev-down:
     docker compose -f docker-compose.dev.yml down
 
+# wipe the shared node_modules volume so the installer reinstalls it (fixes platform/optional-dep mismatches)
+fix-backend-node-modules:
+    docker compose -f docker-compose.dev.yml down
+    docker volume rm przeswity_node_modules
+
 # bring up just the database
 db-up:
     docker compose -f docker-compose.dev.yml up -d db

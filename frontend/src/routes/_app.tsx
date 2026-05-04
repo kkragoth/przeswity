@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, Outlet, useMatches } from '@tanstack/react-router';
+import { createFileRoute, redirect, isRedirect, Outlet, useMatches } from '@tanstack/react-router';
 import { authClient } from '@/auth/client';
 import { useSessionPing } from '@/hooks/api/useSessionPing';
 import { AppTopBar } from '@/components/layout/AppTopBar';
@@ -13,6 +13,7 @@ export const Route = createFileRoute('/_app')({
             }
             return { session: data as unknown as Session };
         } catch (error) {
+            if (isRedirect(error)) throw error;
             // Network/backend failures should not crash router matching.
             console.warn('Session lookup failed, redirecting to login.', error);
             throw redirect({

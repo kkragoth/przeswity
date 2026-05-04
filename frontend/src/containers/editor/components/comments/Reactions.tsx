@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-
-const QUICK = ['👍', '❤️', '🎉', '✅', '🤔', '❓', '🚀'];
+import { QUICK_REACTIONS } from '@/editor/comments/reactions';
 
 interface ReactionsProps {
   reactions: Record<string, string[]> | undefined
@@ -41,7 +40,7 @@ export function Reactions({ reactions, myUserId, onToggle }: ReactionsProps) {
             </button>
             {pickerOpen && (
                 <div className="reaction-picker" onMouseLeave={() => setPickerOpen(false)}>
-                    {QUICK.map((e) => (
+                    {QUICK_REACTIONS.map((e) => (
                         <button
                             key={e}
                             type="button"

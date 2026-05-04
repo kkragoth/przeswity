@@ -164,6 +164,13 @@ Files whose name fights what they actually contain. Each rename is a single
 | `editor/suggestions/DiffBlockAttr.ts` | `editor/suggestions/blockDiffAttribute.ts` | Same reasoning — exports an extension that adds a block attribute, not a class named `DiffBlockAttr`. |
 | `editor/tiptap/blocks/Toc.ts` | `editor/tiptap/extensions/TableOfContents.ts` | Filename matches the exported extension name; rename happens as part of the move. |
 
+**Exported-symbol renames (the only one in this batch):**
+`useThreads` → `useCommentThreads` is both a file rename **and** an exported
+symbol rename. Every call site of the hook must be updated. All other
+renames in this batch change file paths only; their exported symbol names
+(`Comment`, `Insertion`, `Deletion`, `DiffBlockAttr`, `authorColor`, …)
+are preserved.
+
 **NOT renamed** (deliberately, to keep churn down):
 - `editor/comments/threadOps.ts`, `reactions.ts` — names describe the
   module's verbs (`addThread`, `replyTo`, `toggleReaction`); ambiguity is
@@ -187,8 +194,17 @@ For each rename, run in this order:
      xargs -0 perl -pi -e "s|\@/editor/comments/Comment\b|\@/editor/comments/CommentMark|g"
    ```
    The `\b` word boundary is critical — without it, the pattern matches
-   `@/editor/comments/CommentAnchors` etc. **Test the regex with `grep -E`
-   before running `perl -pi`**.
+   `@/editor/comments/CommentAnchors` etc. **Validate the regex first**
+   using a tool that understands Perl-syntax `\b`:
+   ```sh
+   # rg has -P (PCRE2); use it for the dry-run
+   rg -P "\@/editor/comments/Comment\b" src
+   # or perl -ne if rg isn't available
+   find src -type f \( -name '*.ts' -o -name '*.tsx' \) -print0 |
+     xargs -0 perl -ne 'print "$ARGV:$.: $_" if /\@\/editor\/comments\/Comment\b/'
+   ```
+   Do NOT use `grep -E` — POSIX ERE has no `\b` and the dry-run will
+   silently fail open.
 3. For renames that change the **imported symbol** (none in this list — all
    renames change file paths only, leaving exported names untouched),
    you would also rewrite the symbol. Not applicable here.
@@ -265,7 +281,7 @@ The existing test (`commentsStore.test.ts`) does not import the internal
 `makeCommentsActions` — it tests behavior through the store API. No test
 changes required.
 
-### C2. `containers/editor/index.tsx` / EditorHost (188 LOC)
+### C2. `containers/editor/index.tsx` / EditorHost (~155 LOC)
 
 **Already noted** in `layout.md` execution plan (Phase 3 renames the file;
 the README hints at a split into `EditorHost` for lifecycle gating and
@@ -314,7 +330,7 @@ export function EditorHost({ bookId }: { bookId: string }) {
 The Open/Resolved tab bodies are already separate
 (`OpenCommentList.tsx`, `ResolvedCommentList.tsx`) — no further work there.
 
-### C4. `containers/editor/comments/components/MentionTextarea.tsx` (129 LOC)
+### C4. `containers/editor/comments/components/MentionTextarea.tsx` (~115 LOC)
 
 **Concerns:**
 - The `<textarea>` itself + draft state.
@@ -343,7 +359,10 @@ LOC of JSX. The math becomes a pure function, testable in isolation. This
 satisfies CLAUDE.md's "NEVER write raw math/coordinate comparisons inline"
 rule, which the current file violates.
 
-### C6. `containers/editor/glossary/index.tsx` (was GlossaryPanel.tsx, 163 LOC)
+### C6. `containers/editor/glossary/index.tsx` (was GlossaryPanel.tsx, ~140 LOC)
+
+`useGlossary.ts` is already extracted into `glossary/hooks/` per `layout.md`,
+so the data-loading concern is already separated. What remains in `index.tsx`:
 
 **Concerns:**
 - Listing entries (read path).
@@ -354,6 +373,8 @@ rule, which the current file violates.
 ```
 glossary/
     index.tsx                       # orchestrator
+    hooks/
+        useGlossary.ts              # already moved by layout.md
     components/
         GlossaryEntryList.tsx       # listing
         GlossaryEntryForm.tsx       # add + edit (single component, mode prop)
@@ -366,22 +387,28 @@ one file forces both pieces to re-render on either change.
 ### C7. `containers/editor/suggestions/index.tsx` (was SuggestionsSidebar.tsx, 151 LOC)
 
 **Concerns:**
+- Bulk-action bar (`acceptAll` / `rejectAll`).
 - List of pending suggestions.
 - Per-suggestion item (preview, accept/reject buttons).
 
 **Target:** extract `SuggestionItem.tsx` into
-`suggestions/components/SuggestionItem.tsx`. The sidebar shrinks to ~60 LOC.
+`suggestions/components/SuggestionItem.tsx`. The bulk-action bar stays
+inside the sidebar — it owns the cross-cutting list operations and is too
+small (~15 LOC of JSX) to warrant its own component. The sidebar shrinks to
+~70 LOC: bulk bar + `<SuggestionList>` (the existing `.map` over items
+delegating to `<SuggestionItem>`).
 
 ### C8. `containers/editor/versions/index.tsx` (was VersionsPanel.tsx, 134 LOC)
 
 **Concerns:**
-- Header (snapshot button, target-words input).
+- Header (snapshot label input + "create snapshot" button).
 - Snapshot list.
 - Per-snapshot row (name, time, diff/restore actions).
 
 **Target:** the per-snapshot row is **already** `VersionSnapshot.tsx` (43
 LOC, in `components/`). Extract `VersionsPanelHeader.tsx` (~40 LOC) into
-the same folder. `index.tsx` shrinks to ~60 LOC of orchestration.
+the same folder, owning the label input and the create button.
+`index.tsx` shrinks to ~60 LOC of orchestration.
 
 ### C9. `editor/tiptap/toolbar/SpecialCharsMenu.tsx` (was formatting/SpecialCharsMenu.tsx, 137 LOC)
 
@@ -437,6 +464,10 @@ question:
 Phases are separate commits. Each phase ends with `pnpm typecheck && pnpm test`
 green. Do **not** start a phase before the previous one is committed and CI
 green.
+
+**Working directory.** All shell snippets assume cwd = `frontend/` so that
+`src/...` resolves. From the repo root, either `cd frontend` first or prefix
+every `src/` path with `frontend/`.
 
 ### Phase E1 — Tiptap engine restructure (Section A)
 
@@ -527,7 +558,9 @@ One commit per rename **except** the four already absorbed into Phase E1
 Remaining renames, do them in this order — each is one commit:
 
 1. `editor/comments/Comment.ts` → `editor/comments/CommentMark.ts`.
-   Imports affected: `editor/tiptap/extensions.ts` (line 19).
+   Imports affected: `editor/tiptap/extensions.ts` (line 19),
+   `editor/versions/readOnlyExtensions.ts` (line 9). Run the
+   tree-wide regex sweep — do not rely on the listed sites alone.
 2. `editor/comments/color.ts` → `editor/comments/authorColor.ts`.
    Imports affected: `containers/editor/comments/CommentAnchors.tsx`,
    `comments/components/ResolvedThreadCard.tsx`, `comments/components/thread/ThreadHeader.tsx`.
@@ -584,7 +617,7 @@ After all three sections are merged:
 
 - [ ] `editor/tiptap/` root contains exactly: `index.tsx`, `extensions.ts`,
       `editorContext.ts`, `types.ts`, `constants.ts`, `editor.css`,
-      `fonts.css`, plus the seven sub-folders (`canvas/`, `toolbar/`,
+      `fonts.css`, plus nine sub-folders (`canvas/`, `toolbar/`,
       `headerFooter/`, `blocks/`, `extensions/`, `find/`, `slash/`,
       `contextItems/`, `hooks/`).
 - [ ] `editor/tiptap/components/` and `editor/tiptap/formatting/` no longer

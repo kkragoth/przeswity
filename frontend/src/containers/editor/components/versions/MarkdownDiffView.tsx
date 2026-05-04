@@ -3,6 +3,41 @@ import type { JSONNode } from '@/editor/versions/diffDoc';
 import { nodeToMarkdown } from '@/editor/io/markdown';
 import { buildInlineLines, buildSbsRows, LineKind, type DiffLine } from '@/editor/diff/buildDiffDocument';
 
+export interface MarkdownDiffViewProps {
+    diffJson: JSONNode;
+    olderJson?: JSONNode;
+    newerJson?: JSONNode;
+    olderLabel: string;
+    newerLabel: string;
+    useSbs: boolean;
+    sbsAvailable: boolean;
+}
+
+export function MarkdownDiffView({
+    diffJson,
+    olderJson,
+    newerJson,
+    olderLabel,
+    newerLabel,
+    useSbs,
+    sbsAvailable,
+}: MarkdownDiffViewProps) {
+    if (useSbs && olderJson && newerJson) {
+        return (
+            <MarkdownSideBySide
+                olderJson={olderJson}
+                newerJson={newerJson}
+                olderLabel={olderLabel}
+                newerLabel={newerLabel}
+            />
+        );
+    }
+    if (sbsAvailable && olderJson && newerJson) {
+        return <MarkdownInlineDiff olderJson={olderJson} newerJson={newerJson} />;
+    }
+    return <pre className="md-diff md-diff-sbs">{nodeToMarkdown(diffJson)}</pre>;
+}
+
 function renderText(line: DiffLine): ReactNode {
     if (!line.spans) return line.text || ' ';
     return line.spans.map((s, i) => (

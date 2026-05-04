@@ -39,7 +39,7 @@ export function CommentAnchors({ editor, doc, activeCommentId, onSelect }: Comme
     const threads = useThreads(doc);
     const [pins, setPins] = useState<PinAnchor[]>([]);
 
-    // Derive stable open-threads array; only recomputes when identity/count changes.
+    const changeKey = threadChangeKey(threads);
     const openThreads = useMemo<OpenThread[]>(
         () => threads
             .filter((th) => th.status === CommentStatus.Open)
@@ -49,7 +49,7 @@ export function CommentAnchors({ editor, doc, activeCommentId, onSelect }: Comme
                 authorColor: authorColor(th),
                 replies: th.replies.length,
             })),
-        [threadChangeKey(threads)], // eslint-disable-line react-hooks/exhaustive-deps
+        [changeKey], // eslint-disable-line react-hooks/exhaustive-deps
     );
 
     useEffect(() => {

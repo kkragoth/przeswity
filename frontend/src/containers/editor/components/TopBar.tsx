@@ -5,14 +5,15 @@ import type { Editor } from '@tiptap/react';
 
 import { BookTitleMenu } from '@/containers/editor/components/BookTitleMenu';
 import { UserMenu } from '@/containers/editor/components/UserMenu';
+import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
 
 export interface TopBarProps {
-    bookTitle: string;
     editor: Editor | null;
 }
 
-export function TopBar({ bookTitle, editor }: TopBarProps) {
+export function TopBar({ editor }: TopBarProps) {
     const { t } = useTranslation('editor');
+    const { bookTitle } = useEditorSession();
 
     return (
         <header className="topbar">
@@ -26,7 +27,7 @@ export function TopBar({ bookTitle, editor }: TopBarProps) {
             <nav className="topbar-breadcrumb" aria-label="breadcrumb">
                 <Link to="/books" className="topbar-breadcrumb-link">{t('topbar.booksLink')}</Link>
                 <ChevronRight size={12} className="topbar-breadcrumb-sep" aria-hidden="true" />
-                <BookTitleMenu bookTitle={bookTitle} editor={editor} />
+                <BookTitleMenu editor={editor} />
             </nav>
             <div className="topbar-spacer" />
             <div className="topbar-right">

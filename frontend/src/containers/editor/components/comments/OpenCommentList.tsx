@@ -2,19 +2,13 @@ import { CommentThreadCard } from '@/containers/editor/components/comments/Comme
 
 interface OpenCommentListProps {
     threadIds: string[];
-    cardsRef: React.RefObject<Record<string, HTMLDivElement | null>>;
 }
 
-export function OpenCommentList({ threadIds, cardsRef }: OpenCommentListProps) {
+export function OpenCommentList({ threadIds }: OpenCommentListProps) {
     return (
         <>
             {threadIds.map((id) => (
-                <div
-                    key={id}
-                    ref={(el) => {
-                        cardsRef.current[id] = el;
-                    }}
-                >
+                <div key={id} data-thread-id={id}>
                     <CommentThreadCard threadId={id} />
                 </div>
             ))}

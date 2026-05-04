@@ -13,13 +13,12 @@ import { ToastKind } from '@/editor/shell/useToast';
 import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
 
 interface BookTitleMenuProps {
-    bookTitle: string;
     editor: Editor | null;
 }
 
-export function BookTitleMenu({ bookTitle, editor }: BookTitleMenuProps) {
+export function BookTitleMenu({ editor }: BookTitleMenuProps) {
     const { t } = useTranslation('editor');
-    const { perms, toast } = useEditorSession();
+    const { perms, toast, bookTitle } = useEditorSession();
     const confirmDlg = useConfirmDialog();
     const docImport = useDocumentImport({ editor, onToast: toast, confirmDialog: confirmDlg });
     const docExport = useDocumentExport(editor);

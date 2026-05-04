@@ -1,9 +1,9 @@
 import type { User } from '@/api/generated/types.gen';
+import { UserDialog } from '@/containers/admin/components/UserDialog';
 import { DeleteUserButton } from '@/containers/admin/components/DeleteUserButton';
-import { EditUserDialog } from '@/containers/admin/components/EditUserDialog';
 import { SystemRoleBadge } from '@/containers/admin/components/SystemRoleBadge';
 
-export function UserRow({ user, onChanged }: { user: User; onChanged: () => void }) {
+export function UserRow({ user }: { user: User }) {
     return (
         <tr className="border-b">
             <td className="py-2"><span className="mr-2 inline-block h-2 w-2 rounded-full" style={{ backgroundColor: user.color }} />{user.name}</td>
@@ -11,8 +11,8 @@ export function UserRow({ user, onChanged }: { user: User; onChanged: () => void
             <td className="space-x-1"><SystemRoleBadge systemRole={user.systemRole} /></td>
             <td className="text-stone-600">{user.competencyTags.join(', ')}</td>
             <td className="space-x-2">
-                <EditUserDialog user={user} onSaved={onChanged} />
-                <DeleteUserButton id={user.id} onDeleted={onChanged} />
+                <UserDialog mode="edit" user={user} />
+                <DeleteUserButton id={user.id} />
             </td>
         </tr>
     );

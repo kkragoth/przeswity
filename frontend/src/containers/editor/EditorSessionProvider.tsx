@@ -18,6 +18,7 @@ export interface EditorSessionContextValue {
     user: User;
     perms: RolePermissions;
     bookId: string;
+    bookTitle: string;
     collab: CollabBundle;
     toast: ToastFn;
 }
@@ -27,6 +28,7 @@ const EditorSessionContext = createContext<EditorSessionContextValue | null>(nul
 export interface EditorSessionProviderProps {
     user: User;
     bookId: string;
+    bookTitle: string;
     collab: CollabBundle;
     toast: ToastFn;
     children: ReactNode;
@@ -35,6 +37,7 @@ export interface EditorSessionProviderProps {
 export function EditorSessionProvider({
     user,
     bookId,
+    bookTitle,
     collab,
     toast,
     children,
@@ -43,8 +46,8 @@ export function EditorSessionProvider({
     const perms = useMemo(() => permsFor(user.role), [user.role]);
 
     const value = useMemo<EditorSessionContextValue>(
-        () => ({ user, perms, bookId, collab, toast }),
-        [user, perms, bookId, collab, toast],
+        () => ({ user, perms, bookId, bookTitle, collab, toast }),
+        [user, perms, bookId, bookTitle, collab, toast],
     );
 
     return (

@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
 import type { SessionUser } from '@/auth/types';
-import { canAccessCoordinator, requireRole } from '@/lib/auth';
+import { canAccessCoordinator, protectedBeforeLoad } from '@/lib/auth';
 import { CoordinatorDashboard } from '@/containers/coordinator/CoordinatorDashboard';
 
 export const Route = createFileRoute('/_app/coordinator/')({
-    beforeLoad: ({ context }) => { requireRole(context, canAccessCoordinator); },
+    beforeLoad: protectedBeforeLoad(canAccessCoordinator),
     component: CoordinatorRoute,
 });
 
