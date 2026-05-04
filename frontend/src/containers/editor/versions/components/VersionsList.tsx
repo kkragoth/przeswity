@@ -1,5 +1,5 @@
 import type { VersionSnapshot as VersionSnapshotType } from '@/editor/versions/types';
-import { VersionSnapshot } from '@/containers/editor/components/versions/VersionSnapshot';
+import { VersionSnapshot } from './VersionSnapshot';
 
 interface VersionsListProps {
     versions: VersionSnapshotType[];

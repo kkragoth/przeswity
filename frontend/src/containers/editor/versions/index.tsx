@@ -4,10 +4,10 @@ import type { Editor } from '@tiptap/react';
 
 import type { VersionSnapshot } from '@/editor/versions/types';
 import type { JSONNode } from '@/editor/versions/diffDoc';
-import { VersionDiffModal } from '@/containers/editor/components/versions/VersionDiffModal';
-import { VersionsList } from '@/containers/editor/components/versions/VersionsList';
-import { useAutoSnapshot } from '@/containers/editor/hooks/useAutoSnapshot';
-import { useVersions } from '@/containers/editor/hooks/useVersions';
+import { VersionDiffModal } from './components/VersionDiffModal';
+import { VersionsList } from './components/VersionsList';
+import { useAutoSnapshot } from './hooks/useAutoSnapshot';
+import { useVersions } from './hooks/useVersions';
 import { useConfirmDialog } from '@/components/feedback/useConfirmDialog';
 import { ConfirmDialogHost } from '@/components/feedback/ConfirmDialogHost';
 import { ToastKind } from '@/editor/shell/useToast';

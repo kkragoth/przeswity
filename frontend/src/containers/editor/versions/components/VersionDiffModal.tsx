@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { diffStats, type JSONNode } from '@/editor/versions/diffDoc';
-import { DiffRichView } from '@/containers/editor/components/versions/DiffRichView';
-import { MarkdownDiffView } from '@/containers/editor/components/versions/MarkdownDiffView';
+import { DiffRichView } from './DiffRichView';
+import { MarkdownDiffView } from './MarkdownDiffView';
 
 const enum ViewMode {
     Rich = 'rich',

@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 import { OutlineSidebar } from '@/containers/editor/components/outline/OutlineSidebar';
-import { VersionsPanel } from '@/containers/editor/components/versions/VersionsPanel';
+import { VersionsPanel } from '@/containers/editor/versions';
 import { GlossaryPanel } from '@/containers/editor/components/glossary/GlossaryPanel';
 import { MetaPanel } from '@/containers/editor/components/meta/MetaPanel';
 import { useEditorHeadings } from '@/containers/editor/hooks/useEditorHeadings';
