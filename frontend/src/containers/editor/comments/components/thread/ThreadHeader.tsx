@@ -6,10 +6,10 @@ import { authorColor } from '@/editor/comments/color';
 import { withStop } from '@/utils/react/withStop';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { useSession } from '@/containers/editor/SessionStoreProvider';
-import { useCommentsStore } from '@/containers/editor/CommentsStoreProvider';
-import { useCommentsView } from '@/containers/editor/components/comments/CommentsViewContext';
-import { useThread } from '@/containers/editor/components/comments/useThread';
-import { useIsActiveComment } from '@/containers/editor/components/comments/useIsActiveComment';
+import { useCommentsStore } from '../../store/CommentsStoreProvider';
+import { useCommentsView } from '../CommentsViewContext';
+import { useThread } from '../../hooks/useThread';
+import { useIsActiveComment } from '../../hooks/useIsActiveComment';
 
 interface ThreadHeaderProps {
     threadId: string;

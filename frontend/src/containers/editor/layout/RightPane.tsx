@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import type { Editor } from '@tiptap/react';
 import { MessageSquare, GitPullRequestArrow, X } from 'lucide-react';
 
-import { CommentsSidebar } from '@/containers/editor/components/comments/CommentsSidebar';
+import { CommentsSidebar } from '@/containers/editor/comments';
 import { SuggestionsSidebar } from '@/containers/editor/components/suggestions/SuggestionsSidebar';
 import { usePaneStore } from '@/containers/editor/session/paneStore';
 import { useSession } from '@/containers/editor/SessionStoreProvider';

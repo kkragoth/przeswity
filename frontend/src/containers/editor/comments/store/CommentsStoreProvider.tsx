@@ -6,7 +6,7 @@ import {
     createCommentsStore,
     type CommentsState,
     type CommentsStore,
-} from '@/containers/editor/stores/createCommentsStore';
+} from './commentsStore';
 
 /**
  * Wave 4 / T-50 — per-session comments store provider.

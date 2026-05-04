@@ -2,16 +2,16 @@ import { memo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { previewBody } from '@/editor/comments/format';
-import { ThreadComposeForm } from '@/containers/editor/components/comments/thread/ThreadComposeForm';
-import { ThreadHeader } from '@/containers/editor/components/comments/thread/ThreadHeader';
-import { ThreadEditor } from '@/containers/editor/components/comments/thread/ThreadEditor';
-import { ThreadReplies } from '@/containers/editor/components/comments/thread/ThreadReplies';
-import { useCommentsStore } from '@/containers/editor/CommentsStoreProvider';
-import { useCommentsView } from '@/containers/editor/components/comments/CommentsViewContext';
-import { useThread } from '@/containers/editor/components/comments/useThread';
-import { useIsActiveComment } from '@/containers/editor/components/comments/useIsActiveComment';
-import { useComments } from '@/containers/editor/CommentsStoreProvider';
-import { selectInitialDraft } from '@/containers/editor/stores/commentsSelectors';
+import { ThreadComposeForm } from './thread/ThreadComposeForm';
+import { ThreadHeader } from './thread/ThreadHeader';
+import { ThreadEditor } from './thread/ThreadEditor';
+import { ThreadReplies } from './thread/ThreadReplies';
+import { useCommentsStore } from '../store/CommentsStoreProvider';
+import { useCommentsView } from './CommentsViewContext';
+import { useThread } from '../hooks/useThread';
+import { useIsActiveComment } from '../hooks/useIsActiveComment';
+import { useComments } from '../store/CommentsStoreProvider';
+import { selectInitialDraft } from '../store/commentsSelectors';
 import { useSession, useSessionStore } from '@/containers/editor/SessionStoreProvider';
 
 interface CommentThreadCardProps {

@@ -1,4 +1,4 @@
-import { CommentThreadCard } from '@/containers/editor/components/comments/CommentThreadCard';
+import { CommentThreadCard } from './CommentThreadCard';
 
 interface OpenCommentListProps {
     threadIds: string[];

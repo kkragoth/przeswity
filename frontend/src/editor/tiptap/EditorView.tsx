@@ -6,7 +6,7 @@ import { BubbleToolbar } from '@/editor/tiptap/BubbleToolbar';
 import { BlockMenu } from '@/editor/tiptap/BlockMenu';
 import { HeaderFooterBar, HeaderFooterKind } from '@/editor/tiptap/HeaderFooterBar';
 import { ContextMenu } from '@/editor/shell/ContextMenu';
-import { CommentAnchors } from '@/containers/editor/components/comments/CommentAnchors';
+import { CommentAnchors } from '@/containers/editor/comments/CommentAnchors';
 import { DragHandle } from '@/editor/tiptap/blocks/DragHandle';
 import { SlashMenu } from '@/editor/tiptap/slash/SlashMenu';
 import { EMPTY_SLASH, type EditorViewProps, type SlashTriggerInfo } from '@/editor/tiptap/types';

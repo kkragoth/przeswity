@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MentionTextarea, type MentionCandidate } from '@/containers/editor/components/comments/MentionTextarea';
+import { MentionTextarea, type MentionCandidate } from '../MentionTextarea';
 import { withStop } from '@/utils/react/withStop';
 import { useConfirmDialog } from '@/components/feedback/useConfirmDialog';
 import { ConfirmDialogHost } from '@/components/feedback/ConfirmDialogHost';

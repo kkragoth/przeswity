@@ -1,8 +1,8 @@
 import { useLayoutEffect, useRef } from 'react';
 import { ALL_ROLES } from '@/editor/identity/types';
-import { useMentionDetection, type MentionCandidate } from '@/containers/editor/hooks/useMentionDetection';
+import { useMentionDetection, type MentionCandidate } from '../hooks/useMentionDetection';
 
-export type { MentionCandidate } from '@/containers/editor/hooks/useMentionDetection';
+export type { MentionCandidate } from '../hooks/useMentionDetection';
 
 interface MentionTextareaProps {
     value: string

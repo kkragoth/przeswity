@@ -47,7 +47,7 @@ import {
     findByExactText,
     findButtonContaining,
     type CommentHarness,
-} from '@/containers/editor/__tests__/helpers/commentHarness';
+} from '@/containers/editor/comments/__tests__/commentHarness';
 import { getThreadMap } from '@/editor/comments/threadOps';
 import { CommentStatus } from '@/editor/comments/types';
 

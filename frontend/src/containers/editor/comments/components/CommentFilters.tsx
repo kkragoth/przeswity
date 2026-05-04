@@ -3,9 +3,9 @@ import { shallow } from 'zustand/shallow';
 
 import { Role, MENTIONABLE_ROLES } from '@/editor/identity/types';
 import { roleI18nKey } from '@/lib/roleI18n';
-import { useComments } from '@/containers/editor/CommentsStoreProvider';
-import { selectFilter } from '@/containers/editor/stores/commentsSelectors';
-import { CommentStatusFilter } from '@/containers/editor/stores/createCommentsStore';
+import { useComments } from '../store/CommentsStoreProvider';
+import { selectFilter } from '../store/commentsSelectors';
+import { CommentStatusFilter } from '../store/commentsStore';
 
 interface CommentFiltersProps {
     totalOpen: number;

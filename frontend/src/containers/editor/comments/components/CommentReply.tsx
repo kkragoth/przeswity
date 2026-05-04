@@ -2,18 +2,18 @@ import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Avatar } from '@/editor/shell/Avatar';
-import { Reactions } from '@/containers/editor/components/comments/Reactions';
+import { Reactions } from './Reactions';
 import {
     MentionTextarea,
     renderBodyWithMentions,
-} from '@/containers/editor/components/comments/MentionTextarea';
-import { useCommentsView } from '@/containers/editor/components/comments/CommentsViewContext';
-import { useThread } from '@/containers/editor/components/comments/useThread';
-import { useComments, useCommentsStore } from '@/containers/editor/CommentsStoreProvider';
+} from './MentionTextarea';
+import { useCommentsView } from './CommentsViewContext';
+import { useThread } from '../hooks/useThread';
+import { useComments, useCommentsStore } from '../store/CommentsStoreProvider';
 import {
     selectEditText,
     selectIsEditingReply,
-} from '@/containers/editor/stores/commentsSelectors';
+} from '../store/commentsSelectors';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 
 interface CommentReplyProps {

@@ -2,11 +2,11 @@ import { useTranslation } from 'react-i18next';
 
 import { Avatar } from '@/editor/shell/Avatar';
 import { authorColor } from '@/editor/comments/color';
-import { renderBodyWithMentions } from '@/containers/editor/components/comments/MentionTextarea';
+import { renderBodyWithMentions } from './MentionTextarea';
 import { useConfirmDialog } from '@/components/feedback/useConfirmDialog';
 import { ConfirmDialogHost } from '@/components/feedback/ConfirmDialogHost';
-import { useThread } from '@/containers/editor/components/comments/useThread';
-import { useCommentsView } from '@/containers/editor/components/comments/CommentsViewContext';
+import { useThread } from '../hooks/useThread';
+import { useCommentsView } from './CommentsViewContext';
 
 interface ResolvedThreadCardProps {
     threadId: string;

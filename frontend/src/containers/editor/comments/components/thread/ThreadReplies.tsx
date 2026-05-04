@@ -1,12 +1,12 @@
 import { useCallback } from 'react';
 
-import { CommentReply } from '@/containers/editor/components/comments/CommentReply';
-import { ThreadReplyCompose } from '@/containers/editor/components/comments/thread/ThreadReplyCompose';
-import { useCommentsView } from '@/containers/editor/components/comments/CommentsViewContext';
-import { useThread } from '@/containers/editor/components/comments/useThread';
-import { useIsActiveComment } from '@/containers/editor/components/comments/useIsActiveComment';
-import { useComments, useCommentsStore } from '@/containers/editor/CommentsStoreProvider';
-import { selectReplyDraft } from '@/containers/editor/stores/commentsSelectors';
+import { CommentReply } from '../CommentReply';
+import { ThreadReplyCompose } from './ThreadReplyCompose';
+import { useCommentsView } from '../CommentsViewContext';
+import { useThread } from '../../hooks/useThread';
+import { useIsActiveComment } from '../../hooks/useIsActiveComment';
+import { useComments, useCommentsStore } from '../../store/CommentsStoreProvider';
+import { selectReplyDraft } from '../../store/commentsSelectors';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { useSession, useSessionStore } from '@/containers/editor/SessionStoreProvider';
 

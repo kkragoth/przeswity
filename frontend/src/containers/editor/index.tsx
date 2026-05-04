@@ -26,7 +26,7 @@ import { PaneState, paneClass, usePaneStore } from '@/containers/editor/session/
 import { EditorSessionProvider } from '@/containers/editor/session/SessionProvider';
 import { EditorLiveProvider, useEditor } from '@/containers/editor/session/LiveProvider';
 import { SessionStoreProvider, useSession, useSessionStore } from '@/containers/editor/SessionStoreProvider';
-import { CommentsStoreProvider } from '@/containers/editor/CommentsStoreProvider';
+import { CommentsStoreProvider } from '@/containers/editor/comments/store/CommentsStoreProvider';
 
 interface EditorHostProps {
     bookId: string;

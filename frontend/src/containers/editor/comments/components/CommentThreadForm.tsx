@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { MentionTextarea } from '@/containers/editor/components/comments/MentionTextarea';
-import type { MentionCandidate } from '@/containers/editor/components/comments/MentionTextarea';
+import { MentionTextarea } from './MentionTextarea';
+import type { MentionCandidate } from './MentionTextarea';
 
 export function CommentThreadForm({
     value,

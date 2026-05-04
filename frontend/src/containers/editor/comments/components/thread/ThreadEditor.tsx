@@ -1,17 +1,17 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Reactions } from '@/containers/editor/components/comments/Reactions';
-import { ThreadComposeForm } from '@/containers/editor/components/comments/thread/ThreadComposeForm';
-import { renderBodyWithMentions } from '@/containers/editor/components/comments/MentionTextarea';
-import { useCommentsView } from '@/containers/editor/components/comments/CommentsViewContext';
-import { useThread } from '@/containers/editor/components/comments/useThread';
-import { useIsActiveComment } from '@/containers/editor/components/comments/useIsActiveComment';
-import { useComments, useCommentsStore } from '@/containers/editor/CommentsStoreProvider';
+import { Reactions } from '../Reactions';
+import { ThreadComposeForm } from './ThreadComposeForm';
+import { renderBodyWithMentions } from '../MentionTextarea';
+import { useCommentsView } from '../CommentsViewContext';
+import { useThread } from '../../hooks/useThread';
+import { useIsActiveComment } from '../../hooks/useIsActiveComment';
+import { useComments, useCommentsStore } from '../../store/CommentsStoreProvider';
 import {
     selectEditText,
     selectIsEditingThread,
-} from '@/containers/editor/stores/commentsSelectors';
+} from '../../store/commentsSelectors';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { withStop } from '@/utils/react/withStop';
 

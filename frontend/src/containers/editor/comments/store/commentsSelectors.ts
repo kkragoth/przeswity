@@ -5,7 +5,7 @@ import {
     CommentStatusFilter,
     type CommentFilterState,
     type CommentsState,
-} from '@/containers/editor/stores/createCommentsStore';
+} from './commentsStore';
 
 /**
  * Wave 4 / T-50 — pure selectors over `CommentsState` plus thread-list

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-import { ResolvedThreadCard } from '@/containers/editor/components/comments/ResolvedThreadCard';
+import { ResolvedThreadCard } from './ResolvedThreadCard';
 
 interface ResolvedCommentListProps {
     threadIds: string[];

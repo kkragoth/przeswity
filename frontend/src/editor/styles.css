@@ -10,7 +10,7 @@
 @import './tiptap/formatting/formatting.css';
 @import './tiptap/slash/slash.css';
 @import './tiptap/find/find.css';
-@import './comments/comments.css';
+@import '../containers/editor/comments/comments.css';
 @import './suggestions/suggestions.css';
 @import './versions/versions.css';
 @import './glossary/glossary.css';

@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 
-import { createCommentsStore } from '@/containers/editor/stores/createCommentsStore';
+import { createCommentsStore } from '../store/commentsStore';
 import { getThreadMap } from '@/editor/comments/threadOps';
 import { CommentStatus } from '@/editor/comments/types';
 import { Role, type User } from '@/editor/identity/types';

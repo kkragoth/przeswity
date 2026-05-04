@@ -1,7 +1,7 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import type { Editor } from '@tiptap/react';
 
-import type { MentionCandidate } from '@/containers/editor/components/comments/MentionTextarea';
+import type { MentionCandidate } from './MentionTextarea';
 
 /**
  * Wave 4 / T-56 — view-scoped concerns shared across the comments subtree

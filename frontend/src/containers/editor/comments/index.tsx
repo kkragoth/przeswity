@@ -5,25 +5,25 @@ import { shallow } from 'zustand/shallow';
 
 import { useThreads } from '@/editor/comments/useThreads';
 import { CommentStatus } from '@/editor/comments/types';
-import { buildCandidates } from '@/containers/editor/components/comments/mentionCandidates';
-import { CommentFilters } from '@/containers/editor/components/comments/CommentFilters';
-import { OpenCommentList } from '@/containers/editor/components/comments/OpenCommentList';
-import { ResolvedCommentList } from '@/containers/editor/components/comments/ResolvedCommentList';
-import { CommentsViewProvider } from '@/containers/editor/components/comments/CommentsViewContext';
+import { buildCandidates } from '@/editor/comments/mentionCandidates';
+import { CommentFilters } from './components/CommentFilters';
+import { OpenCommentList } from './components/OpenCommentList';
+import { ResolvedCommentList } from './components/ResolvedCommentList';
+import { CommentsViewProvider } from './components/CommentsViewContext';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { useEditorLive } from '@/containers/editor/session/LiveProvider';
 import { useSession, useSessionStore } from '@/containers/editor/SessionStoreProvider';
 import {
     useComments,
     useCommentsStore,
-} from '@/containers/editor/CommentsStoreProvider';
+} from './store/CommentsStoreProvider';
 import {
     selectAuthors,
     selectFilter,
     selectOpenResolved,
     selectVisible,
-} from '@/containers/editor/stores/commentsSelectors';
-import { CommentStatusFilter } from '@/containers/editor/stores/createCommentsStore';
+} from './store/commentsSelectors';
+import { CommentStatusFilter } from './store/commentsStore';
 import { formatRelativeTime } from '@/lib/dates';
 
 interface CommentsSidebarProps {
