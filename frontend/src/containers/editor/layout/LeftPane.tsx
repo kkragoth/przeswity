@@ -9,11 +9,11 @@ import {
     PanelLeftClose,
 } from 'lucide-react';
 
-import { OutlineSidebar } from '@/containers/editor/components/outline/OutlineSidebar';
+import { OutlineSidebar } from '@/containers/editor/outline';
 import { VersionsPanel } from '@/containers/editor/versions';
 import { GlossaryPanel } from '@/containers/editor/components/glossary/GlossaryPanel';
 import { MetaPanel } from '@/containers/editor/components/meta/MetaPanel';
-import { useEditorHeadings } from '@/containers/editor/hooks/useEditorHeadings';
+import { useEditorHeadings } from '@/containers/editor/outline/hooks/useEditorHeadings';
 import { EmptyState } from '@/containers/editor/layout/EmptyState';
 import { usePaneStore } from '@/containers/editor/session/paneStore';
 import { useSession } from '@/containers/editor/SessionStoreProvider';

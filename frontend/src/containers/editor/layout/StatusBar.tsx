@@ -5,7 +5,7 @@ import { wordTargetFillColor, wordTargetPercentClamped, wordTargetPercentRounded
 import { useReadingStats } from '@/containers/editor/hooks/useReadingStats';
 import { useTargetWords } from '@/containers/editor/hooks/useTargetWords';
 import { useConnectionStatus } from '@/containers/editor/hooks/useConnectionStatus';
-import { usePageNavigation } from '@/containers/editor/hooks/usePageNavigation';
+import { usePageNavigation } from '@/containers/editor/outline/hooks/usePageNavigation';
 import { PeerAvatarStack } from '@/containers/editor/components/peers/PeerAvatarStack';
 import { PageJumper } from '@/containers/editor/layout/PageJumper';
 import { SyncMini } from '@/containers/editor/components/status/SyncMini';
