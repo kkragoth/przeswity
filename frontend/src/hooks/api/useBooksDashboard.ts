@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import { booksListOptions } from '@/api/generated/@tanstack/react-query.gen';
 import type { SessionUser } from '@/auth/types';
 import { isAttentionBook, isRecentBook } from '@/lib/status';
@@ -25,12 +25,12 @@ export function useBooksDashboard(me: SessionUser) {
     }), [scoped]);
     const roleOptions = useMemo(() => Array.from(new Set(scoped.flatMap((b) => b.myRoles))).sort(), [scoped]);
     const filters = useMemo(() => ({ showOnlyMine, view, quickFilter, roleFilter }), [showOnlyMine, view, quickFilter, roleFilter]);
-    const setFilter = {
+    const setFilter = useMemo(() => ({
         setShowOnlyMine,
         setView,
         setQuickFilter,
         setRoleFilter,
-    };
+    }), [setShowOnlyMine, setView, setQuickFilter, setRoleFilter]);
 
     return {
         books,

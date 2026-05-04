@@ -4,7 +4,7 @@ Prefer correct, complete implementations over minimal ones.
 Use appropriate data structures and algorithms — don't brute-force what has a known better solution.
 When fixing a bug, fix the root cause, not the symptom.
 If something I asked for requires error handling or validation to work reliably, include it without asking.
-DRY, refactor code, should be human readable < 200 locs
+DRY, refactor code, should be human readable < 600 locs
 
 
 # Code Quality
@@ -13,7 +13,7 @@ DRY, refactor code, should be human readable < 200 locs
 - When fixing a bug, fix the root cause, not the symptom.
 - If something I asked for requires error handling or validation to work reliably, include it without asking.
 # Code Quality Guidelines
-- DRY, keep code human readable, <200loc, separate into domains, separate components
+- DRY, keep code human readable, <600loc, separate into domains, separate components
 - Keep project styling like semicolons, newlines, tab is 4 spaces, use eslint
 - NEVER push (or force push) to any branch without explicit user confirmation. After making changes, always ask "ready to push?" or similar — wait for the user to confirm the fix/change is correct before pushing. This applies to all pushes: regular, force, and amend+push.
 - ALWAYS use the `@/` path alias for imports. NEVER use relative paths like `../` or `./` for cross-directory imports.

@@ -1,8 +1,5 @@
 import type { TFunction } from 'i18next';
-import { MISSING_DATE_DAYS as MISSING_DATE_DAYS_CONST } from '@/lib/constants';
-
-// Re-exported for back-compat; canonical value lives in lib/constants.ts.
-export const MISSING_DATE_DAYS = MISSING_DATE_DAYS_CONST;
+import { MISSING_DATE_DAYS } from '@/lib/constants';
 const ONE_MINUTE_MS = 60_000;
 const ONE_HOUR_MS = 3_600_000;
 const ONE_DAY_MS = 86_400_000;

@@ -16,11 +16,10 @@ export function PageJumper({ current, total, onJump }: PageJumperProps) {
     const inputRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
-        if (!open) setDraft(String(current));
-    }, [current, open]);
-
-    useEffect(() => {
-        if (!open) return;
+        if (!open) {
+            setDraft(String(current));
+            return;
+        }
         inputRef.current?.focus();
         inputRef.current?.select();
         const onPointer = (e: MouseEvent) => {
@@ -33,7 +32,7 @@ export function PageJumper({ current, total, onJump }: PageJumperProps) {
             document.removeEventListener('mousedown', onPointer);
             document.removeEventListener('keydown', onKey);
         };
-    }, [open]);
+    }, [open, current]);
 
     const submit = () => {
         const n = parseInt(draft, 10);

@@ -1,16 +1,7 @@
-import { useCallback, useRef, useState } from 'react';
+import { useImperativeDialog, type ConfirmDialogOpts } from '@/hooks/useImperativeDialog';
 
-interface ConfirmOptions {
-    title: string;
-    description?: string;
-    confirmLabel?: string;
-    cancelLabel?: string;
-    destructive?: boolean;
-}
-
-interface ConfirmState extends ConfirmOptions {
-    resolve: (value: boolean) => void;
-}
+type ConfirmOptions = Omit<ConfirmDialogOpts, 'kind'>;
+type ConfirmState = ConfirmDialogOpts;
 
 export interface UseConfirmDialogResult {
     confirm: (opts: ConfirmOptions) => Promise<boolean>;
@@ -20,27 +11,13 @@ export interface UseConfirmDialogResult {
 }
 
 export function useConfirmDialog(): UseConfirmDialogResult {
-    const [dialogState, setDialogState] = useState<ConfirmState | null>(null);
-    const resolveRef = useRef<((value: boolean) => void) | null>(null);
+    const dlg = useImperativeDialog<boolean>();
+    const dialogState = dlg.state?.kind === 'confirm' ? dlg.state : null;
 
-    const confirm = useCallback((opts: ConfirmOptions): Promise<boolean> => {
-        return new Promise((resolve) => {
-            resolveRef.current = resolve;
-            setDialogState({ ...opts, resolve });
-        });
-    }, []);
-
-    const onConfirm = useCallback(() => {
-        resolveRef.current?.(true);
-        resolveRef.current = null;
-        setDialogState(null);
-    }, []);
-
-    const onCancel = useCallback(() => {
-        resolveRef.current?.(false);
-        resolveRef.current = null;
-        setDialogState(null);
-    }, []);
-
-    return { confirm, dialogState, onConfirm, onCancel };
+    return {
+        confirm: (opts) => dlg.open({ kind: 'confirm', ...opts }),
+        dialogState,
+        onConfirm: () => dlg.settle(true),
+        onCancel: () => dlg.settle(false),
+    };
 }

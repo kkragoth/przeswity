@@ -1,9 +1,8 @@
-import { createFileRoute, redirect, Outlet, useRouterState } from '@tanstack/react-router';
+import { createFileRoute, redirect, Outlet, useMatches } from '@tanstack/react-router';
 import { authClient } from '@/auth/client';
 import { useSessionPing } from '@/hooks/api/useSessionPing';
 import { AppTopBar } from '@/components/layout/AppTopBar';
 import type { Session, SessionUser } from '@/auth/types';
-import { isImmersiveRoute } from '@/lib/routes';
 
 export const Route = createFileRoute('/_app')({
     async beforeLoad({ location }) {
@@ -29,8 +28,8 @@ function AppLayout() {
     const { session } = Route.useRouteContext();
     useSessionPing();
     const user = session.user as SessionUser;
-    const pathname = useRouterState({ select: (s) => s.location.pathname });
-    const immersive = isImmersiveRoute(pathname);
+    const matches = useMatches();
+    const immersive = matches.some((m) => (m.staticData as Record<string, unknown>)?.immersive === true);
 
     if (immersive) {
         return (

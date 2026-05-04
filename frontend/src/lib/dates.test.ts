@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { daysSince, formatActivity, MISSING_DATE_DAYS } from '@/lib/dates';
+import { daysSince, formatActivity } from '@/lib/dates';
+import { MISSING_DATE_DAYS } from '@/lib/constants';
 
 describe('daysSince', () => {
     const now = new Date('2026-04-29T12:00:00.000Z');

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SystemRole } from '@/auth/types';
 import type { UserFormState } from '@/containers/admin/hooks/useUserForm';
 
 export function UserFormFields({
@@ -25,10 +26,10 @@ export function UserFormFields({
             <div><Label>{ta('users.form.competencyTags')}</Label><Input value={form.competencyTagsRaw} placeholder={ta('users.form.competencyTagsHint')} onChange={(e) => set('competencyTagsRaw', e.target.value)} /></div>
             <div>
                 <Label>{ta('users.form.systemRole')}</Label>
-                <select className="mt-1 w-full rounded border border-input bg-background px-3 py-2 text-sm" value={form.systemRole ?? ''} onChange={(e) => set('systemRole', (e.target.value || null) as UserFormState['systemRole'])}>
+                <select className="mt-1 w-full rounded border border-input bg-background px-3 py-2 text-sm" value={form.systemRole ?? ''} onChange={(e) => set('systemRole', (e.target.value || null) as SystemRole | null)}>
                     <option value="">{ta('users.form.systemRoleNone')}</option>
-                    <option value="project_manager">{ta('users.form.systemRoleProjectManager')}</option>
-                    <option value="admin">{ta('users.form.systemRoleAdmin')}</option>
+                    <option value={SystemRole.ProjectManager}>{ta('users.form.systemRoleProjectManager')}</option>
+                    <option value={SystemRole.Admin}>{ta('users.form.systemRoleAdmin')}</option>
                 </select>
             </div>
         </div>

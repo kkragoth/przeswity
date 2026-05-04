@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { allowedNextStages, bookAttention, BookAttention, isAttentionBook, isRecentBook, isStaleDays } from '@/lib/status';
-import { BOOK_STAGES_ORDER } from '@/lib/stage';
+import { bookAttention, BookAttention, isAttentionBook, isRecentBook, isStaleDays } from '@/lib/status';
+import { allowedNextStages, BOOK_STAGES_ORDER } from '@/lib/stage';
 import type { BookSummary } from '@/api/generated/types.gen';
 
 function book(overrides: Partial<BookSummary>): BookSummary {

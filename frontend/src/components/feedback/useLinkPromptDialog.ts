@@ -1,12 +1,7 @@
-import { useCallback, useRef, useState } from 'react';
+import { useImperativeDialog, type PromptDialogOpts } from '@/hooks/useImperativeDialog';
 
-interface LinkPromptOptions {
-    initial?: string;
-}
-
-interface LinkPromptState extends LinkPromptOptions {
-    resolve: (value: string | null) => void;
-}
+type LinkPromptOptions = Omit<PromptDialogOpts, 'kind'>;
+type LinkPromptState = PromptDialogOpts;
 
 export interface UseLinkPromptDialogResult {
     prompt: (opts?: LinkPromptOptions) => Promise<string | null>;
@@ -16,27 +11,13 @@ export interface UseLinkPromptDialogResult {
 }
 
 export function useLinkPromptDialog(): UseLinkPromptDialogResult {
-    const [dialogState, setDialogState] = useState<LinkPromptState | null>(null);
-    const resolveRef = useRef<((value: string | null) => void) | null>(null);
+    const dlg = useImperativeDialog<string | null>();
+    const dialogState = dlg.state?.kind === 'prompt' ? dlg.state : null;
 
-    const prompt = useCallback((opts?: LinkPromptOptions): Promise<string | null> => {
-        return new Promise((resolve) => {
-            resolveRef.current = resolve;
-            setDialogState({ ...opts, resolve });
-        });
-    }, []);
-
-    const onConfirm = useCallback((url: string) => {
-        resolveRef.current?.(url);
-        resolveRef.current = null;
-        setDialogState(null);
-    }, []);
-
-    const onCancel = useCallback(() => {
-        resolveRef.current?.(null);
-        resolveRef.current = null;
-        setDialogState(null);
-    }, []);
-
-    return { prompt, dialogState, onConfirm, onCancel };
+    return {
+        prompt: (opts?) => dlg.open({ kind: 'prompt', ...opts }),
+        dialogState,
+        onConfirm: (url: string) => dlg.settle(url),
+        onCancel: () => dlg.settle(null),
+    };
 }

@@ -3,6 +3,8 @@ import { authClient } from '@/auth/client';
 import { queryClient } from '@/app/queryClient';
 import { router } from '@/app/router';
 
+// Do not attach these interceptors more than once — dedup relies on module-scoped
+// refreshPromise and retried WeakSet; a second registration would bypass both guards.
 type RefreshResult = { ok: true } | { ok: false };
 let refreshPromise: Promise<RefreshResult> | null = null;
 

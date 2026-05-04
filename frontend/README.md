@@ -313,7 +313,7 @@ Full guidelines: [/CLAUDE.md](../CLAUDE.md).
   string literals.
 - **ADTs**: use a `kind` discriminator field and `assertNever` (`@/lib/assert`)
   for exhaustive switches. Avoid optional `| undefined` sibling fields.
-- **File size**: keep files under 200 LOC; split by domain when they grow.
+- **File size**: keep files under 600 LOC; split by domain when they grow.
 - **Strings**: all user-visible text via `t()` — no hardcoded strings in JSX.
 - **Comments**: only for non-obvious behaviour, browser quirks, or non-trivial
   domain logic.

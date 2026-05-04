@@ -1,12 +1,11 @@
 import type { User, UpdateUserBody } from '@/api/generated/types.gen';
-
-type SystemRole = 'admin' | 'project_manager' | null;
+import { SystemRole } from '@/auth/types';
 
 export interface UserFormState {
     name: string;
     email: string;
     password: string;
-    systemRole: SystemRole;
+    systemRole: SystemRole | null;
     color: string;
     competencyTagsRaw: string;
 }
@@ -23,7 +22,7 @@ export function fromUser(user: User): UserFormState {
         name: user.name,
         email: user.email,
         password: '',
-        systemRole: (user.systemRole as SystemRole) ?? null,
+        systemRole: (user.systemRole as SystemRole | null) ?? null,
         color: user.color,
         competencyTagsRaw: tagsToString(user.competencyTags),
     };

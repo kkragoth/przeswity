@@ -2,9 +2,6 @@ import type { BookSummary } from '@/api/generated/types.gen';
 import { daysSince } from '@/lib/dates';
 import { STALE_THRESHOLD_DAYS, RECENT_THRESHOLD_DAYS } from '@/lib/constants';
 
-// Re-export allowedNextStages from lib/stage.ts for back-compat.
-export { allowedNextStages } from '@/lib/stage';
-
 export enum BookAttention {
     Stale = 'stale',
     Active = 'active',

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { BooksList } from '@/containers/coordinator/components/BooksList';
 import { BooksTimeline } from '@/containers/coordinator/components/BooksTimeline';
 import { FilterChip } from '@/containers/coordinator/components/FilterChip';
+import { FilterChipGroup } from '@/containers/coordinator/components/FilterChipGroup';
 import { KpiCard } from '@/containers/coordinator/components/KpiCard';
 import { DashboardView, QuickFilter } from '@/containers/coordinator/hooks/booksDashboardSelectors';
 import { useBooksDashboard } from '@/hooks/api/useBooksDashboard';
@@ -32,16 +33,34 @@ export function CoordinatorDashboard({ me }: { me: SessionUser }) {
                 <KpiCard label={t('dashboard.kpi.unassigned')} value={d.kpis.unassigned} icon={Users} onClick={() => d.setFilter.setQuickFilter(QuickFilter.Unassigned)} />
             </div>
             <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
-                <FilterChip active={d.filters.showOnlyMine} onClick={() => d.setFilter.setShowOnlyMine(true)}>{t('books.filterMine')}</FilterChip>
-                <FilterChip active={!d.filters.showOnlyMine} onClick={() => d.setFilter.setShowOnlyMine(false)}>{t('books.filterAll')}</FilterChip>
+                <FilterChipGroup
+                    options={[
+                        { label: t('books.filterMine'), value: true },
+                        { label: t('books.filterAll'), value: false },
+                    ]}
+                    activeValue={d.filters.showOnlyMine}
+                    onChange={d.setFilter.setShowOnlyMine}
+                />
                 <div className="mx-1 h-5 w-px bg-border" />
-                <FilterChip active={d.filters.view === DashboardView.List} onClick={() => d.setFilter.setView(DashboardView.List)}>{t('dashboard.view.list')}</FilterChip>
-                <FilterChip active={d.filters.view === DashboardView.Timeline} onClick={() => d.setFilter.setView(DashboardView.Timeline)}>{t('dashboard.view.timeline')}</FilterChip>
+                <FilterChipGroup
+                    options={[
+                        { label: t('dashboard.view.list'), value: DashboardView.List },
+                        { label: t('dashboard.view.timeline'), value: DashboardView.Timeline },
+                    ]}
+                    activeValue={d.filters.view}
+                    onChange={d.setFilter.setView}
+                />
                 <div className="mx-1 h-5 w-px bg-border" />
-                <FilterChip active={d.filters.quickFilter === QuickFilter.All} onClick={() => d.setFilter.setQuickFilter(QuickFilter.All)}>{t('dashboard.quick.all')}</FilterChip>
-                <FilterChip active={d.filters.quickFilter === QuickFilter.Attention} onClick={() => d.setFilter.setQuickFilter(QuickFilter.Attention)}>{t('dashboard.quick.attention')}</FilterChip>
-                <FilterChip active={d.filters.quickFilter === QuickFilter.Recent} onClick={() => d.setFilter.setQuickFilter(QuickFilter.Recent)}>{t('dashboard.quick.recent')}</FilterChip>
-                <FilterChip active={d.filters.quickFilter === QuickFilter.Unassigned} onClick={() => d.setFilter.setQuickFilter(QuickFilter.Unassigned)}>{t('dashboard.quick.unassigned')}</FilterChip>
+                <FilterChipGroup
+                    options={[
+                        { label: t('dashboard.quick.all'), value: QuickFilter.All },
+                        { label: t('dashboard.quick.attention'), value: QuickFilter.Attention },
+                        { label: t('dashboard.quick.recent'), value: QuickFilter.Recent },
+                        { label: t('dashboard.quick.unassigned'), value: QuickFilter.Unassigned },
+                    ]}
+                    activeValue={d.filters.quickFilter}
+                    onChange={d.setFilter.setQuickFilter}
+                />
             </div>
             {d.roleOptions.length > 0 ? (
                 <div className="mt-3 flex flex-wrap items-center gap-2">

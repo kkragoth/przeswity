@@ -5,8 +5,6 @@ export function LanguageSwitcher() {
     const { i18n } = useTranslation();
     const change = (lng: string) => {
         void i18n.changeLanguage(lng);
-        try { localStorage.setItem('przeswity.lang', lng); } catch {}
-        // PATCH /api/me — wired in F4j; silent fail if endpoint not yet there.
     };
     return (
         <select
