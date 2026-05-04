@@ -31,7 +31,7 @@ export function BooksListPage({ user }: { user: SessionUser }) {
                     cta={canCreate ? <Link to="/coordinator/books/new"><Button>{t('books.newBook')}</Button></Link> : undefined}
                 />
             ) : (
-                <div className="space-y-3">{books.map((book) => <BookRow key={book.id} book={book} me={user} />)}</div>
+                <div className="space-y-3">{books.map((book) => <BookRow key={book.id} book={book} />)}</div>
             )}
         </PageLayout>
     );

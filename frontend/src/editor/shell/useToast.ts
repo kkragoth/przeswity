@@ -1,9 +1,15 @@
 import { toast as sonnerToast } from 'sonner';
 
-type ToastKind = 'info' | 'success' | 'error'
+export enum ToastKind {
+    Info = 'info',
+    Success = 'success',
+    Error = 'error',
+}
 
-export function useToast() {
+export type ToastFn = (msg: string, kind?: ToastKind) => void
+
+export function useToast(): { show: ToastFn } {
     return {
-        show: (msg: string, kind: ToastKind = 'info') => sonnerToast[kind](msg),
+        show: (msg, kind = ToastKind.Info) => sonnerToast[kind](msg),
     };
 }

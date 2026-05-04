@@ -1,82 +1,109 @@
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import { Avatar } from '@/editor/shell/Avatar';
 import { Reactions } from '@/containers/editor/components/comments/Reactions';
 import {
     MentionTextarea,
     renderBodyWithMentions,
-    type MentionCandidate,
 } from '@/containers/editor/components/comments/MentionTextarea';
-import type { CommentReply as Reply } from '@/editor/comments/types';
+import { useCommentsView } from '@/containers/editor/components/comments/CommentsViewContext';
+import { useThread } from '@/containers/editor/components/comments/useThread';
+import { useComments, useCommentsStore } from '@/containers/editor/CommentsStoreProvider';
+import {
+    selectEditText,
+    selectIsEditingReply,
+} from '@/containers/editor/stores/commentsSelectors';
+import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
 
 interface CommentReplyProps {
-    reply: Reply;
-    timeLabel: string;
-    canEdit: boolean;
-    isEditing: boolean;
-    editValue: string;
-    onEditChange: (next: string) => void;
-    onEditStart: () => void;
-    onEditCancel: () => void;
-    onEditSubmit: () => void;
-    candidates: MentionCandidate[];
-    currentUserId: string;
-    onToggleReaction: (emoji: string) => void;
+    threadId: string;
+    replyId: string;
 }
 
-export function CommentReply(props: CommentReplyProps) {
+export function CommentReply({ threadId, replyId }: CommentReplyProps) {
     const { t } = useTranslation('editor');
-    const r = props.reply;
+    const { user } = useEditorSession();
+    const { candidates, formatRelative } = useCommentsView();
+    const thread = useThread(threadId);
+    const isEditing = useComments(selectIsEditingReply(threadId, replyId));
+    const editText = useComments(selectEditText);
+    const setEditText = useComments((s) => s.setEditText);
+    const commentsStore = useCommentsStore();
+
+    const reply = thread?.replies.find((r) => r.id === replyId);
+    const handleEditSubmit = useCallback(() => {
+        commentsStore.getState().editSubmit();
+    }, [commentsStore]);
+    const handleEditCancel = useCallback(() => {
+        commentsStore.getState().cancelEdit();
+    }, [commentsStore]);
+    const handleEditStart = useCallback(() => {
+        if (!reply) return;
+        commentsStore.getState().beginEdit(
+            { kind: 'reply', threadId, replyId },
+            reply.body,
+        );
+    }, [commentsStore, reply, threadId, replyId]);
+    const handleToggleReaction = useCallback((emoji: string) => {
+        commentsStore.getState().toggleReplyReaction(threadId, replyId, emoji);
+    }, [commentsStore, threadId, replyId]);
+
+    if (!thread || !reply) return null;
+    const canEdit = reply.authorId === user.id;
+
     return (
         <div className="thread-reply">
-            <Avatar name={r.authorName} color={r.authorColor} size="sm" />
+            <Avatar name={reply.authorName} color={reply.authorColor} size="sm" />
             <div className="thread-reply-text">
                 <div className="thread-head-row">
-                    <span className="thread-author">{r.authorName}</span>
-                    <span className="thread-role-chip">{r.authorRole}</span>
-                    <span className="thread-head-time">{props.timeLabel}</span>
+                    <span className="thread-author">{reply.authorName}</span>
+                    <span className="thread-role-chip">{reply.authorRole}</span>
+                    <span className="thread-head-time">{formatRelative(reply.createdAt)}</span>
                 </div>
-                {props.isEditing ? (
+                {isEditing ? (
                     <div className="thread-draft">
                         <MentionTextarea
-                            value={props.editValue}
-                            onChange={props.onEditChange}
+                            value={editText}
+                            onChange={setEditText}
                             placeholder={t('comments.editReply')}
                             autoFocus
-                            candidates={props.candidates}
+                            candidates={candidates}
                             onClick={(e) => e.stopPropagation()}
                         />
                         <div className="thread-actions">
                             <button
                                 type="button"
                                 className="btn-primary"
-                                disabled={!props.editValue.trim()}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    props.onEditSubmit();
-                                }}
+                                disabled={!editText.trim()}
+                                onClick={(e) => { e.stopPropagation(); handleEditSubmit(); }}
                             >
                                 {t('comments.post')}
                             </button>
-                            <button type="button" onClick={(e) => { e.stopPropagation(); props.onEditCancel(); }}>
+                            <button type="button" onClick={(e) => { e.stopPropagation(); handleEditCancel(); }}>
                                 {t('global.cancel')}
                             </button>
                         </div>
                     </div>
                 ) : (
                     <div className="thread-body">
-                        {renderBodyWithMentions(r.body)}
-                        {r.edited ? <span className="thread-edited">{' '}· {t('comments.editedSuffix')}</span> : null}
-                        {props.canEdit ? (
+                        {renderBodyWithMentions(reply.body)}
+                        {reply.edited ? <span className="thread-edited">{' '}· {t('comments.editedSuffix')}</span> : null}
+                        {canEdit ? (
                             <button
                                 type="button"
                                 className="thread-edit-btn"
                                 title={t('comments.editTooltip')}
-                                onClick={(e) => { e.stopPropagation(); props.onEditStart(); }}
+                                onClick={(e) => { e.stopPropagation(); handleEditStart(); }}
                             >✎</button>
                         ) : null}
                     </div>
                 )}
-                <Reactions reactions={r.reactions} myUserId={props.currentUserId} onToggle={props.onToggleReaction} />
+                <Reactions
+                    reactions={reply.reactions}
+                    myUserId={user.id}
+                    onToggle={handleToggleReaction}
+                />
             </div>
         </div>
     );

@@ -1,12 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import type { Editor } from '@tiptap/react';
-import * as Y from 'yjs';
 import { MessageSquare, GitPullRequestArrow, X } from 'lucide-react';
 
 import { CommentsSidebar } from '@/containers/editor/components/comments/CommentsSidebar';
 import { SuggestionsSidebar } from '@/containers/editor/components/suggestions/SuggestionsSidebar';
-import type { User } from '@/editor/identity/types';
-import type { Peer } from '@/containers/editor/hooks/usePeers';
+import { usePaneStore } from '@/containers/editor/stores/paneStore';
+import { useSession } from '@/containers/editor/SessionStoreProvider';
 
 export enum RightTab {
     Comments = 'comments',
@@ -14,18 +13,7 @@ export enum RightTab {
 }
 
 interface RightPaneProps {
-    tab: RightTab
-    onTabChange: (t: RightTab) => void
-    onExpand: () => void
-    onHide: () => void
-    doc: Y.Doc
     editor: Editor | null
-    user: User
-    peers: Peer[]
-    activeCommentId: string | null
-    onActiveCommentChange: (id: string | null) => void
-    pendingNew: { id: string; quote: string } | null
-    onPendingHandled: () => void
 }
 
 type RightTabTKey = 'pane.comments' | 'pane.suggestions'
@@ -35,25 +23,16 @@ const TABS: { id: RightTab; icon: typeof MessageSquare; labelKey: RightTabTKey }
     { id: RightTab.Suggestions, icon: GitPullRequestArrow, labelKey: 'pane.suggestions' },
 ];
 
-export function RightPane({
-    tab,
-    onTabChange,
-    onExpand,
-    onHide,
-    doc,
-    editor,
-    user,
-    peers,
-    activeCommentId,
-    onActiveCommentChange,
-    pendingNew,
-    onPendingHandled,
-}: RightPaneProps) {
+export function RightPane({ editor }: RightPaneProps) {
     const { t } = useTranslation('editor');
+    const tab = useSession((s) => s.rightTab);
+    const setRightTab = useSession((s) => s.setRightTab);
+    const expandPane = usePaneStore((s) => s.expand);
+    const hidePane = usePaneStore((s) => s.hide);
 
     const handleTabClick = (id: RightTab) => {
-        onTabChange(id);
-        onExpand();
+        setRightTab(id);
+        expandPane('right');
     };
 
     return (
@@ -75,7 +54,7 @@ export function RightPane({
                 <button
                     type="button"
                     className="pane-tab-close"
-                    onClick={onHide}
+                    onClick={() => hidePane('right')}
                     aria-label={t('pane.collapse')}
                     title={t('pane.collapse')}
                 >
@@ -85,18 +64,9 @@ export function RightPane({
 
             <div className="pane-body">
                 {tab === RightTab.Comments ? (
-                    <CommentsSidebar
-                        doc={doc}
-                        editor={editor}
-                        user={user}
-                        activeCommentId={activeCommentId}
-                        onActiveCommentChange={onActiveCommentChange}
-                        pendingNew={pendingNew}
-                        onPendingHandled={onPendingHandled}
-                        peers={peers}
-                    />
+                    <CommentsSidebar editor={editor} />
                 ) : (
-                    <SuggestionsSidebar editor={editor} user={user} />
+                    <SuggestionsSidebar editor={editor} />
                 )}
             </div>
         </aside>

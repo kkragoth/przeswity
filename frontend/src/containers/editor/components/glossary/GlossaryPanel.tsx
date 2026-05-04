@@ -4,9 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { GlossaryEntry } from '@/editor/glossary/GlossaryHighlight';
 import { makeId } from '@/editor/utils';
 
-interface GlossaryPanelProps {
-  doc: Y.Doc
-}
+import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
 
 interface StoredEntry extends GlossaryEntry {
   id: string
@@ -30,8 +28,10 @@ export function useGlossary(doc: Y.Doc): StoredEntry[] {
     return entries;
 }
 
-export function GlossaryPanel({ doc }: GlossaryPanelProps) {
+export function GlossaryPanel() {
     const { t } = useTranslation('editor');
+    const { collab } = useEditorSession();
+    const doc = collab.doc;
     const entries = useGlossary(doc);
     const [draft, setDraft] = useState<{ term: string; translation: string; notes: string }>({
         term: '',

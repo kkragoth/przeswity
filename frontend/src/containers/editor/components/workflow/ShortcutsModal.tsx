@@ -1,8 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-interface ShortcutsModalProps {
-  onClose: () => void
-}
+import { useSession } from '@/containers/editor/SessionStoreProvider';
 
 interface Group {
   titleKey: string
@@ -56,8 +54,9 @@ const GROUPS: Group[] = [
     },
 ];
 
-export function ShortcutsModal({ onClose }: ShortcutsModalProps) {
+export function ShortcutsModal() {
     const { t } = useTranslation('editor');
+    const onClose = useSession((s) => s.closeShortcuts);
 
     return (
         <div className="modal-backdrop" onMouseDown={onClose}>

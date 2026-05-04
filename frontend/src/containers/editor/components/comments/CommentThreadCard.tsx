@@ -1,80 +1,75 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { CommentThread } from '@/editor/comments/types';
-import type { MentionCandidate } from '@/containers/editor/components/comments/MentionTextarea';
-import type { CommentEditTarget } from '@/containers/editor/hooks/useCommentDrafts';
+
 import { ThreadComposeForm } from '@/containers/editor/components/comments/thread/ThreadComposeForm';
 import { ThreadHeader } from '@/containers/editor/components/comments/thread/ThreadHeader';
 import { ThreadEditor } from '@/containers/editor/components/comments/thread/ThreadEditor';
 import { ThreadReplies } from '@/containers/editor/components/comments/thread/ThreadReplies';
+import { useCommentsStore } from '@/containers/editor/CommentsStoreProvider';
+import { useCommentsView } from '@/containers/editor/components/comments/CommentsViewContext';
+import { useThread } from '@/containers/editor/components/comments/useThread';
+import { useIsActiveComment } from '@/containers/editor/components/comments/useIsActiveComment';
+import { useComments } from '@/containers/editor/CommentsStoreProvider';
+import { selectInitialDraft } from '@/containers/editor/stores/commentsSelectors';
+import { useSession, useSessionStore } from '@/containers/editor/SessionStoreProvider';
 
-function previewBody(body: string, max = 90): string {
+const PREVIEW_MAX = 90;
+
+function previewBody(body: string): string {
     const single = body.replace(/\s+/g, ' ').trim();
-    if (single.length <= max) return single;
-    return single.slice(0, max - 1) + '…';
-}
-
-export interface ThreadCallbacks {
-    onSelect: () => void;
-    onClose: () => void;
-    onResolve: () => void;
-    onRemove: () => void;
-    onSubmitInitialBody: () => void;
-    onSubmitReply: () => void;
-    onEditThreadStart: () => void;
-    onEditReplyStart: (replyId: string) => void;
-    onEditCancel: () => void;
-    onEditSubmit: () => void;
-    onToggleThreadReaction: (emoji: string) => void;
-    onToggleReplyReaction: (replyId: string, emoji: string) => void;
+    if (single.length <= PREVIEW_MAX) return single;
+    return single.slice(0, PREVIEW_MAX - 1) + '…';
 }
 
 interface CommentThreadCardProps {
-    thread: CommentThread;
-    isActive: boolean;
-    timeLabel: string;
-    replyTimeLabel: (ts: number) => string;
-    canResolve: boolean;
-    canComment: boolean;
-    currentUserId: string;
-    candidates: MentionCandidate[];
-    initialDraft: string;
-    onInitialDraftChange: (next: string) => void;
-    replyDraft: string;
-    onReplyDraftChange: (next: string) => void;
-    editTarget: CommentEditTarget;
-    editText: string;
-    onEditTextChange: (next: string) => void;
-    callbacks: ThreadCallbacks;
+    threadId: string;
 }
 
-export const CommentThreadCard = memo(function CommentThreadCard(props: CommentThreadCardProps) {
+export const CommentThreadCard = memo(function CommentThreadCard({ threadId }: CommentThreadCardProps) {
     const { t } = useTranslation('editor');
-    const { thread, isActive, callbacks: cb } = props;
+    const thread = useThread(threadId);
+    const isActive = useIsActiveComment(threadId);
+    const { candidates, editor } = useCommentsView();
+    const initialDraft = useComments(selectInitialDraft);
+    const setInitialDraft = useComments((s) => s.setInitialDraft);
+    const commentsStore = useCommentsStore();
+    const sessionStore = useSessionStore();
+    const setActiveComment = useSession((s) => s.setActiveComment);
+
+    const handleSelect = useCallback(() => {
+        setActiveComment(threadId);
+        commentsStore.getState().cancelEdit();
+    }, [setActiveComment, threadId, commentsStore]);
+
+    const handleSubmitInitial = useCallback(() => {
+        commentsStore.getState().submitInitialBody(threadId);
+    }, [commentsStore, threadId]);
+
+    const handleRemoveOnEmpty = useCallback(() => {
+        commentsStore.getState().removeThread(threadId);
+        if (editor) editor.chain().focus().unsetComment(threadId).run();
+        if (sessionStore.getState().activeCommentId === threadId) {
+            setActiveComment(null);
+            commentsStore.getState().cancelEdit();
+        }
+    }, [commentsStore, editor, sessionStore, setActiveComment, threadId]);
+
+    if (!thread) return null;
     const draftEmpty = thread.body === '';
-    const editingThreadBody = props.editTarget?.kind === 'thread' && props.editTarget.threadId === thread.id;
 
     return (
-        <div className={`thread${isActive ? ' is-active' : ''}`} onClick={cb.onSelect}>
-            <ThreadHeader
-                thread={thread}
-                isActive={isActive}
-                timeLabel={props.timeLabel}
-                canResolve={props.canResolve}
-                replyCount={thread.replies.length}
-                onResolve={cb.onResolve}
-                onClose={cb.onClose}
-            />
+        <div className={`thread${isActive ? ' is-active' : ''}`} onClick={handleSelect}>
+            <ThreadHeader threadId={threadId} />
             <div className="thread-quote">"{thread.originalQuote}"</div>
 
             {draftEmpty && isActive ? (
                 <ThreadComposeForm
-                    value={props.initialDraft}
-                    onChange={props.onInitialDraftChange}
+                    value={initialDraft}
+                    onChange={setInitialDraft}
                     placeholder={t('comments.writeComment')}
-                    onSubmit={cb.onSubmitInitialBody}
-                    onCancel={cb.onRemove}
-                    candidates={props.candidates}
+                    onSubmit={handleSubmitInitial}
+                    onCancel={handleRemoveOnEmpty}
+                    candidates={candidates}
                 />
             ) : (
                 <>
@@ -83,39 +78,8 @@ export const CommentThreadCard = memo(function CommentThreadCard(props: CommentT
                     ) : null}
                     <div className="thread-expandable">
                         <div className="thread-expandable-inner">
-                            <ThreadEditor
-                                thread={thread}
-                                isActive={isActive}
-                                editingBody={editingThreadBody}
-                                editText={props.editText}
-                                onEditTextChange={props.onEditTextChange}
-                                onEditSubmit={cb.onEditSubmit}
-                                onEditCancel={cb.onEditCancel}
-                                onEditThreadStart={cb.onEditThreadStart}
-                                onToggleThreadReaction={cb.onToggleThreadReaction}
-                                currentUserId={props.currentUserId}
-                                candidates={props.candidates}
-                            />
-                            <ThreadReplies
-                                thread={thread}
-                                isActive={isActive}
-                                replyTimeLabel={props.replyTimeLabel}
-                                editTarget={props.editTarget}
-                                editText={props.editText}
-                                onEditTextChange={props.onEditTextChange}
-                                onEditReplyStart={cb.onEditReplyStart}
-                                onEditCancel={cb.onEditCancel}
-                                onEditSubmit={cb.onEditSubmit}
-                                onToggleReplyReaction={cb.onToggleReplyReaction}
-                                replyDraft={props.replyDraft}
-                                onReplyDraftChange={props.onReplyDraftChange}
-                                onSubmitReply={cb.onSubmitReply}
-                                onRemove={cb.onRemove}
-                                canResolve={props.canResolve}
-                                canComment={props.canComment}
-                                currentUserId={props.currentUserId}
-                                candidates={props.candidates}
-                            />
+                            <ThreadEditor threadId={threadId} />
+                            <ThreadReplies threadId={threadId} />
                         </div>
                     </div>
                 </>

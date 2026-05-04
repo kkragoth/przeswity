@@ -1,82 +1,59 @@
+import { useCallback } from 'react';
+
 import { CommentReply } from '@/containers/editor/components/comments/CommentReply';
 import { ThreadReplyCompose } from '@/containers/editor/components/comments/thread/ThreadReplyCompose';
-import type { MentionCandidate } from '@/containers/editor/components/comments/MentionTextarea';
-import type { CommentEditTarget } from '@/containers/editor/hooks/useCommentDrafts';
-import type { CommentThread } from '@/editor/comments/types';
+import { useCommentsView } from '@/containers/editor/components/comments/CommentsViewContext';
+import { useThread } from '@/containers/editor/components/comments/useThread';
+import { useIsActiveComment } from '@/containers/editor/components/comments/useIsActiveComment';
+import { useComments, useCommentsStore } from '@/containers/editor/CommentsStoreProvider';
+import { selectReplyDraft } from '@/containers/editor/stores/commentsSelectors';
+import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
+import { useSession, useSessionStore } from '@/containers/editor/SessionStoreProvider';
 
 interface ThreadRepliesProps {
-    thread: CommentThread;
-    isActive: boolean;
-    replyTimeLabel: (ts: number) => string;
-    editTarget: CommentEditTarget;
-    editText: string;
-    onEditTextChange: (next: string) => void;
-    onEditReplyStart: (replyId: string) => void;
-    onEditCancel: () => void;
-    onEditSubmit: () => void;
-    onToggleReplyReaction: (replyId: string, emoji: string) => void;
-    replyDraft: string;
-    onReplyDraftChange: (next: string) => void;
-    onSubmitReply: () => void;
-    onRemove: () => void;
-    canResolve: boolean;
-    canComment: boolean;
-    currentUserId: string;
-    candidates: MentionCandidate[];
+    threadId: string;
 }
 
-export function ThreadReplies({
-    thread,
-    isActive,
-    replyTimeLabel,
-    editTarget,
-    editText,
-    onEditTextChange,
-    onEditReplyStart,
-    onEditCancel,
-    onEditSubmit,
-    onToggleReplyReaction,
-    replyDraft,
-    onReplyDraftChange,
-    onSubmitReply,
-    onRemove,
-    canResolve,
-    canComment,
-    currentUserId,
-    candidates,
-}: ThreadRepliesProps) {
+export function ThreadReplies({ threadId }: ThreadRepliesProps) {
+    const { perms } = useEditorSession();
+    const { candidates, editor } = useCommentsView();
+    const thread = useThread(threadId);
+    const isActive = useIsActiveComment(threadId);
+    const replyDraft = useComments(selectReplyDraft(threadId));
+    const setReplyDraft = useComments((s) => s.setReplyDraft);
+    const commentsStore = useCommentsStore();
+    const sessionStore = useSessionStore();
+    const setActiveComment = useSession((s) => s.setActiveComment);
+
+    const handleSubmitReply = useCallback(() => {
+        commentsStore.getState().submitReply(threadId);
+    }, [commentsStore, threadId]);
+    const handleChange = useCallback((v: string) => {
+        setReplyDraft(threadId, v);
+    }, [setReplyDraft, threadId]);
+    const handleRemove = useCallback(() => {
+        commentsStore.getState().removeThread(threadId);
+        if (editor) editor.chain().focus().unsetComment(threadId).run();
+        if (sessionStore.getState().activeCommentId === threadId) {
+            setActiveComment(null);
+            commentsStore.getState().cancelEdit();
+        }
+    }, [commentsStore, editor, sessionStore, setActiveComment, threadId]);
+
+    if (!thread) return null;
+
     return (
         <>
-            {thread.replies.map((reply) => {
-                const isEditingReply =
-                    editTarget?.kind === 'reply'
-                    && editTarget.threadId === thread.id
-                    && editTarget.replyId === reply.id;
-                return (
-                    <CommentReply
-                        key={reply.id}
-                        reply={reply}
-                        timeLabel={replyTimeLabel(reply.createdAt)}
-                        canEdit={reply.authorId === currentUserId}
-                        isEditing={isEditingReply}
-                        editValue={editText}
-                        onEditChange={onEditTextChange}
-                        onEditStart={() => onEditReplyStart(reply.id)}
-                        onEditCancel={onEditCancel}
-                        onEditSubmit={onEditSubmit}
-                        candidates={candidates}
-                        currentUserId={currentUserId}
-                        onToggleReaction={(e) => onToggleReplyReaction(reply.id, e)}
-                    />
-                );
-            })}
-            {canComment && thread.body && isActive ? (
+            {thread.replies.map((reply) => (
+                <CommentReply key={reply.id} threadId={threadId} replyId={reply.id} />
+            ))}
+            {perms.canComment && thread.body && isActive ? (
                 <ThreadReplyCompose
                     replyDraft={replyDraft}
-                    onChange={onReplyDraftChange}
-                    onSubmit={onSubmitReply}
-                    onRemove={onRemove}
-                    canResolve={canResolve}
+                    onChange={handleChange}
+                    onSubmit={handleSubmitReply}
+                    onRemove={handleRemove}
+                    canResolve={perms.canResolveComment}
                     candidates={candidates}
                 />
             ) : null}

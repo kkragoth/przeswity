@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import { useTranslation } from 'react-i18next';
-import type { User } from '@/editor/identity/types';
-import { ROLE_PERMISSIONS } from '@/editor/identity/types';
 import { acceptSuggestion, rejectSuggestion, SuggestionType } from '@/editor/suggestions/suggestionOps';
+import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
 
 interface SuggestionEntry {
   type: SuggestionType
@@ -19,7 +18,6 @@ interface SuggestionEntry {
 
 interface SuggestionsSidebarProps {
   editor: Editor | null
-  user: User
 }
 
 function collectSuggestions(editor: Editor): SuggestionEntry[] {
@@ -54,10 +52,10 @@ function collectSuggestions(editor: Editor): SuggestionEntry[] {
     return out;
 }
 
-export function SuggestionsSidebar({ editor, user }: SuggestionsSidebarProps) {
+export function SuggestionsSidebar({ editor }: SuggestionsSidebarProps) {
     const { t } = useTranslation('editor');
+    const { perms } = useEditorSession();
     const [entries, setEntries] = useState<SuggestionEntry[]>([]);
-    const perms = ROLE_PERMISSIONS[user.role];
 
     useEffect(() => {
         if (!editor) return;

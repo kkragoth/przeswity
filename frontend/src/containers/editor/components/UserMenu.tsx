@@ -6,10 +6,11 @@ import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import { Avatar } from '@/editor/shell/Avatar';
 import { RoleBadge } from '@/components/badges/RoleBadge';
 import { authClient } from '@/auth/client';
-import type { User } from '@/editor/identity/types';
+import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
 
-export function UserMenu({ user }: { user: User }) {
+export function UserMenu() {
     const { t } = useTranslation('editor');
+    const { user } = useEditorSession();
     const navigate = useNavigate();
     const { data: session } = authClient.useSession();
     const email = session?.user?.email ?? '';

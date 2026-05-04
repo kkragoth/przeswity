@@ -2,7 +2,6 @@ import { Link } from '@tanstack/react-router';
 import { Clock3, UserCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { BookSummary } from '@/api/generated/types.gen';
-import type { SessionUser } from '@/auth/types';
 import { RoleBadge } from '@/components/badges/RoleBadge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,7 @@ import { bookAttention, BookAttention } from '@/lib/status';
 import { BOOK_STAGES_ORDER } from '@/lib/stage';
 import { BookStatusBadge } from '@/containers/books/components/BookStatusBadge';
 
-export function BookRow({ book, me: _me }: { book: BookSummary; me: SessionUser }) {
+export function BookRow({ book }: { book: BookSummary }) {
     const { t } = useTranslation('common');
     const stageIndex = Math.max(0, BOOK_STAGES_ORDER.indexOf(book.stage as never)) + 1;
     const status = bookAttention(book);

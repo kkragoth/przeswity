@@ -3,7 +3,6 @@ import { Clock3, UserCheck } from 'lucide-react';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { BookSummary } from '@/api/generated/types.gen';
-import type { SessionUser } from '@/auth/types';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { RoleBadge } from '@/components/badges/RoleBadge';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +12,7 @@ import { allowedNextStages } from '@/lib/stage';
 import { CoordinatorStatusBadge } from '@/containers/coordinator/components/CoordinatorStatusBadge';
 import { useBookActions } from '@/hooks/api/useBookActions';
 
-export function BooksList({ books, me: _me, loading }: { books: ReadonlyArray<BookSummary>; me: SessionUser; loading: boolean }) {
+export function BooksList({ books, loading }: { books: ReadonlyArray<BookSummary>; loading: boolean }) {
     const { t } = useTranslation('coordinator');
     const { t: tc } = useTranslation('common');
     const actions = useBookActions(books.map((b) => ({ id: b.id, stage: b.stage, progress: b.progress })));

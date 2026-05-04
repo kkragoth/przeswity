@@ -1,18 +1,6 @@
 import { ModeToggle } from '@/editor/tiptap/ToolbarPrimitives';
-import type { User } from '@/editor/identity/types';
-import { ROLE_PERMISSIONS } from '@/editor/identity/types';
-
-function hasNoAccess(user: User): boolean {
-    const p = ROLE_PERMISSIONS[user.role];
-    return !p.canEdit && !p.canSuggest;
-}
-
-interface PaneToggleZoneProps {
-    user: User;
-    suggestingMode: boolean;
-    suggestingForced: boolean;
-    onSuggestingModeChange: (mode: boolean) => void;
-}
+import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
+import { useEditorLive } from '@/containers/editor/EditorLiveProvider';
 
 function Divider() {
     return <div className="tb-divider" aria-hidden />;
@@ -20,19 +8,17 @@ function Divider() {
 
 export { Divider };
 
-export function PaneToggleZone({
-    user,
-    suggestingMode,
-    suggestingForced,
-    onSuggestingModeChange,
-}: PaneToggleZoneProps) {
-    if (hasNoAccess(user)) return null;
+export function PaneToggleZone() {
+    const { perms } = useEditorSession();
+    const suggesting = useEditorLive((s) => s.suggesting);
+
+    if (!perms.canEdit && !perms.canSuggest) return null;
     return (
         <>
             <ModeToggle
-                suggestingMode={suggestingMode}
-                suggestingForced={suggestingForced}
-                onSuggestingModeChange={onSuggestingModeChange}
+                suggestingMode={suggesting.effective}
+                suggestingForced={suggesting.forced}
+                onSuggestingModeChange={suggesting.setMode}
             />
             <Divider />
         </>

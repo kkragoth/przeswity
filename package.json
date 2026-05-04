@@ -6,5 +6,9 @@
     "scripts": {
         "build:shared": "npm -w @przeswity/editor-schema run build",
         "dev:shared": "npm -w @przeswity/editor-schema run dev"
+    },
+    "overrides": {
+        "@types/react": "^19.2.0",
+        "@types/react-dom": "^19.2.0"
     }
 }

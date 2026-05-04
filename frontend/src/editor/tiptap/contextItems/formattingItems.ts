@@ -2,11 +2,11 @@
 // async callback from the host component that opens LinkPromptDialog. The TipTap
 // extension callback system is synchronous so this requires host-side wiring.
 import type { ContextMenuItem } from '@/editor/shell/ContextMenu';
-import { ROLE_PERMISSIONS } from '@/editor/identity/types';
+import { permsFor } from '@/editor/identity/perms';
 import type { BuildContextArgs, MarkSet } from '@/editor/tiptap/contextItems/types';
 
 function linkItems(args: BuildContextArgs, marks: MarkSet): ContextMenuItem[] {
-    const perms = ROLE_PERMISSIONS[args.user.role];
+    const perms = permsFor(args.user.role);
     if (marks.linkMark) {
         const href = marks.linkMark.attrs.href as string;
         const items: ContextMenuItem[] = [{ label: '', separator: true }, { label: 'Open link', icon: '↗', action: () => window.open(href, '_blank', 'noopener') }];
@@ -32,7 +32,7 @@ function linkItems(args: BuildContextArgs, marks: MarkSet): ContextMenuItem[] {
 }
 
 function formatItems(args: BuildContextArgs): ContextMenuItem[] {
-    const perms = ROLE_PERMISSIONS[args.user.role];
+    const perms = permsFor(args.user.role);
     if (!args.hasSelection || (!perms.canEdit && !perms.canSuggest)) return [];
     const e = args.editor;
     const styleAction = (cmd: () => void, active: boolean, label: string, icon: string): ContextMenuItem => ({ label, icon: active ? '●' : icon, action: cmd });

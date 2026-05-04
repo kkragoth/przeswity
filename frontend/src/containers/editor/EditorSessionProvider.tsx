@@ -1,0 +1,63 @@
+import { createContext, useContext, useMemo, type ReactNode } from 'react';
+
+import { permsFor } from '@/editor/identity/perms';
+import type { RolePermissions, User } from '@/editor/identity/types';
+import type { CollabBundle } from '@/editor/collab/yDoc';
+import type { ToastFn } from '@/editor/shell/useToast';
+
+/**
+ * Stable per-session context (Wave 1 / T-10).
+ *
+ * Holds values that change at most once per session lifetime: identity,
+ * permissions, the collab bundle, and the toast callback. High-churn
+ * signals (editor instance, peers, suggesting mode) live in a separate
+ * live store introduced in Wave 3 — keep them out of this context to
+ * avoid render storms on awareness updates.
+ */
+export interface EditorSessionContextValue {
+    user: User;
+    perms: RolePermissions;
+    bookId: string;
+    collab: CollabBundle;
+    toast: ToastFn;
+}
+
+const EditorSessionContext = createContext<EditorSessionContextValue | null>(null);
+
+export interface EditorSessionProviderProps {
+    user: User;
+    bookId: string;
+    collab: CollabBundle;
+    toast: ToastFn;
+    children: ReactNode;
+}
+
+export function EditorSessionProvider({
+    user,
+    bookId,
+    collab,
+    toast,
+    children,
+}: EditorSessionProviderProps) {
+    // Resolve permissions once per session — the entire point of T-03b.
+    const perms = useMemo(() => permsFor(user.role), [user.role]);
+
+    const value = useMemo<EditorSessionContextValue>(
+        () => ({ user, perms, bookId, collab, toast }),
+        [user, perms, bookId, collab, toast],
+    );
+
+    return (
+        <EditorSessionContext.Provider value={value}>
+            {children}
+        </EditorSessionContext.Provider>
+    );
+}
+
+export function useEditorSession(): EditorSessionContextValue {
+    const ctx = useContext(EditorSessionContext);
+    if (!ctx) {
+        throw new Error('useEditorSession must be used inside <EditorSessionProvider>');
+    }
+    return ctx;
+}

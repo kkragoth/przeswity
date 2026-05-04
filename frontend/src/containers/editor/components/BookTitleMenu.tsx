@@ -4,24 +4,24 @@ import { useTranslation } from 'react-i18next';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import type { Editor } from '@tiptap/react';
 
-import type { RolePermissions } from '@/editor/identity/types';
 import { TEMPLATES } from '@/editor/workflow/templates';
 import { useDocumentImport } from '@/containers/editor/hooks/useDocumentImport';
 import { useDocumentExport } from '@/containers/editor/hooks/useDocumentExport';
 import { useConfirmDialog } from '@/components/feedback/useConfirmDialog';
 import { ConfirmDialogHost } from '@/components/feedback/ConfirmDialogHost';
+import { ToastKind } from '@/editor/shell/useToast';
+import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
 
 interface BookTitleMenuProps {
     bookTitle: string;
     editor: Editor | null;
-    perms: RolePermissions;
-    onToast: (msg: string, kind?: 'info' | 'success' | 'error') => void;
 }
 
-export function BookTitleMenu({ bookTitle, editor, perms, onToast }: BookTitleMenuProps) {
+export function BookTitleMenu({ bookTitle, editor }: BookTitleMenuProps) {
     const { t } = useTranslation('editor');
+    const { perms, toast } = useEditorSession();
     const confirmDlg = useConfirmDialog();
-    const docImport = useDocumentImport({ editor, onToast, confirmDialog: confirmDlg });
+    const docImport = useDocumentImport({ editor, onToast: toast, confirmDialog: confirmDlg });
     const docExport = useDocumentExport(editor);
     const [fileMenuOpen, setFileMenuOpen] = useState(false);
 
@@ -41,7 +41,7 @@ export function BookTitleMenu({ bookTitle, editor, perms, onToast }: BookTitleMe
         });
         if (!ok) return;
         editor.commands.setContent(tmpl.content as never, { emitUpdate: true });
-        onToast(t('fileMenu.templateLoaded', { name: tmpl.name }), 'success');
+        toast(t('fileMenu.templateLoaded', { name: tmpl.name }), ToastKind.Success);
     };
 
     if (!editor || (!perms.canEdit && !perms.canExport)) {

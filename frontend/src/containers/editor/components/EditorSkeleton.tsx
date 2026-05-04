@@ -1,15 +1,10 @@
-import { PaneState, readPaneState, type PaneSide } from '@/containers/editor/hooks/usePaneState';
+import { PaneState, paneClass, type PaneSide, usePaneStore } from '@/containers/editor/stores/paneStore';
 
 interface EditorSkeletonProps {
     bookTitle?: string;
 }
 
 const TEXT_LINE_WIDTHS = ['92%', '78%', '88%', '64%', '95%', '82%', '70%', '90%', '55%'];
-
-function paneClass(side: PaneSide, state: PaneState): string {
-    if (state === PaneState.Expanded) return `pane-${side}-open`;
-    return `pane-${side}-${state}`;
-}
 
 function PaneSkeleton({ side, state, lineWidths }: { side: PaneSide; state: PaneState; lineWidths: string[] }) {
     if (state === PaneState.Hidden) return null;
@@ -28,8 +23,8 @@ function PaneSkeleton({ side, state, lineWidths }: { side: PaneSide; state: Pane
 }
 
 export function EditorSkeleton({ bookTitle }: EditorSkeletonProps) {
-    const leftState = readPaneState('left');
-    const rightState = readPaneState('right');
+    const leftState = usePaneStore((s) => s.left);
+    const rightState = usePaneStore((s) => s.right);
     const hostClass = ['editor-host', 'editor-skeleton', paneClass('left', leftState), paneClass('right', rightState)].join(' ');
 
     return (

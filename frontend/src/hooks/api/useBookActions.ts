@@ -3,9 +3,10 @@ import { useState } from 'react';
 import {
     bookPatchProgressMutation,
     bookPatchStageMutation,
+    booksListQueryKey,
 } from '@/api/generated/@tanstack/react-query.gen';
 import type { Book } from '@/api/generated/types.gen';
-import { useInvalidateBooks } from '@/hooks/api/cache/useInvalidateBooks';
+import { useInvalidate } from '@/hooks/api/cache/useInvalidate';
 
 export function shouldCommitStage(current: Book['stage'], draft: Book['stage'] | undefined): boolean {
     return Boolean(draft && draft !== current);
@@ -18,7 +19,7 @@ export function shouldCommitProgress(current: number, draft: number | undefined)
 }
 
 export function useBookActions(initialBooks: Array<{ id: string; stage: Book['stage']; progress: number }>) {
-    const invalidateBooks = useInvalidateBooks();
+    const invalidateBooks = useInvalidate(booksListQueryKey);
     const [stageDraft, setStageDraft] = useState<Record<string, Book['stage']>>({});
     const [progressDraft, setProgressDraft] = useState<Record<string, number>>({});
     const byId = new Map(initialBooks.map((b) => [b.id, b]));

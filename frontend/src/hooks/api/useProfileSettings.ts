@@ -1,11 +1,11 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
-import { meGetOptions, mePatchMutation } from '@/api/generated/@tanstack/react-query.gen';
+import { meGetOptions, mePatchMutation, meGetQueryKey } from '@/api/generated/@tanstack/react-query.gen';
 import type { PatchMeBody } from '@/api/generated/types.gen';
-import { useInvalidateMe } from '@/hooks/api/cache/useInvalidateMe';
+import { useInvalidate } from '@/hooks/api/cache/useInvalidate';
 
 export function useProfileSettings() {
-    const invalidateMe = useInvalidateMe();
+    const invalidateMe = useInvalidate(meGetQueryKey);
     const { data: me } = useQuery({
         ...meGetOptions(),
     });

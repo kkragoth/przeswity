@@ -2,6 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
     bookAssignmentsBulkCreateMutation,
+    bookAssignmentsListQueryKey,
     usersListOptions,
 } from '@/api/generated/@tanstack/react-query.gen';
 import type { BulkCreateAssignmentsBody, User } from '@/api/generated/types.gen';
@@ -18,13 +19,13 @@ import { Input } from '@/components/ui/input';
 import { usePeoplePickerState } from '@/components/people/hooks/usePeoplePickerState';
 import { DraftList, RoleSelect, UserSelect } from '@/components/people/PeoplePickerFields';
 import { useFormDialog } from '@/hooks/useFormDialog';
-import { useInvalidateBookAssignments } from '@/hooks/api/cache/useInvalidateBookAssignments';
+import { useInvalidate } from '@/hooks/api/cache/useInvalidate';
 
 type Draft = BulkCreateAssignmentsBody['assignments'][number];
 
 export function PeoplePicker({ bookId }: { bookId: string }) {
     const { t } = useTranslation('common');
-    const invalidateAssignments = useInvalidateBookAssignments(bookId);
+    const invalidateAssignments = useInvalidate(() => bookAssignmentsListQueryKey({ path: { bookId } }));
     const dialog = useFormDialog({}, {
         successKey: 'messages.success',
         errorKey: 'messages.error',

@@ -2,9 +2,7 @@ import { useEffect, useState } from 'react';
 import * as Y from 'yjs';
 import { useTranslation } from 'react-i18next';
 
-interface MetaPanelProps {
-  doc: Y.Doc
-}
+import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
 
 interface DocumentMeta {
   title?: string
@@ -34,8 +32,10 @@ function useMeta(doc: Y.Doc): DocumentMeta {
     return meta;
 }
 
-export function MetaPanel({ doc }: MetaPanelProps) {
+export function MetaPanel() {
     const { t } = useTranslation('editor');
+    const { collab } = useEditorSession();
+    const doc = collab.doc;
     const meta = useMeta(doc);
     const map = doc.getMap('meta') as Y.Map<unknown>;
 

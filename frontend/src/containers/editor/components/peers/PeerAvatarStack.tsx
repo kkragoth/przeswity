@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { Editor } from '@tiptap/react';
 import type { Peer } from '@/containers/editor/hooks/usePeers';
+import { useEditorLive } from '@/containers/editor/EditorLiveProvider';
 
 const VISIBLE_LIMIT = 4;
 const IDLE_AFTER_MS = 30_000;
@@ -50,8 +51,9 @@ function PeerAvatar({ peer, editor, now }: { peer: Peer; editor: Editor | null; 
     );
 }
 
-export function PeerAvatarStack({ peers, editor }: { peers: Peer[]; editor: Editor | null }) {
+export function PeerAvatarStack({ editor }: { editor: Editor | null }) {
     const { t } = useTranslation('editor');
+    const peers = useEditorLive((s) => s.peers);
     const [now, setNow] = useState(() => Date.now());
 
     useEffect(() => {

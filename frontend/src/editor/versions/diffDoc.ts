@@ -70,10 +70,15 @@ export function buildDiffDoc(schema: Schema, a: JSONNode, b: JSONNode): JSONNode
     return json;
 }
 
-type BlockKind = 'ins' | 'del' | 'mixed' | 'none';
+enum BlockKind {
+    Ins = 'ins',
+    Del = 'del',
+    Mixed = 'mixed',
+    None = 'none',
+}
 
 /** Returns the single mark kind covering all text descendants of this node, or
- *  'mixed' (multiple kinds present) / 'none' (no track-change marks at all). */
+ *  Mixed (multiple kinds present) / None (no track-change marks at all). */
 function blockChangeKind(node: JSONNode): BlockKind {
     const samples: BlockKind[] = [];
     const visit = (n: JSONNode) => {
@@ -81,24 +86,24 @@ function blockChangeKind(node: JSONNode): BlockKind {
             const marks = n.marks ?? [];
             const hasIns = marks.some((m) => m.type === 'insertion');
             const hasDel = marks.some((m) => m.type === 'deletion');
-            if (hasIns && hasDel) samples.push('mixed');
-            else if (hasIns) samples.push('ins');
-            else if (hasDel) samples.push('del');
-            else if ((n.text ?? '').trim() !== '') samples.push('mixed');
+            if (hasIns && hasDel) samples.push(BlockKind.Mixed);
+            else if (hasIns) samples.push(BlockKind.Ins);
+            else if (hasDel) samples.push(BlockKind.Del);
+            else if ((n.text ?? '').trim() !== '') samples.push(BlockKind.Mixed);
             return;
         }
         (n.content ?? []).forEach(visit);
     };
     visit(node);
-    if (samples.length === 0) return 'none';
+    if (samples.length === 0) return BlockKind.None;
     const first = samples[0];
-    return samples.every((s) => s === first) ? first : 'mixed';
+    return samples.every((s) => s === first) ? first : BlockKind.Mixed;
 }
 
 function annotateWhollyChangedBlocks(node: JSONNode): void {
     if (BLOCK_TYPES.has(node.type)) {
         const kind = blockChangeKind(node);
-        if (kind === 'ins' || kind === 'del') {
+        if (kind === BlockKind.Ins || kind === BlockKind.Del) {
             node.attrs = { ...(node.attrs ?? {}), diffBlock: kind };
         }
     }

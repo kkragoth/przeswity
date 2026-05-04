@@ -1,9 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Editor } from '@tiptap/react';
-import * as Y from 'yjs';
 
-import type { User } from '@/editor/identity/types';
 import type { VersionSnapshot } from '@/editor/versions/types';
 import type { JSONNode } from '@/editor/versions/diffDoc';
 import { VersionDiffModal } from '@/containers/editor/components/versions/VersionDiffModal';
@@ -12,17 +10,17 @@ import { useAutoSnapshot } from '@/containers/editor/hooks/useAutoSnapshot';
 import { useVersions } from '@/containers/editor/hooks/useVersions';
 import { useConfirmDialog } from '@/components/feedback/useConfirmDialog';
 import { ConfirmDialogHost } from '@/components/feedback/ConfirmDialogHost';
+import { ToastKind } from '@/editor/shell/useToast';
+import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
 
 interface VersionsPanelProps {
-    doc: Y.Doc;
-    user: User;
     editor: Editor | null;
-    bookId: string;
-    onToast?: (msg: string, kind?: 'info' | 'success' | 'error') => void;
 }
 
-export function VersionsPanel({ doc, user, editor, bookId, onToast }: VersionsPanelProps) {
+export function VersionsPanel({ editor }: VersionsPanelProps) {
     const { t } = useTranslation('editor');
+    const { user, bookId, collab, toast } = useEditorSession();
+    const doc = collab.doc;
     const versionsApi = useVersions(doc, user, editor, bookId);
     const confirmDlg = useConfirmDialog();
     const [compareSourceId, setCompareSourceId] = useState<string | null>(null);
@@ -44,7 +42,7 @@ export function VersionsPanel({ doc, user, editor, bookId, onToast }: VersionsPa
 
     const confirmRestore = async (snapshot: VersionSnapshot) => {
         if (!editor) {
-            onToast?.(t('versions.editorNotReady'), 'error');
+            toast(t('versions.editorNotReady'), ToastKind.Error);
             return;
         }
         const ok = await confirmDlg.confirm({
@@ -52,7 +50,7 @@ export function VersionsPanel({ doc, user, editor, bookId, onToast }: VersionsPa
             destructive: true,
         });
         if (!ok) return;
-        if (versionsApi.restore(snapshot)) onToast?.(t('versions.restoreSuccess', { label: snapshot.label }), 'success');
+        if (versionsApi.restore(snapshot)) toast(t('versions.restoreSuccess', { label: snapshot.label }), ToastKind.Success);
     };
 
     const compareSourceLabel = versionsApi.versions.find((v) => v.id === compareSourceId)?.label ?? '';
@@ -72,7 +70,7 @@ export function VersionsPanel({ doc, user, editor, bookId, onToast }: VersionsPa
                         type="button"
                         onClick={() => {
                             const saved = versionsApi.snapshot(false);
-                            onToast?.(t('versions.snapshotSaved', { label: saved.label }), 'success');
+                            toast(t('versions.snapshotSaved', { label: saved.label }), ToastKind.Success);
                         }}
                     >
                         {t('versions.createSnapshot')}

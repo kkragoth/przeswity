@@ -1,19 +1,21 @@
 import { Fragment, useMemo, type ReactNode } from 'react';
 import type { JSONNode } from '@/editor/versions/diffDoc';
 import { nodeToMarkdown } from '@/editor/io/markdown';
-import { buildInlineLines, buildSbsRows, type DiffLine, type LineKind } from '@/editor/diff/buildDiffDocument';
+import { buildInlineLines, buildSbsRows, LineKind, type DiffLine } from '@/editor/diff/buildDiffDocument';
 
 function renderText(line: DiffLine): ReactNode {
     if (!line.spans) return line.text || ' ';
     return line.spans.map((s, i) => (
-        <span key={i} className={s.kind === 'eq' ? undefined : `md-diff-span-${s.kind}`}>
+        <span key={i} className={s.kind === LineKind.Eq ? undefined : `md-diff-span-${s.kind}`}>
             {s.text}
         </span>
     ));
 }
 
 function gutter(kind: LineKind): string {
-    return kind === 'ins' ? '+' : kind === 'del' ? '−' : ' ';
+    if (kind === LineKind.Ins) return '+';
+    if (kind === LineKind.Del) return '−';
+    return ' ';
 }
 
 function Line({ line, showOld = true, showNew = true }: { line: DiffLine; showOld?: boolean; showNew?: boolean }) {

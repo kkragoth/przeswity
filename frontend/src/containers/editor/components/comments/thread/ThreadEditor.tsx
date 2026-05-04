@@ -1,48 +1,60 @@
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import { Reactions } from '@/containers/editor/components/comments/Reactions';
 import { ThreadComposeForm } from '@/containers/editor/components/comments/thread/ThreadComposeForm';
-import type { MentionCandidate } from '@/containers/editor/components/comments/MentionTextarea';
 import { renderBodyWithMentions } from '@/containers/editor/components/comments/MentionTextarea';
-import type { CommentThread } from '@/editor/comments/types';
+import { useCommentsView } from '@/containers/editor/components/comments/CommentsViewContext';
+import { useThread } from '@/containers/editor/components/comments/useThread';
+import { useIsActiveComment } from '@/containers/editor/components/comments/useIsActiveComment';
+import { useComments, useCommentsStore } from '@/containers/editor/CommentsStoreProvider';
+import {
+    selectEditText,
+    selectIsEditingThread,
+} from '@/containers/editor/stores/commentsSelectors';
+import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
 import { withStop } from '@/utils/react/withStop';
 
 interface ThreadEditorProps {
-    thread: CommentThread;
-    isActive: boolean;
-    editingBody: boolean;
-    editText: string;
-    onEditTextChange: (next: string) => void;
-    onEditSubmit: () => void;
-    onEditCancel: () => void;
-    onEditThreadStart: () => void;
-    onToggleThreadReaction: (emoji: string) => void;
-    currentUserId: string;
-    candidates: MentionCandidate[];
+    threadId: string;
 }
 
-export function ThreadEditor({
-    thread,
-    isActive,
-    editingBody,
-    editText,
-    onEditTextChange,
-    onEditSubmit,
-    onEditCancel,
-    onEditThreadStart,
-    onToggleThreadReaction,
-    currentUserId,
-    candidates,
-}: ThreadEditorProps) {
+export function ThreadEditor({ threadId }: ThreadEditorProps) {
     const { t } = useTranslation('editor');
+    const { user } = useEditorSession();
+    const { candidates } = useCommentsView();
+    const thread = useThread(threadId);
+    const isActive = useIsActiveComment(threadId);
+    const editText = useComments(selectEditText);
+    const editingBody = useComments(selectIsEditingThread(threadId));
+    const setEditText = useComments((s) => s.setEditText);
+    const commentsStore = useCommentsStore();
+
+    const handleEditSubmit = useCallback(() => {
+        commentsStore.getState().editSubmit();
+    }, [commentsStore]);
+    const handleEditCancel = useCallback(() => {
+        commentsStore.getState().cancelEdit();
+    }, [commentsStore]);
+    const handleEditStart = useCallback(() => {
+        if (!thread) return;
+        commentsStore.getState().beginEdit({ kind: 'thread', threadId }, thread.body);
+    }, [commentsStore, thread, threadId]);
+    const handleToggleReaction = useCallback((emoji: string) => {
+        commentsStore.getState().toggleThreadReaction(threadId, emoji);
+    }, [commentsStore, threadId]);
+
+    if (!thread) return null;
+
     return (
         <div className="thread-message">
             {thread.body && editingBody ? (
                 <ThreadComposeForm
                     value={editText}
-                    onChange={onEditTextChange}
+                    onChange={setEditText}
                     placeholder={t('comments.editComment')}
-                    onSubmit={onEditSubmit}
-                    onCancel={onEditCancel}
+                    onSubmit={handleEditSubmit}
+                    onCancel={handleEditCancel}
                     candidates={candidates}
                 />
             ) : thread.body ? (
@@ -53,13 +65,13 @@ export function ThreadEditor({
                             {' '}· {t('comments.editedSuffix')}
                         </span>
                     ) : null}
-                    {thread.authorId === currentUserId ? (
-                        <button type="button" className="thread-edit-btn" title={t('comments.editTooltip')} onClick={withStop(onEditThreadStart)}>✎</button>
+                    {thread.authorId === user.id ? (
+                        <button type="button" className="thread-edit-btn" title={t('comments.editTooltip')} onClick={withStop(handleEditStart)}>✎</button>
                     ) : null}
                 </div>
             ) : null}
             {isActive && thread.body ? (
-                <Reactions reactions={thread.reactions} myUserId={currentUserId} onToggle={onToggleThreadReaction} />
+                <Reactions reactions={thread.reactions} myUserId={user.id} onToggle={handleToggleReaction} />
             ) : null}
         </div>
     );

@@ -51,7 +51,7 @@ export function CoordinatorDashboard({ me }: { me: SessionUser }) {
                 </div>
             ) : null}
             <p className="mt-3 text-xs text-muted-foreground">{t('dashboard.showing', { visible: d.visible.length, total: d.scoped.length })}</p>
-            {d.filters.view === DashboardView.List ? <BooksList books={d.visible} me={me} loading={d.isLoading} /> : <BooksTimeline books={d.visible} loading={d.isLoading} />}
+            {d.filters.view === DashboardView.List ? <BooksList books={d.visible} loading={d.isLoading} /> : <BooksTimeline books={d.visible} loading={d.isLoading} />}
         </div>
     );
 }

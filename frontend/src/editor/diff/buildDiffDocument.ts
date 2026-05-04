@@ -1,6 +1,10 @@
 import { diffLines, diffWordsWithSpace, type Change } from 'diff';
 
-export type LineKind = 'eq' | 'ins' | 'del';
+export enum LineKind {
+    Eq = 'eq',
+    Ins = 'ins',
+    Del = 'del',
+}
 
 export interface DiffLine {
     kind: LineKind;
@@ -27,11 +31,11 @@ export function intraWordSpans(oldLine: string, newLine: string): { left: DiffLi
     const left: NonNullable<DiffLine['spans']> = [];
     const right: NonNullable<DiffLine['spans']> = [];
     for (const p of parts) {
-        if (p.added) right.push({ kind: 'ins', text: p.value });
-        else if (p.removed) left.push({ kind: 'del', text: p.value });
+        if (p.added) right.push({ kind: LineKind.Ins, text: p.value });
+        else if (p.removed) left.push({ kind: LineKind.Del, text: p.value });
         else {
-            left.push({ kind: 'eq', text: p.value });
-            right.push({ kind: 'eq', text: p.value });
+            left.push({ kind: LineKind.Eq, text: p.value });
+            right.push({ kind: LineKind.Eq, text: p.value });
         }
     }
     return { left, right };
@@ -105,33 +109,33 @@ function walkHunks<T>(older: string, newer: string, callbacks: WalkCallbacks<T>)
 
 export function buildInlineLines(older: string, newer: string): DiffLine[] {
     return walkHunks<DiffLine>(older, newer, {
-        onEqual: (text, ln) => ({ kind: 'eq', text, oldNo: ln.old, newNo: ln.new }),
+        onEqual: (text, ln) => ({ kind: LineKind.Eq, text, oldNo: ln.old, newNo: ln.new }),
         onReplaced: (ol, nl, ln) => {
             const { left, right } = intraWordSpans(ol, nl);
             return [
-                { kind: 'del', text: ol, spans: left, oldNo: ln.old },
-                { kind: 'ins', text: nl, spans: right, newNo: ln.new },
+                { kind: LineKind.Del, text: ol, spans: left, oldNo: ln.old },
+                { kind: LineKind.Ins, text: nl, spans: right, newNo: ln.new },
             ];
         },
-        onDeleted: (text, ln) => ({ kind: 'del', text, oldNo: ln.old }),
-        onInserted: (text, ln) => ({ kind: 'ins', text, newNo: ln.new }),
+        onDeleted: (text, ln) => ({ kind: LineKind.Del, text, oldNo: ln.old }),
+        onInserted: (text, ln) => ({ kind: LineKind.Ins, text, newNo: ln.new }),
     });
 }
 
 export function buildSbsRows(older: string, newer: string): SbsRow[] {
     return walkHunks<SbsRow>(older, newer, {
         onEqual: (text, ln) => ({
-            left: { kind: 'eq', text, oldNo: ln.old },
-            right: { kind: 'eq', text, newNo: ln.new },
+            left: { kind: LineKind.Eq, text, oldNo: ln.old },
+            right: { kind: LineKind.Eq, text, newNo: ln.new },
         }),
         onReplaced: (ol, nl, ln) => {
             const { left, right } = intraWordSpans(ol, nl);
             return [{
-                left: { kind: 'del', text: ol, spans: left, oldNo: ln.old },
-                right: { kind: 'ins', text: nl, spans: right, newNo: ln.new },
+                left: { kind: LineKind.Del, text: ol, spans: left, oldNo: ln.old },
+                right: { kind: LineKind.Ins, text: nl, spans: right, newNo: ln.new },
             }];
         },
-        onDeleted: (text, ln) => ({ left: { kind: 'del', text, oldNo: ln.old } }),
-        onInserted: (text, ln) => ({ right: { kind: 'ins', text, newNo: ln.new } }),
+        onDeleted: (text, ln) => ({ left: { kind: LineKind.Del, text, oldNo: ln.old } }),
+        onInserted: (text, ln) => ({ right: { kind: LineKind.Ins, text, newNo: ln.new } }),
     });
 }

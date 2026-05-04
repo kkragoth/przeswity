@@ -17,11 +17,12 @@ import type { RolePermissions } from '@/editor/identity/types';
 import { useConfirmDialog } from '@/components/feedback/useConfirmDialog';
 import { ConfirmDialogHost } from '@/components/feedback/ConfirmDialogHost';
 import { useDocumentImport } from '@/containers/editor/hooks/useDocumentImport';
+import { ToastKind, type ToastFn } from '@/editor/shell/useToast';
 
 interface FileMenuProps {
     editor: Editor;
     perms: RolePermissions;
-    onToast: (msg: string, kind?: 'info' | 'success' | 'error') => void;
+    onToast: ToastFn;
 }
 
 export function FileMenu({ editor, perms, onToast }: FileMenuProps) {
@@ -38,7 +39,7 @@ export function FileMenu({ editor, perms, onToast }: FileMenuProps) {
         });
         if (!ok) return;
         editor.commands.setContent(tmpl.content as never, { emitUpdate: true });
-        onToast(t('fileMenu.templateLoaded', { name: tmpl.name }), 'success');
+        onToast(t('fileMenu.templateLoaded', { name: tmpl.name }), ToastKind.Success);
     };
 
     const showAny = perms.canEdit || perms.canExport;

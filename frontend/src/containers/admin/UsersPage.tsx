@@ -4,12 +4,13 @@ import { usersListOptions } from '@/api/generated/@tanstack/react-query.gen';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { NewUserDialog } from '@/containers/admin/components/NewUserDialog';
 import { UsersTable } from '@/containers/admin/components/UsersTable';
-import { useInvalidateUsers } from '@/hooks/api/cache/useInvalidateUsers';
+import { useInvalidate } from '@/hooks/api/cache/useInvalidate';
+import { usersListQueryKey } from '@/api/generated/@tanstack/react-query.gen';
 
 export function UsersPage() {
     const { t: ta } = useTranslation('admin');
     const { t: tc } = useTranslation('common');
-    const invalidate = useInvalidateUsers();
+    const invalidate = useInvalidate(usersListQueryKey);
     const { data: users = [], isLoading } = useQuery({
         ...usersListOptions(),
     });

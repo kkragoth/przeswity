@@ -2,12 +2,13 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import type { SlashTriggerInfo } from './SlashCommand';
 import { SLASH_ITEMS, type SlashItem } from './slashCommandList';
+import { ToastKind, type ToastFn } from '@/editor/shell/useToast';
 
 interface SlashMenuProps {
   editor: Editor | null
   trigger: SlashTriggerInfo
   onClose: () => void
-  onToast?: (msg: string, kind?: 'info' | 'success' | 'error') => void
+  onToast?: ToastFn
 }
 
 function filterItems(query: string): SlashItem[] {
@@ -83,7 +84,7 @@ export function SlashMenu({ editor, trigger, onClose, onToast }: SlashMenuProps)
         try {
             await item.command(editor);
         } catch (err) {
-            onToast?.(`${item.title} failed: ${(err as Error).message}`, 'error');
+            onToast?.(`${item.title} failed: ${(err as Error).message}`, ToastKind.Error);
         }
     };
 

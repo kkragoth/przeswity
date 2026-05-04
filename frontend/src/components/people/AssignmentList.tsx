@@ -3,16 +3,17 @@ import { useTranslation } from 'react-i18next';
 import {
     bookAssignmentDeleteMutation,
     bookAssignmentsListOptions,
+    bookAssignmentsListQueryKey,
 } from '@/api/generated/@tanstack/react-query.gen';
 import type { AssignmentWithUser } from '@/api/generated/types.gen';
 import { Button } from '@/components/ui/button';
 import { RoleBadge } from '@/components/badges/RoleBadge';
 import { EmptyState } from '@/components/feedback/EmptyState';
-import { useInvalidateBookAssignments } from '@/hooks/api/cache/useInvalidateBookAssignments';
+import { useInvalidate } from '@/hooks/api/cache/useInvalidate';
 
 export function AssignmentList({ bookId }: { bookId: string }) {
     const { t } = useTranslation('common');
-    const invalidateAssignments = useInvalidateBookAssignments(bookId);
+    const invalidateAssignments = useInvalidate(() => bookAssignmentsListQueryKey({ path: { bookId } }));
 
     const { data: assignments = [], isLoading } = useQuery({
         ...bookAssignmentsListOptions({ path: { bookId } }),

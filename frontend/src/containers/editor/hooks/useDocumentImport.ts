@@ -5,10 +5,11 @@ import { useTranslation } from 'react-i18next';
 
 import { MAMMOTH_STYLE_MAP } from '@/editor/io/markdown';
 import type { UseConfirmDialogResult } from '@/components/feedback/useConfirmDialog';
+import { ToastKind, type ToastFn } from '@/editor/shell/useToast';
 
 interface UseDocumentImportArgs {
     editor: Editor | null;
-    onToast?: (msg: string, kind?: 'info' | 'success' | 'error') => void;
+    onToast?: ToastFn;
     confirmDialog: Pick<UseConfirmDialogResult, 'confirm'>;
 }
 
@@ -41,7 +42,7 @@ export function useDocumentImport({ editor, onToast, confirmDialog }: UseDocumen
         if (!ok) return;
         setIsImporting(true);
         try {
-            onToast?.(t('fileMenu.importing'), 'info');
+            onToast?.(t('fileMenu.importing'), ToastKind.Info);
             let html = '';
             if (/\.docx$/i.test(file.name)) {
                 const mammoth = await import('mammoth');
@@ -51,9 +52,9 @@ export function useDocumentImport({ editor, onToast, confirmDialog }: UseDocumen
                 html = await marked.parse(await file.text());
             }
             editor.commands.setContent(html, { emitUpdate: true });
-            onToast?.(t('fileMenu.imported', { name: file.name }), 'success');
+            onToast?.(t('fileMenu.imported', { name: file.name }), ToastKind.Success);
         } catch (error) {
-            onToast?.(t('fileMenu.importFailed', { error: (error as Error).message }), 'error');
+            onToast?.(t('fileMenu.importFailed', { error: (error as Error).message }), ToastKind.Error);
         } finally {
             setIsImporting(false);
         }

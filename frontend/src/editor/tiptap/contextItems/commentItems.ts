@@ -1,12 +1,12 @@
 import * as Y from 'yjs';
 import { CommentStatus, type CommentThread } from '@/editor/comments/types';
-import { ROLE_PERMISSIONS } from '@/editor/identity/types';
+import { permsFor } from '@/editor/identity/perms';
 import { makeId } from '@/editor/utils';
 import type { ContextMenuItem } from '@/editor/shell/ContextMenu';
 import type { BuildContextArgs, MarkSet } from '@/editor/tiptap/contextItems/types';
 
 export function commentItems(args: BuildContextArgs, marks: MarkSet): ContextMenuItem[] {
-    const perms = ROLE_PERMISSIONS[args.user.role];
+    const perms = permsFor(args.user.role);
     if (marks.commentMark) {
         const id = marks.commentMark.attrs.commentId as string;
         const items: ContextMenuItem[] = [{ label: '', separator: true }, { label: 'Open comment thread', icon: '💬', action: () => args.callbacks.onActiveCommentChange(id) }];

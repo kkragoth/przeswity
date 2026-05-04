@@ -3,19 +3,15 @@ import { Link } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
 
-import type { User, RolePermissions } from '@/editor/identity/types';
 import { BookTitleMenu } from '@/containers/editor/components/BookTitleMenu';
 import { UserMenu } from '@/containers/editor/components/UserMenu';
 
 export interface TopBarProps {
-    user: User;
     bookTitle: string;
     editor: Editor | null;
-    perms: RolePermissions;
-    onToast: (msg: string, kind?: 'info' | 'success' | 'error') => void;
 }
 
-export function TopBar({ user, bookTitle, editor, perms, onToast }: TopBarProps) {
+export function TopBar({ bookTitle, editor }: TopBarProps) {
     const { t } = useTranslation('editor');
 
     return (
@@ -30,11 +26,11 @@ export function TopBar({ user, bookTitle, editor, perms, onToast }: TopBarProps)
             <nav className="topbar-breadcrumb" aria-label="breadcrumb">
                 <Link to="/books" className="topbar-breadcrumb-link">{t('topbar.booksLink')}</Link>
                 <ChevronRight size={12} className="topbar-breadcrumb-sep" aria-hidden="true" />
-                <BookTitleMenu bookTitle={bookTitle} editor={editor} perms={perms} onToast={onToast} />
+                <BookTitleMenu bookTitle={bookTitle} editor={editor} />
             </nav>
             <div className="topbar-spacer" />
             <div className="topbar-right">
-                <UserMenu user={user} />
+                <UserMenu />
             </div>
         </header>
     );

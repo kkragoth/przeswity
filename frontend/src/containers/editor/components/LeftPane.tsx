@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import type { Editor } from '@tiptap/react';
-import * as Y from 'yjs';
 import {
     ListTree,
     History,
@@ -15,8 +14,9 @@ import { VersionsPanel } from '@/containers/editor/components/versions/VersionsP
 import { GlossaryPanel } from '@/containers/editor/components/glossary/GlossaryPanel';
 import { MetaPanel } from '@/containers/editor/components/meta/MetaPanel';
 import { useEditorHeadings } from '@/containers/editor/hooks/useEditorHeadings';
-import type { User } from '@/editor/identity/types';
 import { EmptyState } from '@/containers/editor/components/EmptyState';
+import { usePaneStore } from '@/containers/editor/stores/paneStore';
+import { useSession } from '@/containers/editor/SessionStoreProvider';
 
 export enum LeftTab {
     Outline = 'outline',
@@ -27,15 +27,7 @@ export enum LeftTab {
 }
 
 interface LeftPaneProps {
-    tab: LeftTab
-    onTabChange: (t: LeftTab) => void
-    onExpand: () => void
-    onRail: () => void
-    doc: Y.Doc
-    user: User
     editor: Editor | null
-    bookId: string
-    onToast: (msg: string, kind?: 'info' | 'success' | 'error') => void
 }
 
 type TabTKey =
@@ -63,24 +55,18 @@ function OutlineGhostIcon() {
     );
 }
 
-export function LeftPane({
-    tab,
-    onTabChange,
-    onRail,
-    onExpand,
-    editor,
-    doc,
-    user,
-    bookId,
-    onToast,
-}: LeftPaneProps) {
+export function LeftPane({ editor }: LeftPaneProps) {
     const { t } = useTranslation('editor');
+    const tab = useSession((s) => s.leftTab);
+    const setLeftTab = useSession((s) => s.setLeftTab);
     const hasHeadings = useEditorHeadings(editor);
+    const expandPane = usePaneStore((s) => s.expand);
+    const railPane = usePaneStore((s) => s.rail);
     const activeLabelKey = TABS.find((e) => e.id === tab)!.labelKey;
 
     const handleTabClick = (id: LeftTab) => {
-        onTabChange(id);
-        onExpand();
+        setLeftTab(id);
+        expandPane('left');
     };
 
     return (
@@ -108,7 +94,7 @@ export function LeftPane({
                 <button
                     type="button"
                     className="pane-collapse"
-                    onClick={onRail}
+                    onClick={() => railPane('left')}
                     title={t('pane.collapse')}
                     aria-label={t('pane.collapse')}
                 >
@@ -134,11 +120,9 @@ export function LeftPane({
                         )}
                     </>
                 )}
-                {tab === LeftTab.Versions && (
-                    <VersionsPanel doc={doc} user={user} editor={editor} bookId={bookId} onToast={onToast} />
-                )}
-                {tab === LeftTab.Glossary && <GlossaryPanel doc={doc} />}
-                {tab === LeftTab.Meta && <MetaPanel doc={doc} />}
+                {tab === LeftTab.Versions && <VersionsPanel editor={editor} />}
+                {tab === LeftTab.Glossary && <GlossaryPanel />}
+                {tab === LeftTab.Meta && <MetaPanel />}
                 {tab === LeftTab.Files && (
                     <EmptyState
                         icon={<Folder size={32} strokeWidth={1.25} />}

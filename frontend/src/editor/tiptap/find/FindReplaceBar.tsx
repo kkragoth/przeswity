@@ -2,14 +2,15 @@ import { useEffect, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import { useTranslation } from 'react-i18next';
 import { findReplaceKey } from './FindReplace';
+import { useSession } from '@/containers/editor/SessionStoreProvider';
 
 interface FindReplaceBarProps {
   editor: Editor | null
-  open: boolean
-  onClose: () => void
 }
 
-export function FindReplaceBar({ editor, open, onClose }: FindReplaceBarProps) {
+export function FindReplaceBar({ editor }: FindReplaceBarProps) {
+    const open = useSession((s) => s.findOpen);
+    const onClose = useSession((s) => s.closeFind);
     const { t } = useTranslation('editor');
     const [query, setQuery] = useState('');
     const [replacement, setReplacement] = useState('');

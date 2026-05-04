@@ -1,19 +1,23 @@
 import { useTranslation } from 'react-i18next';
+import { shallow } from 'zustand/shallow';
+
 import { Role, MENTIONABLE_ROLES } from '@/editor/identity/types';
 import { roleI18nKey } from '@/lib/roleI18n';
-import { CommentStatusFilter, type CommentFilterState } from '@/containers/editor/hooks/useCommentThreads';
+import { useComments } from '@/containers/editor/CommentsStoreProvider';
+import { selectFilter } from '@/containers/editor/stores/commentsSelectors';
+import { CommentStatusFilter } from '@/containers/editor/stores/createCommentsStore';
 
 interface CommentFiltersProps {
-    filter: CommentFilterState;
-    setStatus: (next: CommentStatusFilter) => void;
-    setAuthor: (next: string) => void;
-    setRole: (next: Role | '') => void;
     totalOpen: number;
     allAuthors: string[];
 }
 
-export function CommentFilters({ filter, setStatus, setAuthor, setRole, totalOpen, allAuthors }: CommentFiltersProps) {
+export function CommentFilters({ totalOpen, allAuthors }: CommentFiltersProps) {
     const { t } = useTranslation('editor');
+    const filter = useComments(selectFilter, shallow);
+    const setStatus = useComments((s) => s.setStatus);
+    const setAuthor = useComments((s) => s.setAuthor);
+    const setRole = useComments((s) => s.setRole);
     const statusLabels: Record<CommentStatusFilter, string> = {
         [CommentStatusFilter.Open]: `${t('comments.filter.open')} · ${totalOpen}`,
         [CommentStatusFilter.Resolved]: t('comments.filter.resolved'),
