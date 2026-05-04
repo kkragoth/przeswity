@@ -1,3 +1,8 @@
+// Single component: find row (query input, match counter, prev/next, case
+// toggle, replace toggle, close) and replace row share `query`, `replacement`,
+// `caseSensitive`, and `counter` state. Splitting into FindRow / ReplaceRow /
+// MatchNav would force prop-drilling all four pieces of state and the four
+// commands they call — the cohesion outweighs the file length.
 import { useEffect, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import { useTranslation } from 'react-i18next';
