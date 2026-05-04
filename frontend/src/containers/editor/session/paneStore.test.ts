@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { PaneState, usePaneStore } from '@/containers/editor/stores/paneStore';
+import { PaneState, usePaneStore } from '@/containers/editor/session/paneStore';
 
 beforeEach(() => {
     usePaneStore.setState({ left: PaneState.Expanded, right: PaneState.Expanded });

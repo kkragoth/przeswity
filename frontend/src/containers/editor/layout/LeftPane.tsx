@@ -15,7 +15,7 @@ import { GlossaryPanel } from '@/containers/editor/components/glossary/GlossaryP
 import { MetaPanel } from '@/containers/editor/components/meta/MetaPanel';
 import { useEditorHeadings } from '@/containers/editor/hooks/useEditorHeadings';
 import { EmptyState } from '@/containers/editor/layout/EmptyState';
-import { usePaneStore } from '@/containers/editor/stores/paneStore';
+import { usePaneStore } from '@/containers/editor/session/paneStore';
 import { useSession } from '@/containers/editor/SessionStoreProvider';
 
 export enum LeftTab {

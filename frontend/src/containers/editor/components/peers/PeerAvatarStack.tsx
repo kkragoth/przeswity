@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { Editor } from '@tiptap/react';
 import type { Peer } from '@/containers/editor/hooks/usePeers';
-import { useEditorLive } from '@/containers/editor/EditorLiveProvider';
+import { useEditorLive } from '@/containers/editor/session/LiveProvider';
 
 const VISIBLE_LIMIT = 4;
 const IDLE_AFTER_MS = 30_000;

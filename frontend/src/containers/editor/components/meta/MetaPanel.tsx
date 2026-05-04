@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import * as Y from 'yjs';
 import { useTranslation } from 'react-i18next';
 
-import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
+import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 
 interface DocumentMeta {
   title?: string

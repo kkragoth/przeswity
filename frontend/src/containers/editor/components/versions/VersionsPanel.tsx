@@ -11,7 +11,7 @@ import { useVersions } from '@/containers/editor/hooks/useVersions';
 import { useConfirmDialog } from '@/components/feedback/useConfirmDialog';
 import { ConfirmDialogHost } from '@/components/feedback/ConfirmDialogHost';
 import { ToastKind } from '@/editor/shell/useToast';
-import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
+import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 
 interface VersionsPanelProps {
     editor: Editor | null;

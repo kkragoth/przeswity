@@ -1,6 +1,6 @@
 import { ModeToggle } from '@/editor/tiptap/ToolbarPrimitives';
-import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
-import { useEditorLive } from '@/containers/editor/EditorLiveProvider';
+import { useEditorSession } from '@/containers/editor/session/SessionProvider';
+import { useEditorLive } from '@/containers/editor/session/LiveProvider';
 
 function Divider() {
     return <div className="tb-divider" aria-hidden />;

@@ -4,12 +4,12 @@ import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import { PanelLeft, PanelRight } from 'lucide-react';
 
 import { StyleDropdown } from './StyleDropdown';
-import { PaneState, usePaneStore } from '@/containers/editor/stores/paneStore';
+import { PaneState, usePaneStore } from '@/containers/editor/session/paneStore';
 import { TextFormattingZone } from '@/editor/tiptap/toolbar/TextFormattingZone';
 import { BlockFormattingZone } from '@/editor/tiptap/toolbar/BlockFormattingZone';
 import { InsertZone } from '@/editor/tiptap/toolbar/InsertZone';
 import { PaneToggleZone, Divider } from '@/editor/tiptap/toolbar/PaneToggleZone';
-import { useEditorLive } from '@/containers/editor/EditorLiveProvider';
+import { useEditorLive } from '@/containers/editor/session/LiveProvider';
 import { useSession } from '@/containers/editor/SessionStoreProvider';
 import { LeftTab } from '@/containers/editor/layout/LeftPane';
 import { RightTab } from '@/containers/editor/layout/RightPane';

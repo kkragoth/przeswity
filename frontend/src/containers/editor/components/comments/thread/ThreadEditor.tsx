@@ -12,7 +12,7 @@ import {
     selectEditText,
     selectIsEditingThread,
 } from '@/containers/editor/stores/commentsSelectors';
-import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
+import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { withStop } from '@/utils/react/withStop';
 
 interface ThreadEditorProps {

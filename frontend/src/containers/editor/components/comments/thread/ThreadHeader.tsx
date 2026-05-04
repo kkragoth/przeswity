@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Avatar } from '@/editor/shell/Avatar';
 import { authorColor } from '@/editor/comments/color';
 import { withStop } from '@/utils/react/withStop';
-import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
+import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { useSession } from '@/containers/editor/SessionStoreProvider';
 import { useCommentsStore } from '@/containers/editor/CommentsStoreProvider';
 import { useCommentsView } from '@/containers/editor/components/comments/CommentsViewContext';

@@ -22,9 +22,9 @@ import { FONT_VARIANTS } from '@/editor/io/typography';
 import type { CollabBundle } from '@/editor/collab/yDoc';
 import { useNarrowLayout } from '@/containers/editor/hooks/useNarrowLayout';
 import { EditorSkeleton } from '@/containers/editor/layout/EditorSkeleton';
-import { PaneState, paneClass, usePaneStore } from '@/containers/editor/stores/paneStore';
-import { EditorSessionProvider } from '@/containers/editor/EditorSessionProvider';
-import { EditorLiveProvider, useEditor } from '@/containers/editor/EditorLiveProvider';
+import { PaneState, paneClass, usePaneStore } from '@/containers/editor/session/paneStore';
+import { EditorSessionProvider } from '@/containers/editor/session/SessionProvider';
+import { EditorLiveProvider, useEditor } from '@/containers/editor/session/LiveProvider';
 import { SessionStoreProvider, useSession, useSessionStore } from '@/containers/editor/SessionStoreProvider';
 import { CommentsStoreProvider } from '@/containers/editor/CommentsStoreProvider';
 

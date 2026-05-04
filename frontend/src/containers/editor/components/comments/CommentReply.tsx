@@ -14,7 +14,7 @@ import {
     selectEditText,
     selectIsEditingReply,
 } from '@/containers/editor/stores/commentsSelectors';
-import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
+import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 
 interface CommentReplyProps {
     threadId: string;

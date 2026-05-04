@@ -10,8 +10,8 @@ import { CommentFilters } from '@/containers/editor/components/comments/CommentF
 import { OpenCommentList } from '@/containers/editor/components/comments/OpenCommentList';
 import { ResolvedCommentList } from '@/containers/editor/components/comments/ResolvedCommentList';
 import { CommentsViewProvider } from '@/containers/editor/components/comments/CommentsViewContext';
-import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
-import { useEditorLive } from '@/containers/editor/EditorLiveProvider';
+import { useEditorSession } from '@/containers/editor/session/SessionProvider';
+import { useEditorLive } from '@/containers/editor/session/LiveProvider';
 import { useSession, useSessionStore } from '@/containers/editor/SessionStoreProvider';
 import {
     useComments,

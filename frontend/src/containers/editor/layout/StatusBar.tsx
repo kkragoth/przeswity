@@ -9,8 +9,8 @@ import { usePageNavigation } from '@/containers/editor/hooks/usePageNavigation';
 import { PeerAvatarStack } from '@/containers/editor/components/peers/PeerAvatarStack';
 import { PageJumper } from '@/containers/editor/layout/PageJumper';
 import { SyncMini } from '@/containers/editor/components/status/SyncMini';
-import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
-import { useEditorLive } from '@/containers/editor/EditorLiveProvider';
+import { useEditorSession } from '@/containers/editor/session/SessionProvider';
+import { useEditorLive } from '@/containers/editor/session/LiveProvider';
 
 interface StatusBarProps {
     editor: Editor | null;

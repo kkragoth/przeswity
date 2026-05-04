@@ -21,8 +21,8 @@ import { useEditorInit } from '@/editor/tiptap/hooks/useEditorInit';
 import { useBlockMenu } from '@/editor/tiptap/hooks/useBlockMenu';
 import { addCommentFromBubble, focusOnEmptyClick } from '@/editor/tiptap/hooks/useEditorInteractions';
 import { createEditorContext } from '@/editor/tiptap/editorContext';
-import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
-import { useEditorLive, useSetEditor } from '@/containers/editor/EditorLiveProvider';
+import { useEditorSession } from '@/containers/editor/session/SessionProvider';
+import { useEditorLive, useSetEditor } from '@/containers/editor/session/LiveProvider';
 import { useSession } from '@/containers/editor/SessionStoreProvider';
 
 export function EditorView({

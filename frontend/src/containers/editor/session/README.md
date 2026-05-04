@@ -99,18 +99,22 @@ test that asserts one event per composed action.
 
 ```
 containers/editor/
-    stores/
+    session/
         paneStore.ts            (A) module singleton, persisted
-        createSessionStore.ts   (B) per-session factory: tabs, find,
+        sessionStore.ts         (B) per-session factory: tabs, find,
                                     shortcuts, activeCommentId, pendingNew
-        createCommentsStore.ts  (B) per-session factory: filters, drafts,
-                                    composed ops wrapped in doc.transact
-        createLiveStore.ts      (B) per-session factory: editor, peers,
+        liveStore.ts            (B) per-session factory: editor, peers,
                                     suggesting (high-churn signals)
-    EditorSessionProvider.tsx   stable context: user, perms, bookId,
-                                    collab, toast
-    EditorLiveProvider.tsx      live context, hosts createLiveStore
-    EditorHost.tsx              mounts the providers under key={collab.id}
+        SessionProvider.tsx     stable context: user, perms, bookId,
+                                    collab, toast (component name:
+                                    EditorSessionProvider)
+        LiveProvider.tsx        live context, hosts liveStore (component
+                                    name: EditorLiveProvider)
+    comments/store/
+        commentsStore.ts        (B) per-session factory: filters, drafts,
+                                    composed ops wrapped in doc.transact
+    index.tsx                   mounts the providers under key={collab.id}
+                                    (exports EditorHost)
 
 editor/tiptap/
     editorContext.ts            (C) ref-cell — synchronous reads from

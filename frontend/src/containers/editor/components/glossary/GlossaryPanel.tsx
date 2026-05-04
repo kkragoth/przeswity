@@ -3,7 +3,7 @@ import * as Y from 'yjs';
 import { useTranslation } from 'react-i18next';
 import { makeId } from '@/editor/utils';
 
-import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
+import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { useGlossary, type StoredEntry } from '@/containers/editor/components/glossary/useGlossary';
 
 export function GlossaryPanel() {

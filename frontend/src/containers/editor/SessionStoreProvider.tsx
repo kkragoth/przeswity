@@ -5,7 +5,7 @@ import {
     createSessionStore,
     type SessionState,
     type SessionStore,
-} from '@/containers/editor/stores/createSessionStore';
+} from '@/containers/editor/session/sessionStore';
 
 /**
  * Wave 3 / T-40 — per-session transient UI store provider.

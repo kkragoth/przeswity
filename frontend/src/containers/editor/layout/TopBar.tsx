@@ -5,7 +5,7 @@ import type { Editor } from '@tiptap/react';
 
 import { BookTitleMenu } from '@/containers/editor/layout/BookTitleMenu';
 import { UserMenu } from '@/containers/editor/layout/UserMenu';
-import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
+import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 
 export interface TopBarProps {
     editor: Editor | null;

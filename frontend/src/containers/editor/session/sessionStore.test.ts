@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 
 import { LeftTab } from '@/containers/editor/layout/LeftPane';
 import { RightTab } from '@/containers/editor/layout/RightPane';
-import { createSessionStore } from '@/containers/editor/stores/createSessionStore';
+import { createSessionStore } from '@/containers/editor/session/sessionStore';
 
 describe('createSessionStore', () => {
     it('initialises with the documented defaults', () => {

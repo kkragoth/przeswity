@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
 
-import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
+import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import {
     createCommentsStore,
     type CommentsState,

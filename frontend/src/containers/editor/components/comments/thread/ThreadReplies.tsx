@@ -7,7 +7,7 @@ import { useThread } from '@/containers/editor/components/comments/useThread';
 import { useIsActiveComment } from '@/containers/editor/components/comments/useIsActiveComment';
 import { useComments, useCommentsStore } from '@/containers/editor/CommentsStoreProvider';
 import { selectReplyDraft } from '@/containers/editor/stores/commentsSelectors';
-import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
+import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { useSession, useSessionStore } from '@/containers/editor/SessionStoreProvider';
 
 interface ThreadRepliesProps {

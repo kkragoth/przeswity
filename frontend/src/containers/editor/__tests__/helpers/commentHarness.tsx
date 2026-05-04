@@ -9,14 +9,14 @@ import { createRoot, type Root } from 'react-dom/client';
 import * as Y from 'yjs';
 
 import { CommentsSidebar } from '@/containers/editor/components/comments/CommentsSidebar';
-import { EditorSessionProvider } from '@/containers/editor/EditorSessionProvider';
-import { EditorLiveProvider } from '@/containers/editor/EditorLiveProvider';
+import { EditorSessionProvider } from '@/containers/editor/session/SessionProvider';
+import { EditorLiveProvider } from '@/containers/editor/session/LiveProvider';
 import {
     SessionStoreProvider,
     useSessionStore,
 } from '@/containers/editor/SessionStoreProvider';
 import { CommentsStoreProvider } from '@/containers/editor/CommentsStoreProvider';
-import type { SessionStore } from '@/containers/editor/stores/createSessionStore';
+import type { SessionStore } from '@/containers/editor/session/sessionStore';
 import { Role, type User } from '@/editor/identity/types';
 import type { CollabBundle } from '@/editor/collab/yDoc';
 

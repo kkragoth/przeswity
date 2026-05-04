@@ -1,4 +1,4 @@
-import { PaneState, paneClass, type PaneSide, usePaneStore } from '@/containers/editor/stores/paneStore';
+import { PaneState, paneClass, type PaneSide, usePaneStore } from '@/containers/editor/session/paneStore';
 
 interface EditorSkeletonProps {
     bookTitle?: string;

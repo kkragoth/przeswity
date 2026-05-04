@@ -11,8 +11,8 @@ import { useStoreWithEqualityFn } from 'zustand/traditional';
 
 import { usePeers } from '@/containers/editor/hooks/usePeers';
 import { useSuggestingMode } from '@/containers/editor/hooks/useSuggestingMode';
-import { createLiveStore, type LiveState, type LiveStore } from '@/containers/editor/stores/createLiveStore';
-import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
+import { createLiveStore, type LiveState, type LiveStore } from '@/containers/editor/session/liveStore';
+import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 
 /**
  * Wave 3 / T-20 — split the live signals out of the stable session provider.

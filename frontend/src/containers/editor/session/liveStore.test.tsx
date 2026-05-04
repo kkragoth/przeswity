@@ -17,12 +17,12 @@ vi.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (k: string) => k, i18n: { language: 'en' } }),
 }));
 
-import { EditorSessionProvider } from '@/containers/editor/EditorSessionProvider';
+import { EditorSessionProvider } from '@/containers/editor/session/SessionProvider';
 import {
     EditorLiveProvider,
     useEditorLive,
     useEditorLiveStore,
-} from '@/containers/editor/EditorLiveProvider';
+} from '@/containers/editor/session/LiveProvider';
 import { Role, type User } from '@/editor/identity/types';
 import type { CollabBundle } from '@/editor/collab/yDoc';
 import type { Peer } from '@/containers/editor/hooks/usePeers';

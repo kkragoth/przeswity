@@ -10,7 +10,7 @@ import { useDocumentExport } from '@/containers/editor/hooks/useDocumentExport';
 import { useConfirmDialog } from '@/components/feedback/useConfirmDialog';
 import { ConfirmDialogHost } from '@/components/feedback/ConfirmDialogHost';
 import { ToastKind } from '@/editor/shell/useToast';
-import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
+import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 
 interface BookTitleMenuProps {
     editor: Editor | null;

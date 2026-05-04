@@ -4,7 +4,7 @@ import { MessageSquare, GitPullRequestArrow, X } from 'lucide-react';
 
 import { CommentsSidebar } from '@/containers/editor/components/comments/CommentsSidebar';
 import { SuggestionsSidebar } from '@/containers/editor/components/suggestions/SuggestionsSidebar';
-import { usePaneStore } from '@/containers/editor/stores/paneStore';
+import { usePaneStore } from '@/containers/editor/session/paneStore';
 import { useSession } from '@/containers/editor/SessionStoreProvider';
 
 export enum RightTab {

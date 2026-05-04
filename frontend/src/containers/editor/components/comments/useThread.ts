@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { useEditorSession } from '@/containers/editor/EditorSessionProvider';
+import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { useThreads } from '@/editor/comments/useThreads';
 import type { CommentThread } from '@/editor/comments/types';
 
