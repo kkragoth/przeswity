@@ -11,6 +11,28 @@ export interface SeedUser {
     color: string;
 }
 
+export interface SeedMeta {
+    title?: string;
+    isbn?: string;
+    targetWords?: number;
+    deadline?: string;
+    notes?: string;
+}
+
+export interface SeedGlossaryEntry {
+    id: string;
+    term: string;
+    translation: string;
+    notes?: string;
+    updatedAtMinutesAgo: number;
+}
+
+export interface SeedSnapshot {
+    label: string;
+    minutesAgo: number;
+    createdByEmail: string;
+}
+
 export interface SeedBook {
     slug: string;
     title: string;
@@ -18,6 +40,9 @@ export interface SeedBook {
     fixture: string;
     ownerEmail: string;
     assignments: { email: string; role: Role }[];
+    meta: SeedMeta;
+    glossary: SeedGlossaryEntry[];
+    snapshots: SeedSnapshot[];
 }
 
 export interface SeedActor {
@@ -39,6 +64,8 @@ export interface SeedThread {
     author: SeedActor;
     targetRole: Role | null;
     originalQuote: string;
+    /** Which occurrence of `originalQuote` to anchor on (0 = first match in doc order). */
+    occurrenceIndex: number;
     body: string;
     minutesAgo: number;
     status: 'open' | 'resolved';

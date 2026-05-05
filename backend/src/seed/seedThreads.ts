@@ -18,7 +18,7 @@ type PMJson = {
     content?: PMJson[];
 };
 
-function addCommentMarkToTextNode(node: PMJson, quote: string, commentId: string): PMJson[] | null {
+function splitTextNodeAt(node: PMJson, quote: string, commentId: string): PMJson[] | null {
     if (node.type !== 'text' || !node.text) return null;
     const index = node.text.indexOf(quote);
     if (index < 0) return null;
@@ -34,18 +34,49 @@ function addCommentMarkToTextNode(node: PMJson, quote: string, commentId: string
     return out;
 }
 
-function addCommentMark(json: PMJson, quote: string, commentId: string): boolean {
-    if (!Array.isArray(json.content)) return false;
-    for (let i = 0; i < json.content.length; i += 1) {
-        const child = json.content[i];
-        const split = addCommentMarkToTextNode(child, quote, commentId);
-        if (split) {
-            json.content.splice(i, 1, ...split);
-            return true;
+function countOccurrences(json: PMJson, quote: string): number {
+    let n = 0;
+    if (json.type === 'text' && json.text) {
+        let from = 0;
+        while (true) {
+            const idx = json.text.indexOf(quote, from);
+            if (idx < 0) break;
+            n += 1;
+            from = idx + quote.length;
         }
-        if (addCommentMark(child, quote, commentId)) return true;
     }
-    return false;
+    if (Array.isArray(json.content)) {
+        for (const child of json.content) n += countOccurrences(child, quote);
+    }
+    return n;
+}
+
+interface MarkPlan { remaining: number; done: boolean }
+
+/**
+ * Walks the doc in order; skips `plan.remaining` matches of `quote`, then marks the next one.
+ * Markdown maps each paragraph to a single text node, so per-node occurrence is at most one in
+ * practice. Caller clamps `remaining` to `countOccurrences(...) - 1` to guarantee a hit.
+ */
+function markNthOccurrence(json: PMJson, quote: string, commentId: string, plan: MarkPlan): void {
+    if (plan.done || !Array.isArray(json.content)) return;
+    for (let i = 0; i < json.content.length; i += 1) {
+        if (plan.done) return;
+        const child = json.content[i];
+        if (child.type === 'text' && child.text && child.text.includes(quote)) {
+            if (plan.remaining > 0) {
+                plan.remaining -= 1;
+                continue;
+            }
+            const split = splitTextNodeAt(child, quote, commentId);
+            if (split) {
+                json.content.splice(i, 1, ...split);
+                plan.done = true;
+                return;
+            }
+        }
+        markNthOccurrence(child, quote, commentId, plan);
+    }
 }
 
 export async function reseedBookComments(bookId: string, threads: SeedThread[]): Promise<void> {
@@ -124,9 +155,22 @@ function applyThreadsToYDoc(doc: Y.Doc, threads: SeedThread[]): void {
 function applyThreadMarksToYDoc(sourceDoc: Y.Doc, threads: SeedThread[]): Y.Doc {
     const json = yDocToProsemirrorJSON(sourceDoc, PROSEMIRROR_FIELD) as PMJson;
     for (const t of threads) {
-        const marked = addCommentMark(json, t.originalQuote, t.id);
-        if (!marked) {
+        const total = countOccurrences(json, t.originalQuote);
+        if (total === 0) {
             log.warn('seed: comment quote not found', { threadId: t.id, quote: t.originalQuote });
+            continue;
+        }
+        const idx = Math.min(t.occurrenceIndex, total - 1);
+        const plan: MarkPlan = { remaining: idx, done: false };
+        markNthOccurrence(json, t.originalQuote, t.id, plan);
+        if (!plan.done) {
+            log.warn('seed: comment quote mark failed', {
+                threadId: t.id,
+                quote: t.originalQuote,
+                requestedIndex: t.occurrenceIndex,
+                clampedIndex: idx,
+                total,
+            });
         }
     }
     const schema = buildProseMirrorSchema();

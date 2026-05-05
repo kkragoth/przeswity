@@ -83,6 +83,32 @@
 .editor-host.pane-left-hidden  .pane-handle-left  { display: flex; }
 .editor-host.pane-right-hidden .pane-handle-right { display: flex; }
 
+/* ---------- Sidebar header (collapse toggle) ---------- */
+.vrail-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: var(--sp-2) var(--sp-2);
+  border-bottom: 1px solid var(--border-soft);
+}
+.editor-host.pane-left-rail .left-pane .vrail-header {
+  justify-content: center;
+  padding: var(--sp-2) 0;
+}
+.vrail-toggle {
+  background: transparent;
+  border: none;
+  border-radius: var(--r-2);
+  padding: var(--sp-1);
+  color: var(--text-subtle);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--d-fast), color var(--d-fast);
+}
+.vrail-toggle:hover { background: var(--bg-tint); color: var(--text); }
+
 /* ---------- Vertical tab strip (left rail) ---------- */
 .vrail {
   display: flex;
@@ -160,6 +186,22 @@
   color: var(--text);
   border-bottom-color: var(--accent);
 }
+.pane-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: var(--fw-bold);
+  line-height: 1;
+  color: #fff;
+  background: var(--accent);
+}
+.pane-tab-badge--comments    { background: var(--accent); }
+.pane-tab-badge--suggestions { background: var(--suggest); }
 .pane-tabs-spacer { flex: 1 1 auto; }
 .pane-tab-close {
   background: transparent;
@@ -203,18 +245,6 @@
   color: var(--text-subtle);
   font-feature-settings: 'smcp', 'c2sc';
 }
-.pane-collapse {
-  background: transparent;
-  border: none;
-  border-radius: var(--r-2);
-  padding: var(--sp-1);
-  cursor: pointer;
-  color: var(--text-subtle);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.pane-collapse:hover { background: var(--bg-tint); color: var(--text); }
 .editor-host.pane-left-rail .left-pane .pane-header { display: none; }
 
 /* ---------- Pane empty state ---------- */
@@ -331,8 +361,49 @@
   font-family: var(--font-ui);
 }
 
+/* ---------- Statusbar zoom (compact) ---------- */
+.statusbar .tb-zoom { gap: 0; margin-right: var(--sp-1); }
+.statusbar .tb-zoom .tb-btn {
+  width: 20px;
+  height: 20px;
+  color: var(--text-subtle);
+}
+.statusbar .tb-zoom-percent {
+  height: 20px;
+  min-width: 38px;
+  padding: 0 4px;
+  font-size: var(--fs-xs);
+  color: var(--text-subtle);
+}
+
 /* ---------- Status bar sync mini ---------- */
 .statusbar-spacer { flex: 1 1 auto; }
+.statusbar-sync-wrap { position: relative; display: inline-flex; }
+.statusbar-sync-popover {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  min-width: 200px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--r-3);
+  box-shadow: var(--shadow-paper-3);
+  padding: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  font-size: var(--fs-xs);
+  color: var(--text);
+  z-index: var(--z-overlay);
+}
+.statusbar-sync-popover-title {
+  font-weight: var(--fw-semi);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-subtle);
+}
+.statusbar-sync-popover-time { color: var(--text-muted); }
 .statusbar-sync {
   display: inline-flex;
   align-items: center;

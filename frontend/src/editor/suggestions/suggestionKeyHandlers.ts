@@ -1,7 +1,7 @@
 import type { Editor } from '@tiptap/core';
 import { TextSelection } from '@tiptap/pm/state';
 import type { SuggestionModeOptions } from '@/editor/suggestions/SuggestionMode';
-import { makeMarkAttrs, rangeAllHasMark } from '@/editor/suggestions/suggestionMarkUtils';
+import { attrsForAuthoredMark, rangeAllHasMark } from '@/editor/suggestions/suggestionMarkUtils';
 
 const META_SKIP = 'suggestionMode/skip';
 
@@ -21,7 +21,8 @@ export function backspaceInSuggestingMode(editor: Editor, opts: SuggestionModeOp
             editor.view.dispatch(state.tr.delete(from, to).setMeta(META_SKIP, true));
             return true;
         }
-        editor.view.dispatch(state.tr.addMark(from, to, deletionType.create(makeMarkAttrs(author))).setSelection(TextSelection.create(state.doc, from)).setMeta(META_SKIP, true));
+        const attrs = attrsForAuthoredMark(state, deletionType, author, from, to);
+        editor.view.dispatch(state.tr.addMark(from, to, deletionType.create(attrs)).setSelection(TextSelection.create(state.doc, from)).setMeta(META_SKIP, true));
         return true;
     }
 
@@ -38,7 +39,10 @@ export function backspaceInSuggestingMode(editor: Editor, opts: SuggestionModeOp
     const hasDeletion = node.marks.some((m) => m.type === deletionType);
     if (hasOurInsertion) editor.view.dispatch(state.tr.delete(charFrom, charTo).setMeta(META_SKIP, true));
     else if (hasDeletion) editor.view.dispatch(state.tr.setSelection(TextSelection.create(state.doc, charFrom)).setMeta(META_SKIP, true));
-    else editor.view.dispatch(state.tr.addMark(charFrom, charTo, deletionType.create(makeMarkAttrs(author))).setSelection(TextSelection.create(state.doc, charFrom)).setMeta(META_SKIP, true));
+    else {
+        const attrs = attrsForAuthoredMark(state, deletionType, author, charFrom, charTo);
+        editor.view.dispatch(state.tr.addMark(charFrom, charTo, deletionType.create(attrs)).setSelection(TextSelection.create(state.doc, charFrom)).setMeta(META_SKIP, true));
+    }
     return true;
 }
 
@@ -58,7 +62,8 @@ export function forwardDeleteInSuggestingMode(editor: Editor, opts: SuggestionMo
             editor.view.dispatch(state.tr.delete(from, to).setMeta(META_SKIP, true));
             return true;
         }
-        editor.view.dispatch(state.tr.addMark(from, to, deletionType.create(makeMarkAttrs(author))).setSelection(TextSelection.create(state.doc, to)).setMeta(META_SKIP, true));
+        const attrs = attrsForAuthoredMark(state, deletionType, author, from, to);
+        editor.view.dispatch(state.tr.addMark(from, to, deletionType.create(attrs)).setSelection(TextSelection.create(state.doc, to)).setMeta(META_SKIP, true));
         return true;
     }
 
@@ -75,6 +80,9 @@ export function forwardDeleteInSuggestingMode(editor: Editor, opts: SuggestionMo
     const hasDeletion = node.marks.some((m) => m.type === deletionType);
     if (hasOurInsertion) editor.view.dispatch(state.tr.delete(charFrom, charTo).setMeta(META_SKIP, true));
     else if (hasDeletion) editor.view.dispatch(state.tr.setSelection(TextSelection.create(state.doc, charTo)).setMeta(META_SKIP, true));
-    else editor.view.dispatch(state.tr.addMark(charFrom, charTo, deletionType.create(makeMarkAttrs(author))).setSelection(TextSelection.create(state.doc, charTo)).setMeta(META_SKIP, true));
+    else {
+        const attrs = attrsForAuthoredMark(state, deletionType, author, charFrom, charTo);
+        editor.view.dispatch(state.tr.addMark(charFrom, charTo, deletionType.create(attrs)).setSelection(TextSelection.create(state.doc, charTo)).setMeta(META_SKIP, true));
+    }
     return true;
 }

@@ -3,47 +3,112 @@ import type { Editor } from '@tiptap/react';
 import { useTranslation } from 'react-i18next';
 import { acceptSuggestion, rejectSuggestion, SuggestionType } from '@/editor/suggestions/suggestionOps';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
-import { SuggestionItem, type SuggestionEntry } from './components/SuggestionItem';
+import { useToast } from '@/editor/shell/useToast';
+import { SuggestionEntryKind, SuggestionItem, type SuggestionEntry } from './components/SuggestionItem';
 
 interface SuggestionsSidebarProps {
   editor: Editor | null
 }
 
+interface MarkSide {
+    text: string
+    from: number
+    to: number
+}
+
+interface SuggestionGroup {
+    suggestionId: string
+    authorId: string
+    authorName: string
+    authorColor: string
+    timestamp: number
+    earliestPos: number
+    insertion: MarkSide | null
+    deletion: MarkSide | null
+}
+
+function appendSide(side: MarkSide | null, pos: number, node: { nodeSize: number; text?: string }): MarkSide {
+    if (!side) return { text: node.text ?? '', from: pos, to: pos + node.nodeSize };
+    side.text += node.text ?? '';
+    side.to = pos + node.nodeSize;
+    return side;
+}
+
 function collectSuggestions(editor: Editor): SuggestionEntry[] {
-    const out: SuggestionEntry[] = [];
-    const seen = new Map<string, SuggestionEntry>();
+    const groups = new Map<string, SuggestionGroup>();
     editor.state.doc.descendants((node, pos) => {
         if (!node.isText) return;
         for (const mark of node.marks) {
             if (mark.type.name !== SuggestionType.Insertion && mark.type.name !== SuggestionType.Deletion) continue;
             const id = mark.attrs.suggestionId as string;
-            const existing = seen.get(id);
-            if (existing) {
-                existing.to = pos + node.nodeSize;
-                existing.text += node.text ?? '';
-            } else {
-                const entry: SuggestionEntry = {
-                    type: mark.type.name as SuggestionType,
+            let group = groups.get(id);
+            if (!group) {
+                group = {
                     suggestionId: id,
                     authorId: mark.attrs.authorId,
                     authorName: mark.attrs.authorName,
                     authorColor: mark.attrs.authorColor,
                     timestamp: mark.attrs.timestamp,
-                    text: node.text ?? '',
-                    from: pos,
-                    to: pos + node.nodeSize,
+                    earliestPos: pos,
+                    insertion: null,
+                    deletion: null,
                 };
-                out.push(entry);
-                seen.set(id, entry);
+                groups.set(id, group);
             }
+            if (mark.type.name === SuggestionType.Insertion) group.insertion = appendSide(group.insertion, pos, node);
+            else group.deletion = appendSide(group.deletion, pos, node);
         }
     });
+
+    const out: SuggestionEntry[] = [];
+    for (const g of groups.values()) {
+        const base = {
+            suggestionId: g.suggestionId,
+            authorId: g.authorId,
+            authorName: g.authorName,
+            authorColor: g.authorColor,
+            timestamp: g.timestamp,
+        };
+        if (g.insertion && g.deletion) {
+            out.push({
+                ...base,
+                kind: SuggestionEntryKind.Replace,
+                deletedText: g.deletion.text,
+                insertedText: g.insertion.text,
+                deletedFrom: g.deletion.from,
+                deletedTo: g.deletion.to,
+                insertedFrom: g.insertion.from,
+                insertedTo: g.insertion.to,
+            });
+        } else if (g.insertion) {
+            out.push({ ...base, kind: SuggestionEntryKind.Insert, text: g.insertion.text, from: g.insertion.from, to: g.insertion.to });
+        } else if (g.deletion) {
+            out.push({ ...base, kind: SuggestionEntryKind.Delete, text: g.deletion.text, from: g.deletion.from, to: g.deletion.to });
+        }
+    }
+    out.sort((a, b) => entryStart(a) - entryStart(b));
     return out;
+}
+
+function entryStart(entry: SuggestionEntry): number {
+    if (entry.kind === SuggestionEntryKind.Replace) return Math.min(entry.deletedFrom, entry.insertedFrom);
+    return entry.from;
+}
+
+function entryRange(entry: SuggestionEntry): { from: number; to: number } {
+    if (entry.kind === SuggestionEntryKind.Replace) {
+        return {
+            from: Math.min(entry.deletedFrom, entry.insertedFrom),
+            to: Math.max(entry.deletedTo, entry.insertedTo),
+        };
+    }
+    return { from: entry.from, to: entry.to };
 }
 
 export function SuggestionsSidebar({ editor }: SuggestionsSidebarProps) {
     const { t } = useTranslation('editor');
     const { perms } = useEditorSession();
+    const { showWithUndo } = useToast();
     const [entries, setEntries] = useState<SuggestionEntry[]>([]);
 
     useEffect(() => {
@@ -60,21 +125,34 @@ export function SuggestionsSidebar({ editor }: SuggestionsSidebarProps) {
 
     if (!editor) return null;
 
+    const undoEditor = () => editor.commands.undo();
+
     const accept = (e: SuggestionEntry) => {
         if (!perms.canResolveSuggestion) return;
-        acceptSuggestion(editor, e.suggestionId, e.type);
+        acceptSuggestion(editor, e.suggestionId);
+        showWithUndo(t('suggestions.acceptedToast'), { label: t('suggestions.undo'), onUndo: undoEditor });
     };
 
     const reject = (e: SuggestionEntry) => {
         if (!perms.canResolveSuggestion) return;
-        rejectSuggestion(editor, e.suggestionId, e.type);
+        rejectSuggestion(editor, e.suggestionId);
+        showWithUndo(t('suggestions.rejectedToast'), { label: t('suggestions.undo'), onUndo: undoEditor });
     };
 
-    const acceptAll = () => entries.forEach(accept);
-    const rejectAll = () => entries.forEach(reject);
+    const acceptAll = () => {
+        if (!entries.length) return;
+        entries.forEach((e) => { if (perms.canResolveSuggestion) acceptSuggestion(editor, e.suggestionId); });
+        showWithUndo(t('suggestions.acceptedAllToast', { count: entries.length }), { label: t('suggestions.undo'), onUndo: undoEditor });
+    };
+    const rejectAll = () => {
+        if (!entries.length) return;
+        entries.forEach((e) => { if (perms.canResolveSuggestion) rejectSuggestion(editor, e.suggestionId); });
+        showWithUndo(t('suggestions.rejectedAllToast', { count: entries.length }), { label: t('suggestions.undo'), onUndo: undoEditor });
+    };
 
     const select = (e: SuggestionEntry) => {
-        editor.chain().focus().setTextSelection({ from: e.from, to: e.to }).run();
+        const { from, to } = entryRange(e);
+        editor.chain().focus().setTextSelection({ from, to }).run();
     };
 
     return (

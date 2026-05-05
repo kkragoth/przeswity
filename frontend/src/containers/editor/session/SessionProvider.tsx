@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, type Context, type ReactNode } from 'react';
 
 import { permsFor } from '@/editor/identity/perms';
 import type { RolePermissions, User } from '@/editor/identity/types';
@@ -23,7 +23,11 @@ export interface EditorSessionContextValue {
     toast: ToastFn;
 }
 
-const EditorSessionContext = createContext<EditorSessionContextValue | null>(null);
+const HMR_KEY = '__przeswity_EditorSessionContext';
+type HmrGlobal = typeof globalThis & { [HMR_KEY]?: Context<EditorSessionContextValue | null> };
+const hmrGlobal = globalThis as HmrGlobal;
+const EditorSessionContext: Context<EditorSessionContextValue | null> =
+    hmrGlobal[HMR_KEY] ?? (hmrGlobal[HMR_KEY] = createContext<EditorSessionContextValue | null>(null));
 
 export interface EditorSessionProviderProps {
     user: User;

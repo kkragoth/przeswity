@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, type Context, type ReactNode } from 'react';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
 
 import {
@@ -15,7 +15,13 @@ import {
  * shortcuts visibility) without lifting it back into `EditorSessionUI`'s
  * `useState`s. See `createSessionStore` for the store shape.
  */
-const SessionStoreContext = createContext<SessionStore | null>(null);
+// HMR-stable context: when this module hot-reloads, the existing context
+// (and its consumers) survive instead of being orphaned by a fresh instance.
+const HMR_KEY = '__przeswity_SessionStoreContext';
+type HmrGlobal = typeof globalThis & { [HMR_KEY]?: Context<SessionStore | null> };
+const hmrGlobal = globalThis as HmrGlobal;
+const SessionStoreContext: Context<SessionStore | null> =
+    hmrGlobal[HMR_KEY] ?? (hmrGlobal[HMR_KEY] = createContext<SessionStore | null>(null));
 
 export interface SessionStoreProviderProps {
     children: ReactNode;

@@ -87,6 +87,12 @@
         "templates": "Szablony",
         "ariaLabel": "Pasek narzędzi edytora",
         "removeHighlight": "Usuń wyróżnienie",
+        "zoom": {
+            "label": "Powiększenie",
+            "in": "Powiększ",
+            "out": "Pomniejsz",
+            "reset": "Resetuj powiększenie"
+        },
         "style": {
             "body": "Treść",
             "h1": "Nagłówek 1",
@@ -99,6 +105,8 @@
         }
     },
     "comments": {
+        "resolvedToast": "Wątek rozwiązany",
+        "undo": "Cofnij",
         "tabs": {
             "comments": "Komentarze",
             "active": "Aktywne",
@@ -113,6 +121,7 @@
         "resolve": "Rozwiąż",
         "reattach": "Ponownie zakotwicz",
         "deleteThread": "Usuń wątek",
+        "moreActions": "Więcej akcji",
         "filter": {
             "open": "Otwarte",
             "resolved": "Rozwiązane",
@@ -145,6 +154,11 @@
         }
     },
     "suggestions": {
+        "undo": "Cofnij",
+        "acceptedToast": "Sugestia zaakceptowana",
+        "rejectedToast": "Sugestia odrzucona",
+        "acceptedAllToast": "Zaakceptowano {{count}} sugestii",
+        "rejectedAllToast": "Odrzucono {{count}} sugestii",
         "acceptAll": "Akceptuj wszystkie",
         "rejectAll": "Odrzuć wszystkie",
         "acceptFromAuthor": "Akceptuj od {{author}}",
@@ -154,7 +168,8 @@
         "accept": "Akceptuj",
         "reject": "Odrzuć",
         "inserted": "wstawiono",
-        "deleted": "usunięto"
+        "deleted": "usunięto",
+        "replaced": "zmieniono"
     },
     "versions": {
         "snapshot": "Migawka",
@@ -205,7 +220,13 @@
         "pageOf": "Strona {{current}} z {{total}}",
         "jumpPageTitle": "Przejdź do strony",
         "jumpPageLabel": "Skocz do strony",
-        "jumpPageGo": "Idź"
+        "jumpPageGo": "Idź",
+        "lastSaved": "Ostatnio zapisano",
+        "savedJustNow": "przed chwilą",
+        "savedSecondsAgo": "{{count}} s temu",
+        "savedMinutesAgo": "{{count}} min temu",
+        "savedHoursAgo": "{{count}} h temu",
+        "savedNever": "jeszcze nie zapisano"
     },
     "peers": {
         "activeNow": "aktywny teraz",

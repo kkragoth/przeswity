@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, type Context, type ReactNode } from 'react';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
 
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
@@ -20,7 +20,11 @@ import {
  * invocation does not produce two stores per session.
  */
 
-const CommentsStoreContext = createContext<CommentsStore | null>(null);
+const HMR_KEY = '__przeswity_CommentsStoreContext';
+type HmrGlobal = typeof globalThis & { [HMR_KEY]?: Context<CommentsStore | null> };
+const hmrGlobal = globalThis as HmrGlobal;
+const CommentsStoreContext: Context<CommentsStore | null> =
+    hmrGlobal[HMR_KEY] ?? (hmrGlobal[HMR_KEY] = createContext<CommentsStore | null>(null));
 
 export interface CommentsStoreProviderProps {
     children: ReactNode;

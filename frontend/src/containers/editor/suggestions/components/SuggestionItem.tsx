@@ -1,17 +1,31 @@
 import { useTranslation } from 'react-i18next';
-import { SuggestionType } from '@/editor/suggestions/suggestionOps';
 
-export interface SuggestionEntry {
-    type: SuggestionType
+export enum SuggestionEntryKind {
+    Insert = 'insert',
+    Delete = 'delete',
+    Replace = 'replace',
+}
+
+interface SuggestionEntryBase {
     suggestionId: string
     authorId: string
     authorName: string
     authorColor: string
     timestamp: number
-    text: string
-    from: number
-    to: number
 }
+
+export type SuggestionEntry =
+  | (SuggestionEntryBase & { kind: SuggestionEntryKind.Insert; text: string; from: number; to: number })
+  | (SuggestionEntryBase & { kind: SuggestionEntryKind.Delete; text: string; from: number; to: number })
+  | (SuggestionEntryBase & {
+      kind: SuggestionEntryKind.Replace
+      deletedText: string
+      insertedText: string
+      deletedFrom: number
+      deletedTo: number
+      insertedFrom: number
+      insertedTo: number
+    })
 
 interface SuggestionItemProps {
     entry: SuggestionEntry
@@ -21,24 +35,42 @@ interface SuggestionItemProps {
     onReject: (entry: SuggestionEntry) => void
 }
 
+function SuggestionBody({ entry }: { entry: SuggestionEntry }) {
+    if (entry.kind === SuggestionEntryKind.Replace) {
+        return (
+            <div className="suggestion-text suggestion-text-replace">
+                <span className="suggestion-text-deletion">{entry.deletedText}</span>
+                <span className="suggestion-text-arrow"> → </span>
+                <span className="suggestion-text-insertion">{entry.insertedText}</span>
+            </div>
+        );
+    }
+    return (
+        <div className={`suggestion-text suggestion-text-${entry.kind}`}>{entry.text}</div>
+    );
+}
+
 export function SuggestionItem({ entry, canResolve, onSelect, onAccept, onReject }: SuggestionItemProps) {
     const { t } = useTranslation('editor');
+    const label = entry.kind === SuggestionEntryKind.Insert
+        ? t('suggestions.inserted')
+        : entry.kind === SuggestionEntryKind.Delete
+            ? t('suggestions.deleted')
+            : t('suggestions.replaced');
     return (
         <div
-            className={`suggestion suggestion-${entry.type}`}
+            className={`suggestion suggestion-${entry.kind}`}
             style={{ borderLeftColor: entry.authorColor }}
             onClick={() => onSelect(entry)}
         >
             <div className="suggestion-meta">
                 <span style={{ color: entry.authorColor }}>● {entry.authorName}</span>
-                <span className="suggestion-type">
-                    {entry.type === SuggestionType.Insertion ? t('suggestions.inserted') : t('suggestions.deleted')}
-                </span>
+                <span className="suggestion-type">{label}</span>
                 <span className="suggestion-time">
                     {new Date(entry.timestamp).toLocaleTimeString()}
                 </span>
             </div>
-            <div className={`suggestion-text suggestion-text-${entry.type}`}>{entry.text}</div>
+            <SuggestionBody entry={entry} />
             {canResolve && (
                 <div className="suggestion-actions">
                     <button

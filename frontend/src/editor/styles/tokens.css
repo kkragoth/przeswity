@@ -33,6 +33,11 @@
   --ochre:        #b07a18;
   --ochre-soft:   #f6ebd2;
 
+  /* Suggesting mode — soft purple (avoids warning amber clash) */
+  --suggest:        #6b4ea0;
+  --suggest-soft:   #ece4f5;
+  --suggest-border: #b8a3d6;
+
   /* ---------- Semantic ---------- */
   --success:       #2f6b3a;
   --success-soft:  #dde9d8;
@@ -128,7 +133,7 @@
   --page-margin-y:  96px;
   --page-margin-x:  96px;
   --left-pane-w:    260px;
-  --right-pane-w:   380px;
+  --right-pane-w:   437px;
   --rail-w:         44px;
   --header-h:       52px;
   --toolbar-h:      48px;
@@ -183,6 +188,17 @@
   --ochre:        #8a5a10;
   --ochre-soft:   #ecd9a3;
 
+  --suggest:        #5a4290;
+  --suggest-soft:   #e0d3ee;
+  --suggest-border: #a994c9;
+
+  --success:       #486a2f;
+  --success-soft:  #d8e4c2;
+  --warning:       #8a4a10;
+  --warning-soft:  #ecd5a3;
+  --danger:        #7d1818;
+  --danger-soft:   #ecc9c9;
+
   --comment-mark-bg:        #ecd9a3;
   --comment-mark-bg-strong: #d9bf72;
   --comment-mark-border:    #b07a18;
@@ -231,6 +247,17 @@
 
   --ochre:        #d4a236;
   --ochre-soft:   #3a2f1c;
+
+  --suggest:        #b59cf0;
+  --suggest-soft:   #2a2238;
+  --suggest-border: #5a4a85;
+
+  --success:       #6fb37b;
+  --success-soft:  #1f2c1f;
+  --warning:       #d99a3a;
+  --warning-soft:  #2f2418;
+  --danger:        #e07070;
+  --danger-soft:   #3a1d1d;
 
   --comment-mark-bg:        rgba(245, 158, 11, 0.22);
   --comment-mark-bg-strong: rgba(245, 158, 11, 0.42);

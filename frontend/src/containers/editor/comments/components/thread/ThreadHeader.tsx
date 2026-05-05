@@ -1,11 +1,16 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
+import { MoreHorizontal, Trash2 } from 'lucide-react';
 
 import { Avatar } from '@/editor/shell/Avatar';
 import { authorColor } from '@/editor/comments/authorColor';
 import { withStop } from '@/utils/react/withStop';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
-import { useSession } from '@/containers/editor/SessionStoreProvider';
+import { useSession, useSessionStore } from '@/containers/editor/SessionStoreProvider';
+import { useConfirmDialog } from '@/components/feedback/useConfirmDialog';
+import { ConfirmDialogHost } from '@/components/feedback/ConfirmDialogHost';
+import { useToast } from '@/editor/shell/useToast';
 import { useCommentsStore } from '../../store/CommentsStoreProvider';
 import { useCommentsView } from '../CommentsViewContext';
 import { useThread } from '../../hooks/useThread';
@@ -22,19 +27,40 @@ export function ThreadHeader({ threadId }: ThreadHeaderProps) {
     const thread = useThread(threadId);
     const isActive = useIsActiveComment(threadId);
     const setActiveComment = useSession((s) => s.setActiveComment);
+    const sessionStore = useSessionStore();
     const commentsStore = useCommentsStore();
+    const confirmDlg = useConfirmDialog();
+    const { showWithUndo } = useToast();
 
     const handleResolve = useCallback(() => {
         if (editor) editor.chain().focus().unsetComment(threadId).run();
         commentsStore.getState().resolveThread(threadId);
         setActiveComment(null);
         commentsStore.getState().cancelEdit();
-    }, [editor, commentsStore, setActiveComment, threadId]);
+        showWithUndo(t('comments.resolvedToast'), {
+            label: t('comments.undo'),
+            onUndo: () => {
+                commentsStore.getState().reopenThread(threadId);
+                if (editor) editor.commands.undo();
+            },
+        });
+    }, [editor, commentsStore, setActiveComment, threadId, showWithUndo, t]);
 
     const handleClose = useCallback(() => {
         setActiveComment(null);
         commentsStore.getState().cancelEdit();
     }, [setActiveComment, commentsStore]);
+
+    const handleDelete = useCallback(async () => {
+        const ok = await confirmDlg.confirm({ title: t('comments.deleteConfirm'), destructive: true });
+        if (!ok) return;
+        commentsStore.getState().removeThread(threadId);
+        if (editor) editor.chain().focus().unsetComment(threadId).run();
+        if (sessionStore.getState().activeCommentId === threadId) {
+            setActiveComment(null);
+            commentsStore.getState().cancelEdit();
+        }
+    }, [confirmDlg, t, commentsStore, editor, sessionStore, setActiveComment, threadId]);
 
     if (!thread) return null;
     const replyCount = thread.replies.length;
@@ -61,10 +87,41 @@ export function ThreadHeader({ threadId }: ThreadHeaderProps) {
                         ✓ {t('comments.resolve')}
                     </button>
                 ) : null}
+                {canResolve && isActive ? (
+                    <DropdownMenuPrimitive.Root>
+                        <DropdownMenuPrimitive.Trigger asChild>
+                            <button
+                                type="button"
+                                className="thread-icon-btn thread-menu-btn"
+                                title={t('comments.moreActions')}
+                                aria-label={t('comments.moreActions')}
+                                onClick={withStop(() => {})}
+                            >
+                                <MoreHorizontal size={14} />
+                            </button>
+                        </DropdownMenuPrimitive.Trigger>
+                        <DropdownMenuPrimitive.Portal>
+                            <DropdownMenuPrimitive.Content align="end" sideOffset={4} className="topbar-dropdown-content">
+                                <DropdownMenuPrimitive.Item
+                                    className="topbar-dropdown-item topbar-dropdown-item--danger"
+                                    onSelect={() => void handleDelete()}
+                                >
+                                    <Trash2 size={14} />
+                                    {t('comments.deleteThread')}
+                                </DropdownMenuPrimitive.Item>
+                            </DropdownMenuPrimitive.Content>
+                        </DropdownMenuPrimitive.Portal>
+                    </DropdownMenuPrimitive.Root>
+                ) : null}
                 {isActive ? (
                     <button type="button" className="thread-close-btn" title={t('comments.close')} aria-label={t('comments.close')} onClick={withStop(handleClose)}>✕</button>
                 ) : null}
             </div>
+            <ConfirmDialogHost
+                dialogState={confirmDlg.dialogState}
+                onConfirm={confirmDlg.onConfirm}
+                onCancel={confirmDlg.onCancel}
+            />
         </div>
     );
 }

@@ -20,8 +20,8 @@
     overflow-y: visible;
 }
 .toolbar.is-suggesting {
-    background: var(--warning-soft);
-    border-bottom-color: var(--warning);
+    background: var(--suggest-soft);
+    border-bottom-color: var(--suggest-border);
 }
 .tb-spacer {
     flex: 1;
@@ -102,12 +102,12 @@
     gap: 4px;
 }
 
-/* ---------- Zone 1: Mode segmented control ---------- */
+/* ---------- Mode segmented control (lives in topbar) ---------- */
 .mode-toggle {
     display: flex;
     align-items: center;
-    height: 32px;
-    width: 220px;
+    height: 26px;
+    width: 168px;
     background: var(--bg-sunken);
     border: 1px solid var(--border);
     border-radius: var(--r-3);
@@ -125,12 +125,13 @@
     border: none;
     border-radius: calc(var(--r-3) - 2px);
     background: transparent;
-    font-size: var(--fs-sm);
+    font-size: var(--fs-xs);
     font-weight: var(--fw-medium);
     color: var(--text-muted);
     cursor: pointer;
     transition: background var(--d-fast) var(--ease-out), color var(--d-fast) var(--ease-out);
     white-space: nowrap;
+    padding: 0 var(--sp-2);
 }
 .mode-seg:hover:not(:disabled) {
     background: var(--bg-tint);
@@ -140,6 +141,10 @@
     background: var(--accent);
     color: var(--text-on-accent);
     font-weight: var(--fw-semi);
+}
+.mode-seg.mode-seg--suggest.is-active {
+    background: var(--suggest);
+    color: #fff;
 }
 .mode-seg:disabled {
     cursor: not-allowed;

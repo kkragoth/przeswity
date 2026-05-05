@@ -11,6 +11,7 @@ import { log } from '../lib/log.js';
 import { BOOKS } from './data/books.js';
 import { buildSeedThreads } from './data/threads.js';
 import { reseedBookComments, applyThreadsToBookYjs } from './seedThreads.js';
+import { applyMetaAndGlossary, reseedBookSnapshots } from './seedDocExtras.js';
 import type { Role, SeedBook, SeedUser } from './data/types.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -56,7 +57,9 @@ export async function seedBooks(idByEmail: Map<string, string>, userByEmail: Map
         const bookId = await upsertSeedBook(b, ownerId);
         const threads = buildSeedThreads(b, idByEmail, userByEmail);
         await applyThreadsToBookYjs(bookId, threads);
+        await applyMetaAndGlossary(bookId, b.meta, b.glossary);
         await reseedBookComments(bookId, threads);
+        await reseedBookSnapshots(bookId, b.snapshots, idByEmail);
         for (const a of b.assignments) {
             const uid = idByEmail.get(a.email);
             if (!uid) { log.warn('seed: missing assignee', { slug: b.slug, email: a.email }); continue; }

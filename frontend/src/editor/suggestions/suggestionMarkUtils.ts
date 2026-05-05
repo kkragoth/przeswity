@@ -1,5 +1,5 @@
 import type { EditorState } from '@tiptap/pm/state';
-import type { MarkType } from '@tiptap/pm/model';
+import { Fragment, Slice, type Mark, type MarkType, type Node } from '@tiptap/pm/model';
 import { makeId } from '@/editor/utils';
 import type { SuggestionAuthor } from '@/editor/suggestions/SuggestionMode';
 import { SuggestionType } from '@/editor/suggestions/suggestionOps';
@@ -12,6 +12,53 @@ export function makeMarkAttrs(author: SuggestionAuthor) {
         authorColor: author.color,
         timestamp: Date.now(),
     };
+}
+
+export function findAuthoredMarkAt(
+    state: EditorState,
+    markType: MarkType,
+    authorId: string,
+    pos: number,
+): Mark | null {
+    if (pos < 0 || pos > state.doc.content.size) return null;
+    const $pos = state.doc.resolve(pos);
+    const candidates = [$pos.nodeBefore, $pos.nodeAfter];
+    for (const node of candidates) {
+        if (!node?.isText) continue;
+        const found = node.marks.find((m) => m.type === markType && m.attrs.authorId === authorId);
+        if (found) return found;
+    }
+    return null;
+}
+
+function applyMarkToFragment(fragment: Fragment, mark: Mark): Fragment {
+    const children: Node[] = [];
+    fragment.forEach((child) => {
+        if (child.isText) {
+            children.push(child.mark(mark.addToSet(child.marks)));
+        } else if (child.content.size > 0) {
+            children.push(child.copy(applyMarkToFragment(child.content, mark)));
+        } else {
+            children.push(child);
+        }
+    });
+    return Fragment.fromArray(children);
+}
+
+export function applyMarkToSlice(slice: Slice, mark: Mark): Slice {
+    return new Slice(applyMarkToFragment(slice.content, mark), slice.openStart, slice.openEnd);
+}
+
+export function attrsForAuthoredMark(
+    state: EditorState,
+    markType: MarkType,
+    author: SuggestionAuthor,
+    from: number,
+    to: number,
+): Record<string, unknown> {
+    const neighbor = findAuthoredMarkAt(state, markType, author.id, from)
+        ?? findAuthoredMarkAt(state, markType, author.id, to);
+    return neighbor ? neighbor.attrs : makeMarkAttrs(author);
 }
 
 function insertionCoverage(state: EditorState, authorId: string): { total: number; authoredInsertion: number; deletion: number } {

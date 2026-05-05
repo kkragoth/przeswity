@@ -81,7 +81,7 @@ export function ModeToggle({ suggestingMode, suggestingForced, onSuggestingModeC
             </button>
             <button
                 type="button"
-                className={`mode-seg${suggestingMode ? ' is-active' : ''}`}
+                className={`mode-seg mode-seg--suggest${suggestingMode ? ' is-active' : ''}`}
                 disabled={suggestingForced}
                 onClick={() => onSuggestingModeChange(true)}
                 aria-pressed={suggestingMode}

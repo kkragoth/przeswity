@@ -105,6 +105,8 @@
         }
     },
     "comments": {
+        "resolvedToast": "Thread resolved",
+        "undo": "Undo",
         "tabs": {
             "comments": "Comments",
             "active": "Active",
@@ -119,6 +121,7 @@
         "resolve": "Resolve",
         "reattach": "Reattach",
         "deleteThread": "Delete thread",
+        "moreActions": "More actions",
         "filter": {
             "open": "Open",
             "resolved": "Resolved",
@@ -151,6 +154,11 @@
         }
     },
     "suggestions": {
+        "undo": "Undo",
+        "acceptedToast": "Suggestion accepted",
+        "rejectedToast": "Suggestion rejected",
+        "acceptedAllToast": "Accepted {{count}} suggestions",
+        "rejectedAllToast": "Rejected {{count}} suggestions",
         "acceptAll": "Accept all",
         "rejectAll": "Reject all",
         "acceptFromAuthor": "Accept from {{author}}",
@@ -160,7 +168,8 @@
         "accept": "Accept",
         "reject": "Reject",
         "inserted": "inserted",
-        "deleted": "deleted"
+        "deleted": "deleted",
+        "replaced": "replaced"
     },
     "versions": {
         "snapshot": "Snapshot",
@@ -211,7 +220,13 @@
         "pageOf": "Page {{current}} of {{total}}",
         "jumpPageTitle": "Go to page",
         "jumpPageLabel": "Jump to page",
-        "jumpPageGo": "Go"
+        "jumpPageGo": "Go",
+        "lastSaved": "Last saved",
+        "savedJustNow": "just now",
+        "savedSecondsAgo": "{{count}}s ago",
+        "savedMinutesAgo": "{{count}}m ago",
+        "savedHoursAgo": "{{count}}h ago",
+        "savedNever": "not yet saved"
     },
     "peers": {
         "activeNow": "active now",

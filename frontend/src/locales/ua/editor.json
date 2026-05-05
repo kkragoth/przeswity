@@ -87,6 +87,12 @@
         "templates": "Шаблони",
         "ariaLabel": "Панель інструментів редактора",
         "removeHighlight": "Видалити виділення",
+        "zoom": {
+            "label": "Масштаб",
+            "in": "Збільшити",
+            "out": "Зменшити",
+            "reset": "Скинути масштаб"
+        },
         "style": {
             "body": "Основний текст",
             "h1": "Заголовок 1",
@@ -99,6 +105,8 @@
         }
     },
     "comments": {
+        "resolvedToast": "Гілку вирішено",
+        "undo": "Скасувати",
         "tabs": {
             "comments": "Коментарі",
             "active": "Активні",
@@ -113,6 +121,7 @@
         "resolve": "Вирішити",
         "reattach": "Повторно прикріпити",
         "deleteThread": "Видалити гілку",
+        "moreActions": "Більше дій",
         "filter": {
             "open": "Відкриті",
             "resolved": "Вирішені",
@@ -145,6 +154,11 @@
         }
     },
     "suggestions": {
+        "undo": "Скасувати",
+        "acceptedToast": "Пропозицію прийнято",
+        "rejectedToast": "Пропозицію відхилено",
+        "acceptedAllToast": "Прийнято {{count}} пропозицій",
+        "rejectedAllToast": "Відхилено {{count}} пропозицій",
         "acceptAll": "Прийняти всі",
         "rejectAll": "Відхилити всі",
         "acceptFromAuthor": "Прийняти від {{author}}",
@@ -154,7 +168,8 @@
         "accept": "Прийняти",
         "reject": "Відхилити",
         "inserted": "вставлено",
-        "deleted": "видалено"
+        "deleted": "видалено",
+        "replaced": "змінено"
     },
     "versions": {
         "snapshot": "Знімок",
@@ -205,7 +220,13 @@
         "pageOf": "Сторінка {{current}} з {{total}}",
         "jumpPageTitle": "Перейти до сторінки",
         "jumpPageLabel": "Перейти до сторінки",
-        "jumpPageGo": "Перейти"
+        "jumpPageGo": "Перейти",
+        "lastSaved": "Востаннє збережено",
+        "savedJustNow": "щойно",
+        "savedSecondsAgo": "{{count}} с тому",
+        "savedMinutesAgo": "{{count}} хв тому",
+        "savedHoursAgo": "{{count}} год тому",
+        "savedNever": "ще не збережено"
     },
     "peers": {
         "activeNow": "активний зараз",

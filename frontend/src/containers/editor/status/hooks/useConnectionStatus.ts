@@ -7,10 +7,14 @@ export { SyncStatus } from '@/editor/collab/syncStatus';
 export interface ConnectionState {
     status: SyncStatus;
     reconnect: () => void;
+    lastSavedAt: number | null;
 }
 
 export function useConnectionStatus(provider: HocuspocusProvider): ConnectionState {
     const [status, setStatus] = useState<SyncStatus>(() => getProviderSyncStatus(provider));
+    const [lastSavedAt, setLastSavedAt] = useState<number | null>(
+        () => (getProviderSyncStatus(provider) === SyncStatus.Online ? Date.now() : null),
+    );
 
     const reconnect = useCallback(() => {
         try {
@@ -26,13 +30,22 @@ export function useConnectionStatus(provider: HocuspocusProvider): ConnectionSta
     }, [provider]);
 
     useEffect(() => {
+        const markSaved = () => {
+            setStatus(SyncStatus.Online);
+            setLastSavedAt(Date.now());
+        };
         const onStatus = (e: { connected?: boolean; status?: string }) => {
-            if (e.connected === true || e.status === 'connected') setStatus(SyncStatus.Online);
+            if (e.connected === true || e.status === 'connected') markSaved();
             else if (e.connected === false || e.status === 'disconnected') setStatus(SyncStatus.Offline);
             else if (e.status === 'connecting') setStatus(SyncStatus.Connecting);
         };
-        const onSynced = (e?: { state?: boolean }) =>
-            setStatus(e?.state === false ? getProviderSyncStatus(provider) : SyncStatus.Online);
+        const onSynced = (e?: { state?: boolean }) => {
+            if (e?.state === false) {
+                setStatus(getProviderSyncStatus(provider));
+                return;
+            }
+            markSaved();
+        };
         const onClose = () => setStatus(SyncStatus.Offline);
         const onAuthFailed = () => setStatus(SyncStatus.Offline);
 
@@ -78,5 +91,5 @@ export function useConnectionStatus(provider: HocuspocusProvider): ConnectionSta
         return () => window.clearInterval(retry);
     }, [provider, reconnect, status]);
 
-    return { status, reconnect };
+    return { status, reconnect, lastSavedAt };
 }

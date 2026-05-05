@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { Editor } from '@tiptap/react';
+import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import {
     ListTree,
     History,
@@ -7,6 +8,7 @@ import {
     FileText,
     Folder,
     PanelLeftClose,
+    PanelLeftOpen,
 } from 'lucide-react';
 
 import { OutlineSidebar } from '@/containers/editor/outline';
@@ -15,7 +17,7 @@ import { GlossaryPanel } from '@/containers/editor/glossary';
 import { MetaPanel } from '@/containers/editor/meta';
 import { useEditorHeadings } from '@/containers/editor/outline/hooks/useEditorHeadings';
 import { EmptyState } from '@/containers/editor/layout/EmptyState';
-import { usePaneStore } from '@/containers/editor/session/paneStore';
+import { PaneState, usePaneStore } from '@/containers/editor/session/paneStore';
 import { useSession } from '@/containers/editor/SessionStoreProvider';
 
 export enum LeftTab {
@@ -55,6 +57,41 @@ function OutlineGhostIcon() {
     );
 }
 
+function VrailButton({ id, Icon, label, isActive, isRail, onClick }: {
+    id: LeftTab
+    Icon: typeof ListTree
+    label: string
+    isActive: boolean
+    isRail: boolean
+    onClick: (id: LeftTab) => void
+}) {
+    const button = (
+        <button
+            type="button"
+            className={`vrail-btn${isActive ? ' is-active' : ''}`}
+            onClick={() => onClick(id)}
+            aria-label={label}
+            title={isRail ? undefined : label}
+        >
+            <span className="vrail-btn-icon">
+                <Icon size={16} strokeWidth={1.75} />
+            </span>
+            <span className="vrail-btn-label">{label}</span>
+        </button>
+    );
+    if (!isRail) return button;
+    return (
+        <TooltipPrimitive.Root>
+            <TooltipPrimitive.Trigger asChild>{button}</TooltipPrimitive.Trigger>
+            <TooltipPrimitive.Portal>
+                <TooltipPrimitive.Content className="tb-tooltip" side="right" sideOffset={6}>
+                    {label}
+                </TooltipPrimitive.Content>
+            </TooltipPrimitive.Portal>
+        </TooltipPrimitive.Root>
+    );
+}
+
 export function LeftPane({ editor }: LeftPaneProps) {
     const { t } = useTranslation('editor');
     const tab = useSession((s) => s.leftTab);
@@ -62,44 +99,51 @@ export function LeftPane({ editor }: LeftPaneProps) {
     const hasHeadings = useEditorHeadings(editor);
     const expandPane = usePaneStore((s) => s.expand);
     const railPane = usePaneStore((s) => s.rail);
+    const leftState = usePaneStore((s) => s.left);
+    const isRail = leftState !== PaneState.Expanded;
     const activeLabelKey = TABS.find((e) => e.id === tab)!.labelKey;
 
     const handleTabClick = (id: LeftTab) => {
         setLeftTab(id);
-        expandPane('left');
+        if (isRail) expandPane('left');
     };
+
+    const togglePane = () => (isRail ? expandPane('left') : railPane('left'));
+    const toggleLabel = isRail ? t('pane.expand') : t('pane.collapse');
+    const ToggleIcon = isRail ? PanelLeftOpen : PanelLeftClose;
 
     return (
         <aside className="left-pane">
-            <nav className="vrail" aria-label={t('pane.outline')}>
-                {TABS.map(({ id, icon: Icon, labelKey }) => (
+            <TooltipPrimitive.Provider delayDuration={400}>
+                <div className="vrail-header">
                     <button
-                        key={id}
                         type="button"
-                        className={`vrail-btn${tab === id ? ' is-active' : ''}`}
-                        onClick={() => handleTabClick(id)}
-                        aria-label={t(labelKey)}
-                        title={t(labelKey)}
+                        className="vrail-toggle"
+                        onClick={togglePane}
+                        title={toggleLabel}
+                        aria-label={toggleLabel}
+                        aria-expanded={!isRail}
                     >
-                        <span className="vrail-btn-icon">
-                            <Icon size={16} strokeWidth={1.75} />
-                        </span>
-                        <span className="vrail-btn-label">{t(labelKey)}</span>
+                        <ToggleIcon size={15} strokeWidth={1.75} />
                     </button>
-                ))}
-            </nav>
+                </div>
+                <nav className="vrail" aria-label={t('pane.outline')}>
+                    {TABS.map(({ id, icon: Icon, labelKey }) => (
+                        <VrailButton
+                            key={id}
+                            id={id}
+                            Icon={Icon}
+                            label={t(labelKey)}
+                            isActive={tab === id}
+                            isRail={isRail}
+                            onClick={handleTabClick}
+                        />
+                    ))}
+                </nav>
+            </TooltipPrimitive.Provider>
 
             <div className="pane-header">
                 <h2 className="pane-title">{t(activeLabelKey)}</h2>
-                <button
-                    type="button"
-                    className="pane-collapse"
-                    onClick={() => railPane('left')}
-                    title={t('pane.collapse')}
-                    aria-label={t('pane.collapse')}
-                >
-                    <PanelLeftClose size={15} strokeWidth={1.75} />
-                </button>
             </div>
 
             <div className="pane-body">

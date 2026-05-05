@@ -23,11 +23,22 @@
 }
 .suggestion-text-insertion {
   text-decoration: underline;
-  color: #15803d;
+  color: var(--suggest);
 }
 .suggestion-text-deletion {
   text-decoration: line-through;
-  color: #9ca3af;
+  color: var(--suggest);
+  opacity: 0.6;
+}
+.suggestion-text-replace {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+}
+.suggestion-text-arrow {
+  color: var(--text-subtle);
+  font-size: 12px;
 }
 .suggestion-actions {
   display: flex;
@@ -39,11 +50,12 @@
   text-decoration: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 2px;
-  color: var(--track-color, #15803d);
+  color: var(--track-color, var(--suggest));
 }
 .tc-del {
   text-decoration: line-through;
-  color: var(--track-color, #9ca3af);
+  color: var(--track-color, var(--suggest));
+  opacity: 0.7;
 }
 .comment-anchor {
   background: var(--comment-mark-bg);

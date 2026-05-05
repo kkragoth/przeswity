@@ -23,22 +23,77 @@
 .version {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 8px 10px;
   margin-bottom: 6px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.version:hover {
+  border-color: var(--border-strong);
+}
+.version-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.version-head-text {
+  flex: 1;
+  min-width: 0;
 }
 .version-label {
   font-weight: 600;
   font-size: 13px;
+  word-break: break-word;
 }
 .version-meta {
   font-size: 11px;
   color: var(--text-subtle);
-  margin: 2px 0 6px;
+  margin-top: 2px;
 }
-.version-actions {
-  display: flex;
-  gap: 6px;
+.version-kebab {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-subtle);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.version-kebab:hover {
+  background: var(--bg-tint);
+  color: var(--text);
+  border-color: var(--border);
+}
+.version-primary {
+  width: 100%;
+  background: var(--bg-elev);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.version-primary:hover {
+  background: var(--bg-tint);
+  border-color: var(--border-strong);
+}
+.version.is-compare-target .version-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.version.is-compare-target .version-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 /* Side-by-side diff */
@@ -141,9 +196,11 @@
 .version.is-compare-target {
   background: var(--bg-elev);
 }
-.version-actions .btn-danger {
+[role='menuitem'].is-danger {
   color: var(--warning);
-  border-color: var(--warning-soft);
+}
+[role='menuitem'].is-danger:focus {
+  color: var(--warning);
 }
 
 /* Markdown diff view (GitHub-inspired) */

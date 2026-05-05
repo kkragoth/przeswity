@@ -4,6 +4,7 @@ import {
     useEffect,
     useMemo,
     useState,
+    type Context,
     type ReactNode,
 } from 'react';
 import type { Editor } from '@tiptap/react';
@@ -38,8 +39,17 @@ interface EditorContextValue {
     setEditor: (editor: Editor | null) => void;
 }
 
-const EditorContext = createContext<EditorContextValue | null>(null);
-const EditorLiveStoreContext = createContext<LiveStore | null>(null);
+type HmrGlobal = typeof globalThis & {
+    __przeswity_EditorContext?: Context<EditorContextValue | null>
+    __przeswity_EditorLiveStoreContext?: Context<LiveStore | null>
+};
+const hmrGlobal = globalThis as HmrGlobal;
+const EditorContext: Context<EditorContextValue | null> =
+    hmrGlobal.__przeswity_EditorContext
+    ?? (hmrGlobal.__przeswity_EditorContext = createContext<EditorContextValue | null>(null));
+const EditorLiveStoreContext: Context<LiveStore | null> =
+    hmrGlobal.__przeswity_EditorLiveStoreContext
+    ?? (hmrGlobal.__przeswity_EditorLiveStoreContext = createContext<LiveStore | null>(null));
 
 export interface EditorLiveProviderProps {
     children: ReactNode;

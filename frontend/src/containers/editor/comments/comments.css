@@ -48,11 +48,6 @@
   white-space: pre-wrap;
   word-break: break-word;
 }
-.thread-reply {
-  border-left: 2px solid var(--border);
-  padding-left: 8px;
-  margin: 8px 0 8px 8px;
-}
 .thread-draft textarea {
   width: 100%;
   border: 1px solid var(--border);
