@@ -15,6 +15,12 @@
 .editor-host.pane-left-hidden { --left-effective: 0px; }
 .editor-host.pane-right-hidden { --right-effective: 0px; }
 
+/* Compare view: panes are not rendered, center spans the full width. */
+.editor-host--compare {
+  --left-effective: 0px;
+  --right-effective: 0px;
+}
+
 /* ---------- Main grid ----------
    The center track must be allowed to shrink; otherwise pane transitions can
    push the editor off-screen instead of leaving a visible manuscript surface.

@@ -1,0 +1,3 @@
+export const AUTO_SNAPSHOT_INTERVAL_MS = 10 * 60 * 1000;
+export const AUTO_SNAPSHOT_IDLE_MS = 30 * 1000;
+export const SAVE_STATUS_DEBOUNCE_MS = 400;

@@ -14,7 +14,12 @@ import { EMPTY_SLASH, type EditorViewProps, type SlashTriggerInfo } from '@/edit
 import { useBlockHover } from '@/editor/tiptap/blocks/useBlockHover';
 import { useBlockDrag, useBlockDragOver } from '@/editor/tiptap/blocks/useBlockDragDrop';
 import { useAwarenessSync } from '@/editor/tiptap/hooks/useAwarenessSync';
-import { useCommentScrollPulse } from '@/editor/tiptap/hooks/useCommentScrollPulse';
+import {
+    useActiveCommentMarkClass,
+    useCommentScrollPulse,
+    useResolvedCommentMarkClass,
+} from '@/editor/tiptap/hooks/useCommentScrollPulse';
+import { useCommentThreads } from '@/editor/comments/useCommentThreads';
 import { useHeaderFooterSync } from '@/editor/tiptap/headerFooter/useHeaderFooterSync';
 import { useEditorContextMenu } from '@/editor/tiptap/hooks/useEditorContextMenu';
 import { useEditorInit } from '@/editor/tiptap/hooks/useEditorInit';
@@ -37,6 +42,7 @@ export function EditorView({
     const setEditorInStore = useSetEditor();
     const suggestingMode = useEditorLive((s) => s.suggesting.effective);
     const activeCommentId = useSession((s) => s.activeCommentId);
+    const commentPulseTick = useSession((s) => s.commentPulseTick);
 
     // Single context cell replacing 5 mutable refs — initialized before first useEditor call.
     const ctx = useMemo(() => createEditorContext({
@@ -85,7 +91,10 @@ export function EditorView({
     useAwarenessSync(editor, collab.provider, user);
     const hoveredBlock = useBlockHover(editor);
     useBlockDragOver(editor, dragStateRef, setDropTop);
-    useCommentScrollPulse(editor, activeCommentId);
+    const allThreads = useCommentThreads(collab.doc);
+    useCommentScrollPulse(editor, activeCommentId, commentPulseTick);
+    useActiveCommentMarkClass(editor, activeCommentId);
+    useResolvedCommentMarkClass(editor, allThreads);
 
     const showHeaderFooterBar = editor && headerFooterFocus.kind !== HeaderFooterKind.None;
     const showDragHandle = editor && hoveredBlock && canEditOrSuggest;
@@ -126,12 +135,6 @@ export function EditorView({
                         onMouseDown={(e) => focusOnEmptyClick(e, editor, canEditOrSuggest)}
                     >
                         <EditorContent editor={editor} />
-                        <CommentAnchors
-                            editor={editor}
-                            doc={collab.doc}
-                            activeCommentId={activeCommentId}
-                            onSelect={onActiveCommentChange}
-                        />
                         {showDragHandle ? (
                             <DragHandle
                                 editor={editor}
@@ -143,6 +146,19 @@ export function EditorView({
                         ) : null}
                         {dropTop !== null ? <div className="drop-indicator" style={{ top: dropTop }} /> : null}
                     </div>
+                    {/* Pins live in the zoom-frame (sibling of `.editor-page`)
+                        so they anchor right next to the page edge — not far
+                        at the editor-shell gutter — while still staying
+                        outside the page's `transform: scale` (so the cards
+                        don't scale with editor zoom). The frame is part of
+                        scroll content, so pins scroll with the doc naturally,
+                        no scroll listener needed. */}
+                    <CommentAnchors
+                        editor={editor}
+                        doc={collab.doc}
+                        activeCommentId={activeCommentId}
+                        onSelect={onActiveCommentChange}
+                    />
                 </div>
             </div>
             {editor ? (

@@ -7,11 +7,24 @@ export enum PaneState {
     Hidden = 'hidden',
 }
 
+export enum PinsMode {
+    Off = 'off',
+    Avatars = 'avatars',
+    Full = 'full',
+}
+
+export enum PinsSide {
+    Left = 'left',
+    Right = 'right',
+}
+
 export type PaneSide = 'left' | 'right';
 
 interface PaneStore {
     left: PaneState;
     right: PaneState;
+    pinsMode: PinsMode;
+    pinsSide: PinsSide;
     set: (side: PaneSide, state: PaneState) => void;
     expand: (side: PaneSide) => void;
     hide: (side: PaneSide) => void;
@@ -20,6 +33,8 @@ interface PaneStore {
     toggle: (side: PaneSide, narrow: boolean) => void;
     showSide: (side: PaneSide, narrow: boolean) => void;
     dismissBoth: () => void;
+    cyclePinsMode: () => void;
+    togglePinsSide: () => void;
 }
 
 const nextCycle = (current: PaneState): PaneState =>
@@ -27,11 +42,15 @@ const nextCycle = (current: PaneState): PaneState =>
 
 const opposite = (side: PaneSide): PaneSide => (side === 'left' ? 'right' : 'left');
 
+const PINS_CYCLE: PinsMode[] = [PinsMode.Full, PinsMode.Avatars, PinsMode.Off];
+
 export const usePaneStore = create<PaneStore>()(
     persist(
         (set, get) => ({
             left: PaneState.Expanded,
             right: PaneState.Expanded,
+            pinsMode: PinsMode.Full,
+            pinsSide: PinsSide.Right,
             set: (side, state) => set({ [side]: state }),
             expand: (side) => set({ [side]: PaneState.Expanded }),
             hide: (side) => set({ [side]: PaneState.Hidden }),
@@ -53,8 +72,15 @@ export const usePaneStore = create<PaneStore>()(
                 get().showSide(side, true);
             },
             dismissBoth: () => set({ left: PaneState.Hidden, right: PaneState.Hidden }),
+            cyclePinsMode: () => set((s) => {
+                const idx = PINS_CYCLE.indexOf(s.pinsMode);
+                return { pinsMode: PINS_CYCLE[(idx + 1) % PINS_CYCLE.length] };
+            }),
+            togglePinsSide: () => set((s) => ({
+                pinsSide: s.pinsSide === PinsSide.Right ? PinsSide.Left : PinsSide.Right,
+            })),
         }),
-        { name: 'editor.panes', version: 1 },
+        { name: 'editor.panes', version: 3 },
     ),
 );
 

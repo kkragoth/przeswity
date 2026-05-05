@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Send } from 'lucide-react';
 import { MentionTextarea, type MentionCandidate } from '../MentionTextarea';
 import { withStop } from '@/utils/react/withStop';
 
@@ -30,7 +31,9 @@ export const ThreadReplyCompose = memo(function ThreadReplyCompose(props: Thread
                     title={t('comments.reply')}
                     aria-label={t('comments.reply')}
                     onClick={withStop(props.onSubmit)}
-                >↑</button>
+                >
+                    <Send size={14} strokeWidth={2.25} />
+                </button>
             </div>
         </div>
     );

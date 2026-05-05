@@ -14,8 +14,11 @@ export const TOAST_DURATION_MS = 3_000;
 /** Fraction of block height that determines drop-above vs drop-below. */
 export const BLOCK_DROP_MIDPOINT_RATIO = 0.5;
 
-// Comment pins
-export const COMMENT_PIN_GAP_PX = 36;
+// Comment pins — minimum vertical distance between two stacked pins so they
+// don't visually collide. Cards are taller than avatars, so they need a
+// bigger gap; the consumer picks based on `PinsMode`.
+export const COMMENT_PIN_AVATAR_GAP_PX = 36;
+export const COMMENT_PIN_CARD_GAP_PX = 84;
 
 // Page navigation
 export const PAGE_NAV_ACTIVE_LINE_RATIO = 0.30;

@@ -23,6 +23,12 @@ export interface PendingComment {
 
 export interface SessionState {
     activeCommentId: string | null;
+    /**
+     * Monotonic counter incremented every time the user re-asserts focus on a
+     * comment (clicking the same thread again). Lets `useCommentScrollPulse`
+     * replay the pulse animation even when `activeCommentId` didn't change.
+     */
+    commentPulseTick: number;
     pendingNewComment: PendingComment | null;
     leftTab: LeftTab;
     rightTab: RightTab;
@@ -30,6 +36,7 @@ export interface SessionState {
     shortcutsOpen: boolean;
 
     setActiveComment: (id: string | null) => void;
+    requestCommentPulse: () => void;
     enqueuePendingComment: (a: PendingComment) => void;
     consumePendingComment: () => PendingComment | null;
     setLeftTab: (t: LeftTab) => void;
@@ -45,12 +52,17 @@ export type SessionStore = StoreApi<SessionState>;
 export const createSessionStore = (): SessionStore =>
     createStore<SessionState>()((set, get) => ({
         activeCommentId: null,
+        commentPulseTick: 0,
         pendingNewComment: null,
         leftTab: LeftTab.Outline,
         rightTab: RightTab.Comments,
         findOpen: false,
         shortcutsOpen: false,
-        setActiveComment: (id) => set({ activeCommentId: id }),
+        setActiveComment: (id) => set((s) => ({
+            activeCommentId: id,
+            commentPulseTick: id !== null ? s.commentPulseTick + 1 : s.commentPulseTick,
+        })),
+        requestCommentPulse: () => set((s) => ({ commentPulseTick: s.commentPulseTick + 1 })),
         enqueuePendingComment: (a) => set({ pendingNewComment: a }),
         consumePendingComment: () => {
             const v = get().pendingNewComment;

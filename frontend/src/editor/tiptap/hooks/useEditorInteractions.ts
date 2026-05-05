@@ -19,7 +19,7 @@ export function focusOnEmptyClick(
 ) {
     if (!editor || !canEditOrSuggest) return;
     const target = e.target as HTMLElement;
-    if (target.closest('.prose-editor, [data-comment-id], .drag-handle, button, a, input, textarea')) return;
+    if (target.closest('.prose-editor, [data-comment-id], .drag-handle, button, [role="button"], a, input, textarea')) return;
     e.preventDefault();
     editor.commands.focus('end');
 }

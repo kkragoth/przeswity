@@ -61,6 +61,23 @@ export function attrsForAuthoredMark(
     return neighbor ? neighbor.attrs : makeMarkAttrs(author);
 }
 
+// When typing after a backspace-deletion, the insertion should share the
+// same suggestionId as the deletion mark to show as one Replace suggestion.
+export function attrsForAuthoredMarkWithPair(
+    state: EditorState,
+    primaryType: MarkType,
+    pairType: MarkType,
+    author: SuggestionAuthor,
+    from: number,
+    to: number,
+): Record<string, unknown> {
+    const neighbor = findAuthoredMarkAt(state, primaryType, author.id, from)
+        ?? findAuthoredMarkAt(state, primaryType, author.id, to)
+        ?? findAuthoredMarkAt(state, pairType, author.id, from)
+        ?? findAuthoredMarkAt(state, pairType, author.id, to);
+    return neighbor ? neighbor.attrs : makeMarkAttrs(author);
+}
+
 function insertionCoverage(state: EditorState, authorId: string): { total: number; authoredInsertion: number; deletion: number } {
     let total = 0;
     let authoredInsertion = 0;

@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
 import type { Editor } from '@tiptap/react';
-import { COMMENT_PIN_GAP_PX } from '@/editor/constants';
-import { readEffectiveZoom } from '@/contexts/EditorZoomContext';
 
 export interface PinAnchor {
     id: string;
@@ -18,7 +16,20 @@ export interface OpenThread {
     replies: number;
 }
 
-function placePins(dom: HTMLElement, pageRect: DOMRect, zoom: number, openThreads: OpenThread[]): PinAnchor[] {
+/**
+ * Compute pin tops in the coord space of `.editor-zoom-frame` (sibling of the
+ * page, same size as the scaled page but without the transform). Because the
+ * frame is part of scroll content, pins scroll with the doc automatically —
+ * no scroll listener needed. And because the frame has no transform, the
+ * pin's CSS top is in native pixels and `spanRect.top - frameRect.top` lines
+ * up with the span's viewport y at any editor zoom.
+ */
+function placePins(
+    dom: HTMLElement,
+    frameRect: DOMRect,
+    openThreads: OpenThread[],
+    minGapPx: number,
+): PinAnchor[] {
     const placed: PinAnchor[] = [];
     const seen = new Set<string>();
     for (const th of openThreads) {
@@ -27,46 +38,60 @@ function placePins(dom: HTMLElement, pageRect: DOMRect, zoom: number, openThread
         if (!span) continue;
         seen.add(th.id);
         const r = span.getBoundingClientRect();
-        placed.push({ ...th, top: (r.top - pageRect.top) / zoom });
+        placed.push({ ...th, top: r.top - frameRect.top });
     }
     placed.sort((a, b) => a.top - b.top);
     for (let i = 1; i < placed.length; i++) {
-        if (pinsAreOverlapping(placed[i - 1].top, placed[i].top)) {
-            placed[i].top = placed[i - 1].top + COMMENT_PIN_GAP_PX;
+        if (pinsAreOverlapping(placed[i - 1].top, placed[i].top, minGapPx)) {
+            placed[i].top = placed[i - 1].top + minGapPx;
         }
     }
     return placed;
 }
 
-function pinsAreOverlapping(prevTop: number, currTop: number): boolean {
-    return currTop - prevTop < COMMENT_PIN_GAP_PX;
+function pinsAreOverlapping(prevTop: number, currTop: number, minGapPx: number): boolean {
+    return currTop - prevTop < minGapPx;
 }
 
-export function useCommentPinPositions(editor: Editor | null, openThreads: OpenThread[]): PinAnchor[] {
+export function useCommentPinPositions(
+    editor: Editor | null,
+    openThreads: OpenThread[],
+    minGapPx: number,
+): PinAnchor[] {
     const [pins, setPins] = useState<PinAnchor[]>([]);
 
     useEffect(() => {
         if (!editor) return;
+        const dom = editor.view.dom as HTMLElement;
+        const frame = dom.closest('.editor-zoom-frame') as HTMLElement | null;
+        if (!frame) return;
+
         let raf = 0;
         const compute = () => {
             cancelAnimationFrame(raf);
             raf = requestAnimationFrame(() => {
-                const dom = editor.view.dom as HTMLElement;
-                const page = dom.closest('.editor-page') as HTMLElement | null;
-                if (!page) return;
-                setPins(placePins(dom, page.getBoundingClientRect(), readEffectiveZoom(page), openThreads));
+                setPins(placePins(dom, frame.getBoundingClientRect(), openThreads, minGapPx));
             });
         };
         compute();
-        const onTr = () => compute();
-        editor.on('transaction', onTr);
+        editor.on('update', compute);
         window.addEventListener('resize', compute);
+
+        // Doc reflows that don't fire `update` still move the anchored spans:
+        // font load, PaginationPlus inserting page breaks, images settling,
+        // zoom toggles. Watch the frame and the prosemirror dom for size
+        // changes and recompute.
+        const ro = new ResizeObserver(compute);
+        ro.observe(frame);
+        ro.observe(dom);
+
         return () => {
             cancelAnimationFrame(raf);
-            editor.off('transaction', onTr);
+            editor.off('update', compute);
             window.removeEventListener('resize', compute);
+            ro.disconnect();
         };
-    }, [editor, openThreads]);
+    }, [editor, openThreads, minGapPx]);
 
     return pins;
 }

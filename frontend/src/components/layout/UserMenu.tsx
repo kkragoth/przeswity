@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { LogOut, Settings, BookOpen } from 'lucide-react';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import { authClient } from '@/auth/client';
+import { queryClient } from '@/app/queryClient';
 import { Avatar } from '@/components/Avatar';
 import type { SessionUser } from '@/auth/types';
 
@@ -12,6 +13,7 @@ export function UserMenu({ user }: { user: SessionUser }) {
 
     const handleLogout = async () => {
         await authClient.signOut();
+        queryClient.clear();
         void navigate({ to: '/login', search: {} });
     };
 

@@ -2,7 +2,8 @@
     "global": {
         "cancel": "Anuluj",
         "close": "Zamknij",
-        "delete": "Usuń"
+        "delete": "Usuń",
+        "loading": "Ładowanie..."
     },
     "topbar": {
         "saving": "Zapisywanie...",
@@ -373,5 +374,46 @@
         "importFailed": "Import nie powiódł się: {{error}}",
         "templateLoaded": "Załadowano szablon: {{name}}",
         "linkPrompt": "Adres URL"
+    },
+    "versionHistory": {
+        "title": "Historia wersji",
+        "viewing": "Przeglądasz wersję:",
+        "restore": "Przywróć tę wersję",
+        "close": "Zamknij",
+        "current": "Bieżący dokument",
+        "from": "Od",
+        "to": "Do",
+        "swap": "Zamień strony",
+        "fromBadge": "Od",
+        "toBadge": "Do",
+        "railHint": "Kliknij wersję, aby ustawić ją jako prawą stronę"
+    },
+    "pins": {
+        "toggle": "Przełącz przypięcia komentarzy",
+        "toggleSide": "Strona przypięć: lewa / prawa",
+        "off": "Wyłączone",
+        "avatars": "Awatary",
+        "full": "Pełne karty"
+    },
+    "threads": {
+        "title": "Dyskusje",
+        "empty": "Brak otwartych komentarzy lub sugestii.",
+        "kind": {
+            "comment": "Komentarz",
+            "suggestion": "Sugestia"
+        },
+        "action": {
+            "accept": "Akceptuj",
+            "reject": "Odrzuć",
+            "resolve": "Rozwiąż",
+            "reply": "Odpowiedz"
+        },
+        "filter": {
+            "all": "Wszystkie",
+            "open": "Otwarte",
+            "resolved": "Rozwiązane",
+            "suggestions": "Sugestie",
+            "mine": "Moje"
+        }
     }
 }

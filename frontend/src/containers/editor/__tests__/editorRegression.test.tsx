@@ -66,7 +66,7 @@ afterEach(() => h.unmount());
 
 describe('editor regression — comment golden path', () => {
     it('1. mounts an empty sidebar with the editor namespace title', () => {
-        expect(h.host.textContent).toContain('comments.tabs.comments');
+        expect(h.host.textContent).toContain('comments.filter.open');
         expect(h.host.textContent).toContain('comments.empty');
     });
 

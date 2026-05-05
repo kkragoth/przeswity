@@ -12,6 +12,7 @@ import { SyncMini } from '@/containers/editor/status';
 import { ZoomControl } from '@/editor/tiptap/toolbar/ZoomControl';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { useEditorLive } from '@/containers/editor/session/LiveProvider';
+import { EditorSaveStatus } from '@/containers/editor/layout/EditorSaveStatus';
 
 interface StatusBarProps {
     editor: Editor | null;
@@ -71,6 +72,7 @@ export function StatusBar({ editor }: StatusBarProps) {
                     </>
                 ) : null}
                 <span className="statusbar-spacer" />
+                <EditorSaveStatus />
                 <ZoomControl />
                 <PageJumper current={pageNav.current} total={pageNav.total} onJump={pageNav.jumpTo} />
                 <PeerAvatarStack editor={editor} />

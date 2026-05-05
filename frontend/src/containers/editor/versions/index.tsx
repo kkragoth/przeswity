@@ -1,125 +1,104 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Editor } from '@tiptap/react';
 
-import type { VersionSnapshot } from '@/editor/versions/types';
-import type { JSONNode } from '@/editor/versions/diffDoc';
-import { VersionDiffModal } from './components/VersionDiffModal';
-import { VersionsList } from './components/VersionsList';
+import {
+    bookSnapshotsListOptions,
+    bookSnapshotCreateMutation,
+    bookSnapshotDeleteMutation,
+} from '@/api/generated/@tanstack/react-query.gen';
 import { VersionsPanelHeader } from './components/VersionsPanelHeader';
-import { useAutoSnapshot } from './hooks/useAutoSnapshot';
-import { useVersions } from './hooks/useVersions';
-import { useConfirmDialog } from '@/components/feedback/useConfirmDialog';
-import { ConfirmDialogHost } from '@/components/feedback/ConfirmDialogHost';
-import { ToastKind } from '@/editor/shell/useToast';
+import { useVersionNavigation } from './hooks/useVersionNavigation';
+import { CURRENT_SIDE, snapshotSide } from '@/containers/editor/session/editorViewStore';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
+import { ToastKind } from '@/editor/shell/useToast';
+import type { SnapshotSummary } from '@/api/generated/types.gen';
 
 interface VersionsPanelProps {
     editor: Editor | null;
 }
 
-export function VersionsPanel({ editor }: VersionsPanelProps) {
+export function VersionsPanel({ editor: _editor }: VersionsPanelProps) {
     const { t } = useTranslation('editor');
-    const { user, bookId, collab, toast } = useEditorSession();
-    const doc = collab.doc;
-    const versionsApi = useVersions(doc, user, editor, bookId);
-    const confirmDlg = useConfirmDialog();
-    const [compareSourceId, setCompareSourceId] = useState<string | null>(null);
-    const [diffState, setDiffState] = useState<{
-        diffJson: JSONNode;
-        olderJson?: JSONNode;
-        newerJson?: JSONNode;
-        olderLabel: string;
-        newerLabel: string;
-        restoreSnapshot?: VersionSnapshot;
-    } | null>(null);
+    const { bookId, toast } = useEditorSession();
+    const [label, setLabel] = useState('');
+    const queryClient = useQueryClient();
+    const { openCompare } = useVersionNavigation();
 
-    useAutoSnapshot(
-        doc,
-        useCallback(() => {
-            versionsApi.snapshot(true, t('versions.autoLabel', { time: new Date().toLocaleString() }));
-        }, [versionsApi, t]),
-    );
+    const { data: snapshots = [] } = useQuery(bookSnapshotsListOptions({ path: { bookId } }));
 
-    const confirmRestore = async (snapshot: VersionSnapshot) => {
-        if (!editor) {
-            toast(t('versions.editorNotReady'), ToastKind.Error);
-            return;
-        }
-        const ok = await confirmDlg.confirm({
-            title: t('versions.restoreConfirm', { label: snapshot.label }),
-            destructive: true,
-        });
-        if (!ok) return;
-        if (versionsApi.restore(snapshot)) toast(t('versions.restoreSuccess', { label: snapshot.label }), ToastKind.Success);
+    const createMut = useMutation({
+        ...bookSnapshotCreateMutation(),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['bookSnapshotsList'] });
+            setLabel('');
+        },
+    });
+
+    const deleteMut = useMutation({
+        ...bookSnapshotDeleteMutation(),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['bookSnapshotsList'] });
+        },
+    });
+
+    const onCreate = () => {
+        const snapshotLabel = label.trim() || `Snapshot ${new Date().toLocaleString()}`;
+        createMut.mutate(
+            { path: { bookId }, body: { label: snapshotLabel } },
+            {
+                onSuccess: (snap) => toast(t('versions.snapshotSaved', { label: snap.label }), ToastKind.Success),
+                onError: () => toast(t('versions.editorNotReady'), ToastKind.Error),
+            },
+        );
     };
 
-    const compareSourceLabel = versionsApi.versions.find((v) => v.id === compareSourceId)?.label ?? '';
+    const onDelete = (snap: SnapshotSummary) => {
+        deleteMut.mutate({ path: { bookId, id: snap.id } });
+    };
 
     return (
-        <>
-            <div className="sidebar versions-panel">
-                <VersionsPanelHeader
-                    label={versionsApi.label}
-                    onLabelChange={versionsApi.setLabel}
-                    onCreate={() => {
-                        const saved = versionsApi.snapshot(false);
-                        toast(t('versions.snapshotSaved', { label: saved.label }), ToastKind.Success);
-                    }}
-                />
-
-                {compareSourceId ? (
-                    <div className="compare-banner">
-                        {t('versions.compareBanner', { label: compareSourceLabel })}{' '}
-                        <button type="button" onClick={() => setCompareSourceId(null)}>{t('global.cancel')}</button>
-                    </div>
-                ) : null}
-
-                {versionsApi.versions.length === 0 ? (
-                    <div className="sidebar-empty">{t('versions.empty')}</div>
-                ) : (
-                    <VersionsList
-                        versions={versionsApi.versions}
-                        compareSourceId={compareSourceId}
-                        onDiffCurrent={(snapshot) => {
-                            const diff = versionsApi.diffWithCurrent(snapshot);
-                            if (!diff) return;
-                            setDiffState({ ...diff, restoreSnapshot: snapshot });
-                        }}
-                        onStartCompare={(snapshot) => setCompareSourceId(snapshot.id)}
-                        onDiffWithSelected={(snapshot) => {
-                            if (!compareSourceId) return;
-                            const source = versionsApi.versions.find((v) => v.id === compareSourceId);
-                            setCompareSourceId(null);
-                            if (!source || source.id === snapshot.id) return;
-                            setDiffState(versionsApi.diffBetween(source, snapshot));
-                        }}
-                        onRestore={(snapshot) => void confirmRestore(snapshot)}
-                        onDelete={(snapshot) => {
-                            versionsApi.remove(snapshot.id);
-                            if (compareSourceId === snapshot.id) setCompareSourceId(null);
-                        }}
-                    />
-                )}
-            </div>
-
-            {diffState ? (
-                <VersionDiffModal
-                    diffJson={diffState.diffJson}
-                    olderJson={diffState.olderJson}
-                    newerJson={diffState.newerJson}
-                    olderLabel={diffState.olderLabel}
-                    newerLabel={diffState.newerLabel}
-                    onClose={() => setDiffState(null)}
-                    onRestore={diffState.restoreSnapshot ? () => void confirmRestore(diffState.restoreSnapshot!) : undefined}
-                />
-            ) : null}
-
-            <ConfirmDialogHost
-                dialogState={confirmDlg.dialogState}
-                onConfirm={confirmDlg.onConfirm}
-                onCancel={confirmDlg.onCancel}
+        <div className="sidebar versions-panel">
+            <VersionsPanelHeader
+                label={label}
+                onLabelChange={setLabel}
+                onCreate={onCreate}
             />
-        </>
+
+            {snapshots.length === 0 ? (
+                <div className="sidebar-empty">{t('versions.empty')}</div>
+            ) : (
+                snapshots.map((snap) => (
+                    <div key={snap.id} className="version">
+                        <div className="version-head">
+                            <div className="version-head-text">
+                                <div className="version-label">
+                                    {snap.label.startsWith('auto:') ? (
+                                        <><span className="auto-badge">{t('versions.autoBadge')}</span>{snap.label.slice(5)}</>
+                                    ) : snap.label}
+                                </div>
+                                <div className="version-meta">
+                                    {snap.createdBy.name} · {new Date(snap.createdAt).toLocaleString()}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="version-actions">
+                            <button type="button" className="version-primary" onClick={() => openCompare(snapshotSide(snap.id), CURRENT_SIDE)}>
+                                {t('versions.compare')}
+                            </button>
+                            <button
+                                type="button"
+                                className="version-primary"
+                                onClick={() => onDelete(snap)}
+                                style={{ color: 'var(--warning)' }}
+                            >
+                                {t('versions.delete')}
+                            </button>
+                        </div>
+                    </div>
+                ))
+            )}
+        </div>
     );
 }

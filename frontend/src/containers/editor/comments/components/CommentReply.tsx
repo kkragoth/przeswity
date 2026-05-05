@@ -54,12 +54,15 @@ export function CommentReply({ threadId, replyId }: CommentReplyProps) {
 
     return (
         <div className="thread-reply">
-            <Avatar name={reply.authorName} color={reply.authorColor} size="sm" />
+            <Avatar name={reply.authorName} color={reply.authorColor} size="xs" />
             <div className="thread-reply-text">
                 <div className="thread-head-row">
                     <span className="thread-author">{reply.authorName}</span>
-                    <span className="thread-role-chip">{reply.authorRole}</span>
-                    <span className="thread-head-time">{formatRelative(reply.createdAt)}</span>
+                    <span className="thread-head-meta">
+                        <span className="thread-head-role">{reply.authorRole}</span>
+                        <span className="thread-head-dot">·</span>
+                        <span className="thread-head-time">{formatRelative(reply.createdAt)}</span>
+                    </span>
                 </div>
                 {isEditing ? (
                     <div className="thread-draft">

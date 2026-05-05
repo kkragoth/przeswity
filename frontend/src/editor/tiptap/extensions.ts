@@ -16,7 +16,7 @@ import { PaginationPlus } from 'tiptap-pagination-plus';
 import type { HeaderClickEvent, FooterClickEvent } from 'tiptap-pagination-plus';
 
 import { Comment } from '@/editor/comments/CommentMark';
-import { Insertion, Deletion } from '@/editor/suggestions/trackChangeMarks';
+import { Insertion, Deletion, FormatChange } from '@/editor/suggestions/trackChangeMarks';
 import { DiffBlockAttr } from '@/editor/suggestions/blockDiffAttribute';
 import { SuggestionMode } from '@/editor/suggestions/SuggestionMode';
 import { SmartPaste } from '@/editor/tiptap/extensions/SmartPaste';
@@ -81,11 +81,16 @@ export function buildExtensions(config: ExtensionsConfig): AnyExtension[] {
             addProseMirrorPlugins() {
                 // awareness is always defined — we never pass awareness:null to HocuspocusProvider
                 const awareness = collab.provider.awareness!;
-                awareness.setLocalStateField('user', {
-                    name: user.name,
-                    color: user.color,
-                    userId: user.id,
-                    lastActiveAt: Date.now(),
+                // setLocalStateField fires a synchronous awareness 'change' event which calls
+                // setPeers inside usePeers — if this runs during React render it triggers the
+                // "setState during render" violation. Defer past the current render frame.
+                queueMicrotask(() => {
+                    awareness.setLocalStateField('user', {
+                        name: user.name,
+                        color: user.color,
+                        userId: user.id,
+                        lastActiveAt: Date.now(),
+                    });
                 });
                 return [yCursorPlugin(awareness, { cursorBuilder: peerCursorBuilder, selectionBuilder: peerSelectionBuilder })];
             },
@@ -93,6 +98,7 @@ export function buildExtensions(config: ExtensionsConfig): AnyExtension[] {
         Comment.configure({ onCommentClick: config.onCommentClick }),
         Insertion,
         Deletion,
+        FormatChange,
         DiffBlockAttr,
         SmartPaste,
         FindReplace,

@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
-import { MoreHorizontal, Trash2 } from 'lucide-react';
+import { Check, ChevronUp, MoreHorizontal, Trash2 } from 'lucide-react';
 
 import { Avatar } from '@/editor/shell/Avatar';
 import { authorColor } from '@/editor/comments/authorColor';
@@ -33,18 +33,16 @@ export function ThreadHeader({ threadId }: ThreadHeaderProps) {
     const { showWithUndo } = useToast();
 
     const handleResolve = useCallback(() => {
-        if (editor) editor.chain().focus().unsetComment(threadId).run();
+        // Pure y-doc status change — see CommentAnchors.handleResolve for why
+        // we don't touch the editor mark here.
         commentsStore.getState().resolveThread(threadId);
         setActiveComment(null);
         commentsStore.getState().cancelEdit();
         showWithUndo(t('comments.resolvedToast'), {
             label: t('comments.undo'),
-            onUndo: () => {
-                commentsStore.getState().reopenThread(threadId);
-                if (editor) editor.commands.undo();
-            },
+            onUndo: () => commentsStore.getState().reopenThread(threadId),
         });
-    }, [editor, commentsStore, setActiveComment, threadId, showWithUndo, t]);
+    }, [commentsStore, setActiveComment, threadId, showWithUndo, t]);
 
     const handleClose = useCallback(() => {
         setActiveComment(null);
@@ -68,23 +66,27 @@ export function ThreadHeader({ threadId }: ThreadHeaderProps) {
 
     return (
         <div className="thread-head">
-            <Avatar name={thread.authorName} color={authorColor(thread)} size="md" ring={isActive} />
+            <Avatar name={thread.authorName} color={authorColor(thread)} size="sm" ring={isActive} />
             <div className="thread-head-text">
                 <div className="thread-head-row">
                     <span className="thread-author">{thread.authorName}</span>
-                    <span className="thread-role-chip">{thread.authorRole}</span>
+                    <span className="thread-head-meta">
+                        <span className="thread-head-role">{thread.authorRole}</span>
+                        <span className="thread-head-dot">·</span>
+                        <span className="thread-head-time">{formatRelative(thread.createdAt)}</span>
+                    </span>
                 </div>
-                <div className="thread-head-time">{formatRelative(thread.createdAt)}</div>
             </div>
             <div className="thread-head-aside">
                 {replyCount > 0 && !isActive ? (
                     <span className="thread-reply-count" title={t('comments.repliesCount', { count: replyCount })}>
-                        ↳ {replyCount}
+                        💬 {replyCount}
                     </span>
                 ) : null}
                 {canResolve && isActive ? (
                     <button type="button" className="btn-resolve" aria-label={t('comments.resolve')} onClick={withStop(handleResolve)}>
-                        ✓ {t('comments.resolve')}
+                        <Check size={13} strokeWidth={2.5} />
+                        {t('comments.resolve')}
                     </button>
                 ) : null}
                 {canResolve && isActive ? (
@@ -114,7 +116,9 @@ export function ThreadHeader({ threadId }: ThreadHeaderProps) {
                     </DropdownMenuPrimitive.Root>
                 ) : null}
                 {isActive ? (
-                    <button type="button" className="thread-close-btn" title={t('comments.close')} aria-label={t('comments.close')} onClick={withStop(handleClose)}>✕</button>
+                    <button type="button" className="thread-collapse-btn" title={t('comments.close')} aria-label={t('comments.close')} onClick={withStop(handleClose)}>
+                        <ChevronUp size={14} strokeWidth={2.25} />
+                    </button>
                 ) : null}
             </div>
             <ConfirmDialogHost

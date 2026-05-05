@@ -22,13 +22,19 @@
   word-break: break-word;
 }
 .suggestion-text-insertion {
-  text-decoration: underline;
-  color: var(--suggest);
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--suggest);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+    background-color: color-mix(in srgb, var(--suggest) 15%, transparent);
 }
 .suggestion-text-deletion {
-  text-decoration: line-through;
-  color: var(--suggest);
-  opacity: 0.6;
+    color: inherit;
+    text-decoration: line-through;
+    text-decoration-color: var(--suggest);
+    text-decoration-thickness: 2px;
+    background-color: color-mix(in srgb, var(--suggest) 15%, transparent);
 }
 .suggestion-text-replace {
   display: flex;
@@ -47,15 +53,19 @@
 
 /* In-document track-change marks */
 .tc-ins {
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 2px;
-  color: var(--track-color, var(--suggest));
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--track-color, var(--suggest));
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+    background-color: color-mix(in srgb, var(--track-color, var(--suggest)) 10%, transparent);
 }
 .tc-del {
-  text-decoration: line-through;
-  color: var(--track-color, var(--suggest));
-  opacity: 0.7;
+    color: inherit;
+    text-decoration: line-through;
+    text-decoration-color: var(--track-color, var(--suggest));
+    text-decoration-thickness: 2px;
+    background-color: color-mix(in srgb, var(--track-color, var(--suggest)) 10%, transparent);
 }
 .comment-anchor {
   background: var(--comment-mark-bg);
@@ -63,4 +73,73 @@
   color: var(--comment-mark-text);
   cursor: pointer;
   border-radius: 1px;
+}
+
+/* Format-change mark: wavy underline in author color */
+.tc-fmt {
+  text-decoration: underline wavy var(--track-color, var(--suggest));
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+/* Inline suggestion accept/reject bubble */
+.suggestion-bubble {
+  display: flex;
+  align-items: center;
+  background: var(--bg-paper);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.14);
+  overflow: hidden;
+  font-size: 12px;
+}
+.suggestion-bubble-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 0.12s;
+  white-space: nowrap;
+}
+.suggestion-bubble-accept {
+  color: var(--success, #1a7f4e);
+}
+.suggestion-bubble-accept:hover {
+  background: color-mix(in srgb, var(--success, #1a7f4e) 12%, transparent);
+}
+.suggestion-bubble-reject {
+  color: var(--danger, #c0392b);
+}
+.suggestion-bubble-reject:hover {
+  background: color-mix(in srgb, var(--danger, #c0392b) 12%, transparent);
+}
+.suggestion-bubble-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+}
+
+/* Suggestion-kind chip */
+.thread-role-chip--suggestion {
+  background: color-mix(in srgb, var(--suggest) 15%, transparent);
+  color: var(--suggest);
+  border-color: color-mix(in srgb, var(--suggest) 30%, transparent);
+}
+
+/* Suggestion preview text inside thread card */
+.thread-suggestion-preview {
+  font-size: 13px;
+  margin: 2px 0 4px;
+  padding: 4px 6px;
+  background: var(--bg-subtle, var(--bg));
+  border-radius: 4px;
+}
+.suggestion-text-label {
+  color: var(--text-subtle);
+  font-size: 11px;
 }

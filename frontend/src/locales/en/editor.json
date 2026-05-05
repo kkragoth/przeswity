@@ -2,7 +2,8 @@
     "global": {
         "cancel": "Cancel",
         "close": "Close",
-        "delete": "Delete"
+        "delete": "Delete",
+        "loading": "Loading..."
     },
     "topbar": {
         "saving": "Saving...",
@@ -373,5 +374,46 @@
         "importFailed": "Import failed: {{error}}",
         "templateLoaded": "Loaded template: {{name}}",
         "linkPrompt": "Link URL"
+    },
+    "versionHistory": {
+        "title": "Version history",
+        "viewing": "Viewing version:",
+        "restore": "Restore this version",
+        "close": "Close",
+        "current": "Current document",
+        "from": "From",
+        "to": "To",
+        "swap": "Swap sides",
+        "fromBadge": "From",
+        "toBadge": "To",
+        "railHint": "Click a version to set as the right side"
+    },
+    "pins": {
+        "toggle": "Toggle comment pins",
+        "toggleSide": "Pin side: left / right",
+        "off": "Off",
+        "avatars": "Avatars",
+        "full": "Full cards"
+    },
+    "threads": {
+        "title": "Discussions",
+        "empty": "No open comments or suggestions.",
+        "kind": {
+            "comment": "Comment",
+            "suggestion": "Suggestion"
+        },
+        "action": {
+            "accept": "Accept",
+            "reject": "Reject",
+            "resolve": "Resolve",
+            "reply": "Reply"
+        },
+        "filter": {
+            "all": "All",
+            "open": "Open",
+            "resolved": "Resolved",
+            "suggestions": "Suggestions",
+            "mine": "Mine"
+        }
     }
 }

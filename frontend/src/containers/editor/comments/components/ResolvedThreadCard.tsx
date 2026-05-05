@@ -32,15 +32,18 @@ export function ResolvedThreadCard({ threadId, canDelete, onReopen, onDelete }: 
     return (
         <div className="thread is-resolved">
             <div className="thread-head">
-                <Avatar name={thread.authorName} color={authorColor(thread)} size="md" />
+                <Avatar name={thread.authorName} color={authorColor(thread)} size="sm" />
                 <div className="thread-head-text">
                     <div className="thread-head-row">
                         <span className="thread-author">{thread.authorName}</span>
-                        <span className="thread-role-chip">{thread.authorRole}</span>
-                    </div>
-                    <div className="thread-head-time">
-                        {t('comments.resolvedBy', { name: thread.resolvedBy ?? '' })}
-                        {thread.resolvedAt ? ` · ${timeLabel}` : ''}
+                        <span className="thread-head-meta">
+                            <span className="thread-head-role">{thread.authorRole}</span>
+                            <span className="thread-head-dot">·</span>
+                            <span className="thread-head-time">
+                                {t('comments.resolvedBy', { name: thread.resolvedBy ?? '' })}
+                                {thread.resolvedAt ? ` · ${timeLabel}` : ''}
+                            </span>
+                        </span>
                     </div>
                 </div>
             </div>

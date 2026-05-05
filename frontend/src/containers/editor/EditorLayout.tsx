@@ -18,6 +18,11 @@ import { useEditor } from '@/containers/editor/session/LiveProvider';
 import { useSession, useSessionStore } from '@/containers/editor/SessionStoreProvider';
 import { EditorZoomProvider } from '@/contexts/EditorZoomContext';
 import type { CollabBundle } from '@/editor/collab/yDoc';
+import { useAutoSnapshot } from '@/containers/editor/versions/hooks/useAutoSnapshot';
+import { useEditorSession } from '@/containers/editor/session/SessionProvider';
+import { useEditorViewStore, EditorViewKind } from '@/containers/editor/session/editorViewStore';
+import { VersionHistoryView } from '@/containers/editor/versions/VersionHistoryView';
+import { SuggestionBubble } from '@/containers/editor/suggestions/SuggestionBubble';
 
 interface EditorLayoutProps {
     collab: CollabBundle
@@ -27,7 +32,11 @@ export function EditorLayout({ collab }: EditorLayoutProps) {
     const { t } = useTranslation('editor');
     const editor = useEditor();
     const sessionStore = useSessionStore();
+    const { bookId } = useEditorSession();
+
+    useAutoSnapshot(collab.doc, bookId);
     const shortcutsOpen = useSession((s) => s.shortcutsOpen);
+    const editorView = useEditorViewStore((s) => s.view);
 
     const left = usePaneStore((s) => s.left);
     const right = usePaneStore((s) => s.right);
@@ -44,7 +53,13 @@ export function EditorLayout({ collab }: EditorLayoutProps) {
         editor.view.dispatch(editor.state.tr.setMeta('glossaryHighlight/refresh', true));
     }, [editor, glossaryEntries]);
 
-    const hostClassName = ['editor-host', paneClass('left', left), paneClass('right', right)].join(' ');
+    const isCompareView = editorView.kind === EditorViewKind.VersionHistory;
+    const hostClassName = [
+        'editor-host',
+        paneClass('left', left),
+        paneClass('right', right),
+        isCompareView ? 'editor-host--compare' : '',
+    ].filter(Boolean).join(' ');
 
     const handleActiveCommentChange = (id: string | null) => {
         sessionStore.getState().setActiveComment(id);
@@ -64,8 +79,8 @@ export function EditorLayout({ collab }: EditorLayoutProps) {
         <EditorZoomProvider className={hostClassName}>
             <TopBar editor={editor} />
             <main className="main-grid">
-                <LeftPane editor={editor} />
-                {left === PaneState.Hidden ? (
+                {!isCompareView && <LeftPane editor={editor} />}
+                {!isCompareView && left === PaneState.Hidden ? (
                     <button
                         type="button"
                         className="pane-handle pane-handle-left"
@@ -76,18 +91,24 @@ export function EditorLayout({ collab }: EditorLayoutProps) {
                     </button>
                 ) : null}
                 <section className="center-pane">
-                    {editor ? <Toolbar editor={editor} /> : null}
-                    <EditorView
-                        collab={collab}
-                        glossaryEntries={glossaryEntries}
-                        onActiveCommentChange={handleActiveCommentChange}
-                        onCreateComment={handleCreateComment}
-                    />
-                    <FindReplaceBar editor={editor} />
-                    <StatusBar editor={editor} />
+                    {isCompareView && (
+                        <VersionHistoryView editor={editor} />
+                    )}
+                    <div style={{ display: isCompareView ? 'none' : 'contents' }}>
+                        {editor ? <Toolbar editor={editor} /> : null}
+                        <EditorView
+                            collab={collab}
+                            glossaryEntries={glossaryEntries}
+                            onActiveCommentChange={handleActiveCommentChange}
+                            onCreateComment={handleCreateComment}
+                        />
+                        {editor ? <SuggestionBubble editor={editor} /> : null}
+                        <FindReplaceBar editor={editor} />
+                        <StatusBar editor={editor} />
+                    </div>
                 </section>
-                <RightPane editor={editor} />
-                {right === PaneState.Hidden ? (
+                {!isCompareView && <RightPane editor={editor} />}
+                {!isCompareView && right === PaneState.Hidden ? (
                     <button
                         type="button"
                         className="pane-handle pane-handle-right"

@@ -1,32 +1,7 @@
-/* Comments */
-.thread {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px;
-  margin-bottom: 8px;
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
-.thread:hover {
-  border-color: var(--border-strong);
-}
-.thread.is-active {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
-}
-.thread.is-resolved {
-  opacity: 0.7;
-  background: var(--bg-paper);
-}
-.thread-quote {
-  font-style: italic;
-  color: var(--text-muted);
-  font-size: 12px;
-  border-left: 2px solid var(--border-strong);
-  padding-left: 8px;
-  margin-bottom: 6px;
-}
+/* ============================================================
+   Comments — Google Docs–style cards
+   ============================================================ */
+
 .thread-meta {
   display: flex;
   gap: 6px;
@@ -35,32 +10,35 @@
   margin-bottom: 4px;
   flex-wrap: wrap;
 }
-.thread-author {
-  font-weight: 600;
-  color: var(--text);
-}
 .thread-role {
   text-transform: uppercase;
   font-size: 10px;
 }
-.thread-body {
-  margin-bottom: 8px;
-  white-space: pre-wrap;
-  word-break: break-word;
+.thread-draft {
+  margin-top: 4px;
 }
 .thread-draft textarea {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px 8px;
+  border-radius: 8px;
+  padding: 6px 9px;
   font: inherit;
+  font-size: 12.5px;
   resize: vertical;
-  min-height: 50px;
+  min-height: 48px;
+  background: var(--bg-paper);
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.thread-draft textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 .thread-actions {
   display: flex;
   gap: 6px;
   margin-top: 6px;
+  justify-content: flex-end;
 }
 .thread-actions button,
 .suggestion-actions button,
@@ -72,13 +50,17 @@
   border-radius: 6px;
   padding: 4px 10px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
 .thread-actions button:hover,
 .suggestion-actions button:hover,
 .bulk-actions button:hover,
 .version-actions button:hover {
-  background: var(--bg);
+  background: var(--bg-tint);
+  color: var(--text);
 }
 .bulk-actions {
   display: flex;
@@ -123,34 +105,48 @@
 .reactions {
   display: flex;
   gap: 4px;
-  margin-top: 6px;
+  margin-top: 8px;
   flex-wrap: wrap;
   position: relative;
+  align-items: center;
 }
 .reaction {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  background: var(--bg);
-  border: 1px solid var(--border);
+  gap: 4px;
+  background: var(--bg-tint);
+  border: 1px solid transparent;
   border-radius: 999px;
-  padding: 2px 8px;
+  padding: 3px 9px;
   cursor: pointer;
   font-size: 12px;
   line-height: 1.3;
+  transition: background 0.12s, border-color 0.12s, transform 0.12s;
 }
 .reaction:hover {
-  border-color: var(--text-subtle);
+  background: var(--bg-paper);
+  border-color: var(--border);
+  transform: scale(1.04);
 }
 .reaction.is-mine {
   background: var(--accent-soft);
   border-color: var(--accent);
   color: var(--accent);
+  font-weight: 600;
 }
 .reaction-add {
   color: var(--text-subtle);
+  background: transparent;
+  border: 1px dashed var(--border);
+  padding: 2px 8px;
+  font-weight: 600;
   opacity: 0;
-  transition: opacity 0.12s ease;
+  transition: opacity 0.12s ease, color 0.12s, border-color 0.12s;
+}
+.reaction-add:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 .thread-message:hover .reaction-add,
 .thread-reply:hover .reaction-add,
@@ -219,11 +215,21 @@
 .mention-textarea textarea {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px 8px;
+  border-radius: 10px;
+  padding: 9px 12px;
   font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
   resize: vertical;
-  min-height: 50px;
+  min-height: 56px;
+  background: var(--bg-paper);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.mention-textarea textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 .mention-picker {
   position: absolute;
@@ -281,72 +287,98 @@
 .comment-filters {
   display: flex;
   gap: 4px;
-  margin-bottom: 10px;
-  padding: 0 2px;
+  margin: 0 4px 8px;
+  padding: 4px 6px;
   align-items: center;
+  background: var(--bg-tint);
+  border-radius: 8px;
+  flex-wrap: wrap;
 }
 .filter-chips {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   flex-shrink: 0;
 }
 .filter-chip {
-  padding: 4px 11px;
+  padding: 3px 10px;
   border-radius: 999px;
   font-size: 11px;
-  font-weight: 500;
-  border: 1px solid var(--border);
-  background: var(--bg-paper);
+  font-weight: 600;
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  transition: background 0.12s, color 0.12s, border-color 0.12s, box-shadow 0.12s;
   line-height: 1.4;
 }
 .filter-chip:hover {
-  border-color: var(--border-strong);
+  background: var(--bg-paper);
   color: var(--text);
 }
 .filter-chip.is-active {
-  background: var(--accent);
-  color: white;
-  border-color: var(--accent);
+  background: var(--bg-paper);
+  color: var(--accent);
+  border-color: var(--border);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
 }
 .comment-filters select {
   flex: 1;
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 4px 6px;
-  font-size: 11px;
+  padding: 4px 8px;
+  font-size: 11.5px;
   background: var(--bg-paper);
   min-width: 0;
   color: var(--text-muted);
+  cursor: pointer;
+}
+.comment-filters select:hover {
+  color: var(--text);
 }
 
-/* Comment pins (in-text margin avatars) */
+/* Comment pins live in `.editor-zoom-frame` (sibling of `.editor-page`),
+   anchored just outside the page edge on whichever side the user picked.
+   They scroll with content automatically because the frame is part of the
+   scroll content. */
+.editor-zoom-frame {
+  /* already set in editor.css to `position: relative` */
+}
 .editor-page {
   position: relative;
 }
 .comment-pins {
   position: absolute;
-  right: -56px;
   top: 0;
-  width: 40px;
   pointer-events: none;
   z-index: 5;
 }
+/* Avatars: 24px chip in a 40px-wide strip 16px past the page edge. */
+.comment-pins--avatars.comment-pins--side-right { width: 40px; right: -56px; }
+.comment-pins--avatars.comment-pins--side-left  { width: 40px; left:  -56px; }
+/* Full mode: 200px card 16px past the page edge. */
+.comment-pins--full.comment-pins--side-right    { width: 200px; right: -216px; }
+.comment-pins--full.comment-pins--side-left     { width: 200px; left:  -216px; }
 .comment-pin {
   position: absolute;
-  right: 0;
   background: transparent;
   border: none;
   padding: 0;
   cursor: pointer;
   pointer-events: auto;
-  transition: transform 0.18s ease, top 0.25s ease;
+  transition: transform 0.18s ease, top 0.25s ease, box-shadow 0.18s ease;
 }
-.comment-pin:hover {
-  transform: translateX(-2px);
-}
+/* The pin itself spans the full container width on its side. Hover/active
+   transforms are mirrored so the pin always slides AWAY from the page. */
+.comment-pins--side-right .comment-pin { right: 0; }
+.comment-pins--side-left  .comment-pin { left: 0; }
+.comment-pins--side-right .comment-pin:hover    { transform: translateX(-2px); }
+.comment-pins--side-left  .comment-pin:hover    { transform: translateX(2px); }
+.comment-pins--side-right .comment-pin.is-active { transform: translateX(-4px); }
+.comment-pins--side-left  .comment-pin.is-active { transform: translateX(4px); }
+.comment-pins--side-right .comment-pin--card:hover     { transform: translateX(2px) translateY(-1px); }
+.comment-pins--side-left  .comment-pin--card:hover     { transform: translateX(-2px) translateY(-1px); }
+.comment-pins--side-right .comment-pin--card.is-active { transform: translateX(4px) translateY(-1px); }
+.comment-pins--side-left  .comment-pin--card.is-active { transform: translateX(-4px) translateY(-1px); }
 .comment-pin.is-active {
   transform: translateX(-4px);
 }
@@ -371,185 +403,256 @@
   margin-left: 4px;
   font-weight: 700;
 }
+
+/* ----- Card container ----- */
 .thread {
+  position: relative;
   background: var(--bg-paper);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-soft);
   border-radius: 10px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
+  padding: 10px 12px 9px;
+  margin: 0 4px 6px;
   cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   transition:
-    border-color 0.15s,
-    box-shadow 0.15s,
-    transform 0.15s;
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease,
+    background 0.18s ease;
+}
+.thread::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 2.5px;
+  border-radius: 0 3px 3px 0;
+  background: transparent;
+  transition: background 0.18s ease;
+  pointer-events: none;
 }
 .thread:hover {
-  border-color: var(--border-strong);
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  border-color: var(--border);
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.05),
+    0 6px 16px rgba(15, 23, 42, 0.05);
+  transform: translateY(-1px);
 }
 .thread.is-active {
-  border-color: var(--accent);
+  border-color: var(--border);
+  background: var(--bg-paper);
   box-shadow:
-    0 0 0 3px var(--accent-soft),
-    0 4px 12px rgba(15, 23, 42, 0.08);
+    0 4px 10px rgba(15, 23, 42, 0.06),
+    0 12px 28px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+.thread.is-active::before {
+  background: var(--accent);
 }
 .thread.is-active .avatar-ring {
   box-shadow: 0 0 0 2px var(--bg-paper), 0 0 0 3.5px var(--accent);
 }
 .thread.is-resolved {
   background: var(--bg);
-  opacity: 0.85;
+  opacity: 0.78;
+}
+.thread.is-resolved::before {
+  background: var(--success);
+  opacity: 0.6;
 }
 
 /* Focus mode — dim inactive threads when one is active */
-.comments-sidebar.has-active .thread:not(.is-active) {
+.comments-sidebar.has-active .thread:not(.is-active),
+.threads-sidebar.has-active .thread:not(.is-active) {
   opacity: 0.45;
   transition: opacity 0.2s ease;
 }
-.comments-sidebar.has-active .thread:not(.is-active):hover {
+.comments-sidebar.has-active .thread:not(.is-active):hover,
+.threads-sidebar.has-active .thread:not(.is-active):hover {
   opacity: 0.75;
 }
 
-/* Close button on active thread */
-.thread-close-btn {
-  width: 20px;
-  height: 20px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--bg-paper);
+/* ----- Collapse button on active thread (chevron-up) ----- */
+.thread-collapse-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
   color: var(--text-subtle);
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.12s;
+  transition: background 0.12s, color 0.12s;
   padding: 0;
   line-height: 1;
 }
-.thread-close-btn:hover {
+.thread-collapse-btn:hover {
   background: var(--bg-tint);
   color: var(--text);
 }
 
+/* ----- Header (avatar + name + time + actions) ----- */
 .thread-head {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 .thread-head-text {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 .thread-head-row {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 6px;
-  flex-wrap: wrap;
+  min-width: 0;
 }
 .thread-author {
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--text);
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.thread-role-chip {
-  background: var(--bg);
-  color: var(--text-muted);
-  border-radius: 4px;
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 1px 5px;
-  font-weight: 600;
-}
-.thread-head-time {
+.thread-head-meta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
   font-size: 11px;
   color: var(--text-subtle);
-  margin-top: 2px;
+  line-height: 1.3;
+  min-width: 0;
+}
+.thread-head-role {
+  text-transform: capitalize;
+}
+.thread-head-dot {
+  opacity: 0.6;
+}
+.thread-head-time {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .thread-head-aside {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+  flex-shrink: 0;
 }
 .thread-reply-count {
   font-size: 11px;
   color: var(--text-muted);
-  background: var(--bg);
+  background: var(--bg-tint);
   border-radius: 999px;
-  padding: 2px 8px;
+  padding: 1px 7px;
+  font-weight: 500;
+  line-height: 1.5;
 }
 .thread-icon-btn {
   background: transparent;
-  border: 1px solid var(--border);
+  border: none;
   border-radius: 6px;
-  padding: 2px 7px;
+  padding: 4px 6px;
   cursor: pointer;
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--text-subtle);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, color 0.12s;
 }
 .thread-icon-btn:hover {
-  background: var(--bg);
+  background: var(--bg-tint);
   color: var(--text);
 }
 .thread-icon-btn.thread-remove:hover {
+  background: var(--warning-soft);
   color: var(--warning);
-  border-color: var(--warning-soft);
 }
+
+/* ----- Resolve button (Google Docs-style ghost button) ----- */
 .btn-resolve {
   font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--accent);
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
   background: var(--bg-paper);
-  color: var(--accent);
-  font-weight: 500;
+  color: var(--text-muted);
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.12s;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transition:
+    background 0.12s,
+    color 0.12s,
+    border-color 0.12s;
   line-height: 1.4;
 }
 .btn-resolve:hover {
-  background: var(--accent-soft);
+  background: var(--success-soft);
+  color: var(--success);
+  border-color: var(--success);
 }
+
+/* ----- Quoted highlight (the "selected text" snippet) ----- */
 .thread-quote {
-  background: var(--bg);
-  border-left: 2px solid var(--border-strong);
+  background: var(--ochre-soft, var(--accent-soft));
+  border-left: 2px solid var(--ochre, var(--accent));
   padding: 4px 8px;
-  margin: 4px 0;
+  margin: 4px 0 6px;
   font-style: italic;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 11.5px;
+  line-height: 1.45;
   border-radius: 0 4px 4px 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  position: relative;
 }
 .thread.is-active .thread-quote {
-  background: linear-gradient(to right, var(--accent-soft), var(--bg-tint));
+  background: linear-gradient(135deg, var(--accent-soft), var(--bg-tint));
   border-left-color: var(--accent);
+  color: var(--text);
   white-space: normal;
   overflow: visible;
   text-overflow: unset;
 }
+
+/* ----- Preview (collapsed body) ----- */
 .thread-preview {
-  font-size: 13px;
+  font-size: 12.5px;
+  line-height: 1.45;
   color: var(--text);
-  margin-top: 6px;
+  margin-top: 2px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ----- Expandable wrapper ----- */
 .thread-expandable {
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
   transition:
-    grid-template-rows 0.25s cubic-bezier(0.22, 0.61, 0.36, 1),
-    opacity 0.2s ease;
+    grid-template-rows 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 0.22s ease;
 }
 .thread.is-active .thread-expandable {
   grid-template-rows: 1fr;
@@ -559,19 +662,23 @@
   min-height: 0;
   overflow: hidden;
 }
+
+/* ----- Message body ----- */
 .thread-body {
-  font-size: 13px;
+  font-size: 12.5px;
   line-height: 1.5;
   color: var(--text);
-  margin: 6px 0 8px;
+  margin: 2px 0 4px;
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* ----- Replies (nested under primary comment) ----- */
 .thread-reply {
   display: flex;
   gap: 8px;
-  padding: 8px 0 8px 4px;
-  border-top: 1px solid var(--border);
+  padding: 8px 0 6px;
+  border-top: 1px solid var(--border-soft);
   margin-top: 4px;
 }
 .thread-reply-text {
@@ -579,38 +686,65 @@
   min-width: 0;
 }
 .thread-reply-text .thread-body {
-  margin: 2px 0 0;
+  margin: 1px 0 2px;
+  font-size: 12.5px;
 }
-.thread-reply-text .thread-head-time {
-  margin-top: 0;
-  margin-left: auto;
-}
-.thread-draft {
-  margin-top: 8px;
-}
+
+/* ----- Primary action button ----- */
 .thread-actions button.btn-primary {
   background: var(--accent);
-  color: white;
+  color: var(--text-on-accent);
   border-color: var(--accent);
+  font-weight: 600;
+}
+.thread-actions button.btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--text-on-accent);
 }
 .thread-actions button.btn-primary:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
+/* ----- Reply compose (Google Docs style pill) ----- */
 .thread-reply-compose {
   margin-top: 8px;
-  border-top: 1px solid var(--border);
   padding-top: 8px;
+  border-top: 1px solid var(--border-soft);
 }
 .thread-compose-row {
   display: flex;
   align-items: flex-end;
   gap: 6px;
 }
-.thread-compose-row .mention-textarea {
+.thread-compose-row .mention-textarea,
+.thread-compose-row .thread-compose-textarea {
   flex: 1;
   min-width: 0;
+}
+.thread-compose-row .mention-textarea textarea,
+.thread-compose-textarea {
+  width: 100%;
+  resize: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--text);
+  background: var(--bg-paper);
+  outline: none;
+  line-height: 1.5;
+  transition: border-color 0.12s, box-shadow 0.12s, border-radius 0.18s;
+  field-sizing: content;
+  min-height: 30px;
+}
+.thread-compose-row .mention-textarea textarea:focus,
+.thread-compose-textarea:focus {
+  border-color: var(--accent);
+  border-radius: 12px;
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 .thread-compose-footer {
   display: flex;
@@ -620,24 +754,345 @@
 .btn-send {
   width: 30px;
   height: 30px;
-  border-radius: 7px;
+  border-radius: 999px;
   background: var(--accent);
   border: none;
   color: var(--text-on-accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.12s;
+  transition: background 0.12s, transform 0.12s;
 }
-.btn-send:hover {
+.btn-send:hover:not(:disabled) {
   background: var(--accent-hover);
+  transform: translateY(-1px);
 }
 .btn-send:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
+  background: var(--text-subtle);
+  box-shadow: none;
+}
+
+/* ============================================================
+   Threads sidebar (unified comments + suggestions)
+   ============================================================ */
+
+.threads-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.threads-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  padding: 4px 0;
+}
+
+/* Filter chips row */
+.threads-filter-bar {
+  display: flex;
+  gap: 4px;
+  padding: 6px 10px 8px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border-soft);
+  flex-shrink: 0;
+}
+.threads-filter-chip {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--bg-paper);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  line-height: 1.4;
+}
+.threads-filter-chip:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.threads-filter-chip.is-active {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: var(--accent);
+}
+
+/* Suggestion thread card */
+.thread--suggestion {
+  border-left: 3px solid var(--suggest);
+  cursor: pointer;
+}
+.thread-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.thread-badge {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--bg);
+  color: var(--text-muted);
+}
+.thread-badge--suggestion {
+  background: var(--suggest-soft);
+  color: var(--suggest);
+}
+.thread-time {
+  font-size: 11px;
+  color: var(--text-subtle);
+  margin-left: auto;
+}
+.thread-suggestion-preview {
+  font-size: 12px;
+  margin: 4px 0 8px;
+  word-break: break-word;
+}
+.thread-action-accept {
+  background: var(--success-soft);
+  color: var(--success);
+  border: 1px solid var(--success);
+  border-radius: 5px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.thread-action-accept:hover {
+  background: var(--success);
+  color: #fff;
+}
+.thread-action-reject {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: 5px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.thread-action-reject:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+/* ============================================================
+   Inline pin cards (comment-pin--card = full mode)
+   ============================================================ */
+
+.comment-pin--card {
+  /* Inherits `position: absolute` from `.comment-pin`. Don't override to
+     `relative` — that puts the card back in flow and turns its `top:` style
+     into a flow-relative offset, causing each card to cascade ~150px below
+     where its anchor span actually is. */
+  width: 200px;
+  background: var(--bg-paper);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 8px 10px 7px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  text-align: left;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+  overflow: hidden;
+}
+.comment-pin--card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 2.5px;
+  border-radius: 0 3px 3px 0;
+  background: transparent;
+  transition: background 0.18s ease;
+  pointer-events: none;
+}
+.comment-pin--card:hover {
+  border-color: var(--border);
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.06),
+    0 8px 18px rgba(15, 23, 42, 0.07);
+  transform: translateX(2px) translateY(-1px);
+}
+.comment-pin--card.is-active {
+  border-color: var(--border);
+  box-shadow:
+    0 4px 10px rgba(15, 23, 42, 0.08),
+    0 12px 28px rgba(15, 23, 42, 0.10);
+  transform: translateX(4px) translateY(-1px);
+  /* Active card grows when actions appear; lift above neighbors so an
+     adjacent inactive pin can't be partially occluded. */
+  z-index: 1;
+}
+.comment-pin--card.is-active::before {
+  background: var(--accent);
+}
+.pin-card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+  min-width: 0;
+}
+.pin-card-author {
+  font-size: 11.5px;
+  font-weight: 600;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -0.005em;
+}
+.pin-card-replies {
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--bg-tint);
+  color: var(--text-muted);
+  border-radius: 999px;
+  min-width: 18px;
+  padding: 1px 6px;
+  text-align: center;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+.comment-pin--card.is-active .pin-card-replies {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+.pin-card-preview {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+/* Top-right deselect button on the active pin card. Sits in the slot
+   that otherwise holds `.pin-card-replies`. */
+.pin-card-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.pin-card-close:hover {
+  background: var(--bg-tint);
+  color: var(--text);
+}
+
+/* Action row — only rendered when the pin card is `.is-active`. */
+.pin-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid var(--border-soft);
+}
+.pin-card-action {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border-soft);
+  background: var(--bg-paper);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.pin-card-action:hover {
+  background: var(--bg-tint);
+  color: var(--text);
+  border-color: var(--border);
+}
+.pin-card-action--resolve:hover {
+  background: color-mix(in srgb, var(--success, #16a34a) 12%, var(--bg-paper));
+  color: var(--success, #16a34a);
+  border-color: color-mix(in srgb, var(--success, #16a34a) 35%, var(--border-soft));
+}
+
+/* ============================================================
+   Save status indicator (in status bar)
+   ============================================================ */
+
+.save-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-subtle);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.save-status:hover {
+  background: var(--bg-tint);
+  color: var(--text-muted);
+}
+.save-status--saving {
+  color: var(--text-muted);
+}
+.save-status--saved {
+  color: var(--success);
+}
+.save-status--offline,
+.save-status--error {
+  color: var(--warning);
+}
+
+/* When some comment is selected, fade non-active anchors to a paler tint of
+   the same yellow (~55% opacity over the page background) so they still
+   read as comment marks but recede behind the active one. */
+.has-active-comment .comment-anchor:not(.is-active) {
+  background: color-mix(in srgb, var(--comment-mark-bg) 55%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--comment-mark-border) 50%, transparent);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+/* Resolved threads keep their mark in the doc so resolve/reopen is a pure
+   status flip (no editor-undo coupling). The mark is muted so the text reads
+   as normal-but-historical, with a subtle dotted underline as a click hint. */
+.comment-anchor.is-resolved {
+  background: transparent;
+  border-bottom: 1px dotted color-mix(in srgb, var(--comment-mark-border) 50%, transparent);
+  transition: background 0.15s ease, border-bottom-color 0.15s ease;
 }
 
 /* Comment pulse */

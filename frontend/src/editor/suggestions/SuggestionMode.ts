@@ -1,28 +1,11 @@
 import { Extension } from '@tiptap/core';
 import type { Editor } from '@tiptap/core';
 import { isChangeOrigin } from '@tiptap/extension-collaboration';
-import { Plugin, PluginKey, type EditorState } from '@tiptap/pm/state';
-import { ReplaceStep } from '@tiptap/pm/transform';
-import type { Mark, Slice } from '@tiptap/pm/model';
+import { Plugin, PluginKey, type Transaction } from '@tiptap/pm/state';
+import { ReplaceStep, ReplaceAroundStep, AddMarkStep, RemoveMarkStep, AttrStep } from '@tiptap/pm/transform';
+import type { Mark, MarkType, Node as PmNode, Slice } from '@tiptap/pm/model';
 import { backspaceInSuggestingMode, forwardDeleteInSuggestingMode } from '@/editor/suggestions/suggestionKeyHandlers';
-import { applyMarkToSlice, attrsForAuthoredMark, stripInsertionFlood } from '@/editor/suggestions/suggestionMarkUtils';
-
-interface StepWork {
-  mappedFrom: number
-  mappedTo: number
-  removedSlice: Slice | null
-}
-
-function rangeFullyHasMark(state: EditorState, from: number, to: number, mark: Mark): boolean {
-    let allHave = true;
-    let sawText = false;
-    state.doc.nodesBetween(from, to, (node) => {
-        if (!node.isText) return;
-        sawText = true;
-        if (!mark.isInSet(node.marks)) allHave = false;
-    });
-    return sawText && allHave;
-}
+import { applyMarkToSlice, attrsForAuthoredMark, attrsForAuthoredMarkWithPair, stripInsertionFlood, makeMarkAttrs } from '@/editor/suggestions/suggestionMarkUtils';
 
 export interface SuggestionAuthor {
   id: string
@@ -36,6 +19,42 @@ export interface SuggestionModeOptions {
 }
 
 const META_SKIP = 'suggestionMode/skip';
+
+// Whitelisted node attributes whose changes are tracked as format suggestions.
+const TRACKED_NODE_ATTRS = new Set(['level', 'listType', 'type']);
+
+function isHistoryTransaction(tx: Transaction): boolean {
+    const meta = (tx as unknown as { meta: Record<string, unknown> | null }).meta;
+    if (!meta) return false;
+    // ProseMirror history sets meta with { redo: boolean, historyState: ... }
+    return Object.values(meta).some(
+        (v) => v !== null && typeof v === 'object' && 'redo' in (v as object) && 'historyState' in (v as object),
+    );
+}
+
+function isUndoRedoBatch(transactions: readonly Transaction[]): boolean {
+    return transactions.some(isHistoryTransaction);
+}
+
+function resolveRemovedSlice(tx: Transaction, stepIndex: number, from: number, to: number): Slice | null {
+    if (to <= from) return null;
+    const doc = (tx as unknown as { docs: PmNode[] }).docs[stepIndex];
+    return doc ? doc.slice(from, to) : null;
+}
+
+function mapThroughLaterSteps(pos: number, bias: 1 | -1, tx: Transaction, fromStepIndex: number): number {
+    for (let j = fromStepIndex; j < tx.steps.length; j++) {
+        pos = tx.steps[j].getMap().map(pos, bias);
+    }
+    return pos;
+}
+
+function mapThroughLaterTxs(pos: number, bias: 1 | -1, transactions: readonly Transaction[], fromTxIndex: number): number {
+    for (let j = fromTxIndex; j < transactions.length; j++) {
+        pos = transactions[j].mapping.map(pos, bias);
+    }
+    return pos;
+}
 
 export const SuggestionMode = Extension.create<SuggestionModeOptions>({
     name: 'suggestionMode',
@@ -52,76 +71,115 @@ export const SuggestionMode = Extension.create<SuggestionModeOptions>({
         const opts = this.options;
         return [new Plugin({
             key: new PluginKey('suggestionMode-marker'),
-            appendTransaction(transactions, _oldState, newState) {
+            appendTransaction(transactions, oldState, newState) {
                 const author = opts.getAuthor();
                 if (!author) return null;
-                if (transactions.some((t) => t.getMeta(META_SKIP)) || !transactions.some((t) => t.docChanged)) return null;
+                if (transactions.some((t) => t.getMeta(META_SKIP))) return null;
+                if (!transactions.some((t) => t.docChanged)) return null;
 
-                const insertionType = newState.schema.marks.insertion;
-                const deletionType = newState.schema.marks.deletion;
+                const { insertion: insertionType, deletion: deletionType, formatChange: formatChangeType } =
+                    newState.schema.marks as Record<string, MarkType | undefined>;
                 if (!insertionType || !deletionType) return null;
-                if (transactions.some(isChangeOrigin)) return stripInsertionFlood(newState, insertionType, author.id);
-                if (!opts.getEnabled()) return null;
 
-                const work: StepWork[] = [];
+                if (transactions.some(isChangeOrigin)) {
+                    return stripInsertionFlood(newState, insertionType, author.id);
+                }
+                if (!opts.getEnabled()) return null;
+                if (isUndoRedoBatch(transactions)) return null;
+
+                const tr = newState.tr;
+                const replaceWork: Array<{ mappedFrom: number; mappedTo: number; removedSlice: Slice | null }> = [];
+
                 for (let txIdx = 0; txIdx < transactions.length; txIdx++) {
                     const tx = transactions[txIdx];
                     if (tx.getMeta(META_SKIP)) continue;
+
                     for (let i = 0; i < tx.steps.length; i++) {
                         const step = tx.steps[i];
-                        if (!(step instanceof ReplaceStep)) continue;
-                        const removedSlice = step.to > step.from ? tx.docs[i].slice(step.from, step.to) : null;
-                        if (step.slice.size === 0 && (!removedSlice || removedSlice.size === 0)) continue;
 
-                        let mappedFrom = step.from;
-                        let mappedTo = step.from + step.slice.size;
-                        for (let j = i + 1; j < tx.steps.length; j++) {
-                            mappedFrom = tx.steps[j].getMap().map(mappedFrom, 1);
-                            mappedTo = tx.steps[j].getMap().map(mappedTo, -1);
+                        if (step instanceof ReplaceStep) {
+                            const removedSlice = resolveRemovedSlice(tx, i, step.from, step.to);
+                            if (step.slice.size === 0 && (!removedSlice || removedSlice.size === 0)) continue;
+                            let mappedFrom = mapThroughLaterSteps(step.from, 1, tx, i + 1);
+                            let mappedTo = mapThroughLaterSteps(step.from + step.slice.size, -1, tx, i + 1);
+                            mappedFrom = mapThroughLaterTxs(mappedFrom, 1, transactions, txIdx + 1);
+                            mappedTo = mapThroughLaterTxs(mappedTo, -1, transactions, txIdx + 1);
+                            replaceWork.push({ mappedFrom, mappedTo, removedSlice });
+                            continue;
                         }
-                        for (let j = txIdx + 1; j < transactions.length; j++) {
-                            mappedFrom = transactions[j].mapping.map(mappedFrom, 1);
-                            mappedTo = transactions[j].mapping.map(mappedTo, -1);
+
+                        if (step instanceof ReplaceAroundStep) {
+                            // Wrap/unwrap: track the wrapped content range as a format change.
+                            if (!formatChangeType) continue;
+                            let gapFrom = mapThroughLaterTxs(step.gapFrom, 1, transactions, txIdx + 1);
+                            let gapTo = mapThroughLaterTxs(step.gapTo, -1, transactions, txIdx + 1);
+                            if (gapTo > gapFrom && gapFrom >= 0) {
+                                const fmtAttrs = { ...makeMarkAttrs(author), marksAdded: '[]', marksRemoved: '[]', nodeAttr: 'null' };
+                                tr.addMark(gapFrom, gapTo, formatChangeType.create(fmtAttrs));
+                            }
+                            continue;
                         }
-                        work.push({ mappedFrom, mappedTo, removedSlice });
+
+                        if (step instanceof AddMarkStep || step instanceof RemoveMarkStep) {
+                            if (!formatChangeType) continue;
+                            const isAdd = step instanceof AddMarkStep;
+                            const stepMark = (step as AddMarkStep).mark ?? (step as RemoveMarkStep).mark;
+                            // Skip tracking our own suggestion marks — avoids feedback loop
+                            if (stepMark.type === insertionType || stepMark.type === deletionType || stepMark.type === formatChangeType) continue;
+
+                            const rawFrom = (step as AddMarkStep).from;
+                            const rawTo = (step as AddMarkStep).to;
+                            let mappedFrom = mapThroughLaterTxs(rawFrom, 1, transactions, txIdx + 1);
+                            let mappedTo = mapThroughLaterTxs(rawTo, -1, transactions, txIdx + 1);
+                            if (mappedTo <= mappedFrom || mappedFrom < 0) continue;
+
+                            const marksAdded = JSON.stringify(isAdd ? [stepMark.type.name] : []);
+                            const marksRemoved = JSON.stringify(isAdd ? [] : [stepMark.type.name]);
+                            const fmtAttrs = { ...makeMarkAttrs(author), marksAdded, marksRemoved, nodeAttr: 'null' };
+                            tr.addMark(mappedFrom, mappedTo, formatChangeType.create(fmtAttrs));
+                            continue;
+                        }
+
+                        if (step instanceof AttrStep) {
+                            if (!formatChangeType || !TRACKED_NODE_ATTRS.has(step.attr)) continue;
+                            const node = oldState.doc.nodeAt(step.pos);
+                            if (!node) continue;
+                            const before = node.attrs[step.attr] as unknown;
+                            const nodeAttr = JSON.stringify({ attr: step.attr, before, after: step.value });
+
+                            // AttrStep affects a node, not a text range — mark the node's content
+                            let nodeFrom = mapThroughLaterTxs(step.pos + 1, 1, transactions, txIdx + 1);
+                            let nodeTo = mapThroughLaterTxs(step.pos + node.nodeSize - 1, -1, transactions, txIdx + 1);
+                            if (nodeTo > nodeFrom && nodeFrom >= 0) {
+                                const fmtAttrs = { ...makeMarkAttrs(author), marksAdded: '[]', marksRemoved: '[]', nodeAttr };
+                                tr.addMark(nodeFrom, nodeTo, formatChangeType.create(fmtAttrs));
+                            }
+                        }
                     }
                 }
 
-                // Process from highest position to lowest so earlier positions stay valid
-                // as we mutate `tr` (insertions only push content forward).
-                work.sort((a, b) => b.mappedFrom - a.mappedFrom);
-
-                const tr = newState.tr;
-                for (const w of work) {
+                // Apply ReplaceStep work (content tracking) from highest pos to lowest
+                replaceWork.sort((a, b) => b.mappedFrom - a.mappedFrom);
+                for (const w of replaceWork) {
                     const { mappedFrom, mappedTo, removedSlice } = w;
                     if (mappedFrom < 0 || mappedFrom > newState.doc.content.size) continue;
                     const hasInsertion = mappedTo > mappedFrom && mappedTo <= newState.doc.content.size;
                     const hasDeletion = !!removedSlice && removedSlice.size > 0;
 
-                    // When a single step both inserts and removes content (type-over-selection,
-                    // paste-replace, etc.), share one suggestionId between the deletion and
-                    // insertion marks so the sidebar shows them as one "replace" entry.
                     const pairedAttrs = hasInsertion && hasDeletion
                         ? attrsForAuthoredMark(newState, insertionType, author, mappedFrom, mappedTo)
                         : null;
 
                     if (hasInsertion) {
-                        // Reuse a neighboring insertion mark from the same author so consecutive
-                        // typing collapses into one suggestion entry. The insertion mark uses
-                        // `excludes: ''` so multiple authors' marks can overlap; without this
-                        // dedup, every keystroke would mint a fresh suggestionId.
                         const insAttrs = pairedAttrs
-                            ?? attrsForAuthoredMark(newState, insertionType, author, mappedFrom, mappedTo);
+                            ?? attrsForAuthoredMarkWithPair(newState, insertionType, deletionType, author, mappedFrom, mappedTo);
                         const insMark: Mark = insertionType.create(insAttrs);
-                        if (!rangeFullyHasMark(newState, mappedFrom, mappedTo, insMark)) {
+                        if (!rangeFullyHasMark(newState.doc, mappedFrom, mappedTo, insMark)) {
                             tr.addMark(mappedFrom, mappedTo, insMark);
                         }
                         tr.removeMark(mappedFrom, mappedTo, deletionType);
                     }
 
-                    // Restore content removed by inputs that bypass our key handlers
-                    // (type-over-selection, paste-replace, cut, drag-drop, IME) and tag it
-                    // as a suggested deletion.
                     if (hasDeletion && removedSlice) {
                         const delAttrs = pairedAttrs
                             ?? attrsForAuthoredMark(newState, deletionType, author, mappedFrom, mappedFrom);
@@ -129,11 +187,11 @@ export const SuggestionMode = Extension.create<SuggestionModeOptions>({
                         try {
                             tr.replace(mappedFrom, mappedFrom, markedSlice);
                         } catch {
-                            // Slice doesn't fit the new context (e.g. cross-block deletion
-                            // collapsed to a different structure). Let the actual deletion stand.
+                            // Cross-block deletion collapsed to a different structure — let it stand.
                         }
                     }
                 }
+
                 if (tr.steps.length === 0) return null;
                 tr.setMeta(META_SKIP, true);
                 tr.setMeta('addToHistory', false);
@@ -142,3 +200,14 @@ export const SuggestionMode = Extension.create<SuggestionModeOptions>({
         })];
     },
 });
+
+function rangeFullyHasMark(doc: PmNode, from: number, to: number, mark: Mark): boolean {
+    let allHave = true;
+    let sawText = false;
+    doc.nodesBetween(from, to, (node) => {
+        if (!node.isText) return;
+        sawText = true;
+        if (!mark.isInSet(node.marks)) allHave = false;
+    });
+    return sawText && allHave;
+}

@@ -85,3 +85,45 @@ export const Deletion = Mark.create({
         return ['del', mergeAttributes({ class: 'tc-del' }, HTMLAttributes), 0];
     },
 });
+
+export interface FormatChangeAttrs extends TrackChangeAttrs {
+    marksAdded: string   // JSON-encoded string[]
+    marksRemoved: string // JSON-encoded string[]
+    nodeAttr: string     // JSON-encoded { attr, before, after } | null
+}
+
+export const FormatChange = Mark.create({
+    name: 'formatChange',
+    inclusive: false,
+    spanning: true,
+    excludes: '',
+
+    addAttributes() {
+        return {
+            ...baseAttrs(),
+            marksAdded: {
+                default: '[]',
+                parseHTML: (el: HTMLElement) => el.getAttribute('data-marks-added') ?? '[]',
+                renderHTML: (attrs: { marksAdded: string }) => ({ 'data-marks-added': attrs.marksAdded }),
+            },
+            marksRemoved: {
+                default: '[]',
+                parseHTML: (el: HTMLElement) => el.getAttribute('data-marks-removed') ?? '[]',
+                renderHTML: (attrs: { marksRemoved: string }) => ({ 'data-marks-removed': attrs.marksRemoved }),
+            },
+            nodeAttr: {
+                default: 'null',
+                parseHTML: (el: HTMLElement) => el.getAttribute('data-node-attr') ?? 'null',
+                renderHTML: (attrs: { nodeAttr: string }) => ({ 'data-node-attr': attrs.nodeAttr }),
+            },
+        };
+    },
+
+    parseHTML() {
+        return [{ tag: 'span[data-format-change]' }];
+    },
+
+    renderHTML({ HTMLAttributes }) {
+        return ['span', mergeAttributes({ class: 'tc-fmt', 'data-format-change': '' }, HTMLAttributes), 0];
+    },
+});
