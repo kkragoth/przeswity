@@ -20,7 +20,7 @@ export function LoginPage() {
             <div className="grid gap-12 md:grid-cols-2">
                 <section>
                     <h1 className="text-3xl font-semibold">{t('login.title')}</h1>
-                    <p className="mt-1 text-stone-600">{t('login.subtitle')}</p>
+                    <p className="mt-1 text-muted-foreground">{t('login.subtitle')}</p>
                     {reason === 'session-unavailable' ? <p className="mt-3 text-sm text-destructive">{t('sessionUnavailable')}</p> : null}
                     <form onSubmit={form.submit} className="mt-6 max-w-sm space-y-4">
                         <div>
@@ -38,7 +38,7 @@ export function LoginPage() {
                             {form.isSubmitting ? `${t('login.submit')}...` : t('login.submit')}
                         </Button>
                     </form>
-                    <p className="mt-6 text-sm text-stone-500">{t('login.noAccount')}</p>
+                    <p className="mt-6 text-sm text-muted-foreground">{t('login.noAccount')}</p>
                 </section>
                 {import.meta.env.DEV ? <DevQuickLogin onLogin={afterDevLogin} /> : null}
             </div>

@@ -54,14 +54,14 @@ export function DevQuickLogin({ onLogin }: { onLogin: () => Promise<void> }) {
     return (
         <section>
             <h2 className="text-xl font-semibold">{t('devLogin.title')}</h2>
-            <p className="mt-1 text-stone-600">{t('devLogin.subtitle')}</p>
+            <p className="mt-1 text-muted-foreground">{t('devLogin.subtitle')}</p>
             <Input className="mt-4" placeholder={t('devLogin.search')} value={filter} onChange={(e) => setFilter(e.target.value)} />
             <ul className="mt-3 space-y-2">
                 {filtered.map((u) => (
-                    <li key={u.id} className="flex items-center justify-between rounded-md border bg-white px-3 py-2">
+                    <li key={u.id} className="flex items-center justify-between rounded-md border bg-card text-card-foreground px-3 py-2">
                         <div>
                             <div className="font-medium">{u.name}</div>
-                            <div className="text-xs text-stone-500">{u.email}</div>
+                            <div className="text-xs text-muted-foreground">{u.email}</div>
                             <div className="mt-1 flex gap-1">
                                 {u.systemRole === 'admin' ? <Badge>{tc('roles.admin')}</Badge> : null}
                                 {u.systemRole === 'project_manager' ? <Badge variant="secondary">{tc('roles.projectManagerShort')}</Badge> : null}
@@ -72,7 +72,7 @@ export function DevQuickLogin({ onLogin }: { onLogin: () => Promise<void> }) {
                         </Button>
                     </li>
                 ))}
-                {users.length === 0 ? <li className="text-sm text-stone-500">{t('devLogin.empty')}</li> : null}
+                {users.length === 0 ? <li className="text-sm text-muted-foreground">{t('devLogin.empty')}</li> : null}
             </ul>
         </section>
     );
