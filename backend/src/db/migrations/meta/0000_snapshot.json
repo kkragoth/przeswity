@@ -1,5 +1,5 @@
 {
-  "id": "ec588714-907f-42f2-ac70-782bc072624d",
+  "id": "821343bd-780c-4c63-887b-cc1e86e3722d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -237,6 +237,47 @@
           "notNull": true,
           "default": "''"
         },
+        "stage": {
+          "name": "stage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'editing'"
+        },
+        "progress": {
+          "name": "progress",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "progress_mode": {
+          "name": "progress_mode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'manual'"
+        },
+        "stage_changed_at": {
+          "name": "stage_changed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "stage_due_at": {
+          "name": "stage_due_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stage_note": {
+          "name": "stage_note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
         "updated_by_id": {
           "name": "updated_by_id",
           "type": "text",
@@ -399,6 +440,113 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.book_stage_history": {
+      "name": "book_stage_history",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "book_id": {
+          "name": "book_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "from_stage": {
+          "name": "from_stage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "to_stage": {
+          "name": "to_stage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "created_by_id": {
+          "name": "created_by_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "book_stage_history_book_idx": {
+          "name": "book_stage_history_book_idx",
+          "columns": [
+            {
+              "expression": "book_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "book_stage_history_book_id_book_id_fk": {
+          "name": "book_stage_history_book_id_book_id_fk",
+          "tableFrom": "book_stage_history",
+          "tableTo": "book",
+          "columnsFrom": [
+            "book_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "book_stage_history_created_by_id_user_id_fk": {
+          "name": "book_stage_history_created_by_id_user_id_fk",
+          "tableFrom": "book_stage_history",
+          "tableTo": "user",
+          "columnsFrom": [
+            "created_by_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.book_yjs_state": {
       "name": "book_yjs_state",
       "schema": "",
@@ -414,6 +562,13 @@
           "type": "bytea",
           "primaryKey": false,
           "notNull": true
+        },
+        "size_bytes": {
+          "name": "size_bytes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         },
         "updated_at": {
           "name": "updated_at",
@@ -771,19 +926,11 @@
           "notNull": true,
           "default": "now()"
         },
-        "is_admin": {
-          "name": "is_admin",
-          "type": "boolean",
+        "system_role": {
+          "name": "system_role",
+          "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "is_coordinator": {
-          "name": "is_coordinator",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
+          "notNull": false
         },
         "competency_tags": {
           "name": "competency_tags",

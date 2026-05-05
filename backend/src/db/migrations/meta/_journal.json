@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1777369206602,
-      "tag": "0000_common_ikaris",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1777389600000,
-      "tag": "0001_stage_progress",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1745863700000,
-      "tag": "0002_system_role",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1777456000000,
-      "tag": "0003_constraints_and_indexes",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1798800000000,
-      "tag": "0004_book_yjs_size_and_indexes",
+      "when": 1777970087503,
+      "tag": "0000_initial",
       "breakpoints": true
     }
   ]

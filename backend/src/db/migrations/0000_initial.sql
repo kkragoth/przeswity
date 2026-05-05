@@ -28,6 +28,12 @@ CREATE TABLE "book" (
 	"description" text DEFAULT '' NOT NULL,
 	"created_by_id" text NOT NULL,
 	"initial_markdown" text DEFAULT '' NOT NULL,
+	"stage" text DEFAULT 'editing' NOT NULL,
+	"progress" integer DEFAULT 0 NOT NULL,
+	"progress_mode" text DEFAULT 'manual' NOT NULL,
+	"stage_changed_at" timestamp DEFAULT now() NOT NULL,
+	"stage_due_at" timestamp,
+	"stage_note" text DEFAULT '' NOT NULL,
 	"updated_by_id" text,
 	"last_edit_at" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL,
@@ -43,9 +49,20 @@ CREATE TABLE "book_snapshot" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "book_stage_history" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"book_id" uuid NOT NULL,
+	"from_stage" text,
+	"to_stage" text NOT NULL,
+	"note" text DEFAULT '' NOT NULL,
+	"created_by_id" text NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "book_yjs_state" (
 	"book_id" uuid PRIMARY KEY NOT NULL,
 	"state" "bytea" NOT NULL,
+	"size_bytes" integer DEFAULT 0 NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -90,8 +107,7 @@ CREATE TABLE "user" (
 	"image" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
-	"is_admin" boolean DEFAULT false,
-	"is_coordinator" boolean DEFAULT false,
+	"system_role" text,
 	"competency_tags" text[] DEFAULT ARRAY[]::text[] NOT NULL,
 	"color" text DEFAULT '#7c3aed',
 	"preferred_locale" text DEFAULT 'pl',
@@ -116,6 +132,8 @@ ALTER TABLE "book" ADD CONSTRAINT "book_created_by_id_user_id_fk" FOREIGN KEY ("
 ALTER TABLE "book" ADD CONSTRAINT "book_updated_by_id_user_id_fk" FOREIGN KEY ("updated_by_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "book_snapshot" ADD CONSTRAINT "book_snapshot_book_id_book_id_fk" FOREIGN KEY ("book_id") REFERENCES "public"."book"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "book_snapshot" ADD CONSTRAINT "book_snapshot_created_by_id_user_id_fk" FOREIGN KEY ("created_by_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "book_stage_history" ADD CONSTRAINT "book_stage_history_book_id_book_id_fk" FOREIGN KEY ("book_id") REFERENCES "public"."book"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "book_stage_history" ADD CONSTRAINT "book_stage_history_created_by_id_user_id_fk" FOREIGN KEY ("created_by_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "book_yjs_state" ADD CONSTRAINT "book_yjs_state_book_id_book_id_fk" FOREIGN KEY ("book_id") REFERENCES "public"."book"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "comment_message" ADD CONSTRAINT "comment_message_thread_id_comment_thread_id_fk" FOREIGN KEY ("thread_id") REFERENCES "public"."comment_thread"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "comment_message" ADD CONSTRAINT "comment_message_author_id_user_id_fk" FOREIGN KEY ("author_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -124,5 +142,18 @@ ALTER TABLE "comment_thread" ADD CONSTRAINT "comment_thread_created_by_id_user_i
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "account_userId_idx" ON "account" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "book_snapshot_book_idx" ON "book_snapshot" USING btree ("book_id","created_at");--> statement-breakpoint
+CREATE INDEX "book_stage_history_book_idx" ON "book_stage_history" USING btree ("book_id","created_at");--> statement-breakpoint
 CREATE INDEX "session_userId_idx" ON "session" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "verification_identifier_idx" ON "verification" USING btree ("identifier");
+CREATE INDEX "verification_identifier_idx" ON "verification" USING btree ("identifier");--> statement-breakpoint
+ALTER TABLE "book" ADD CONSTRAINT "book_stage_check"
+    CHECK (stage IN ('translation','editing','authorization','proofreading','applying_changes','typesetting','post_typeset_proof','finalization'));--> statement-breakpoint
+ALTER TABLE "book" ADD CONSTRAINT "book_progress_mode_check"
+    CHECK (progress_mode IN ('auto','manual'));--> statement-breakpoint
+ALTER TABLE "book" ADD CONSTRAINT "book_progress_range_check"
+    CHECK (progress BETWEEN 0 AND 100);--> statement-breakpoint
+CREATE INDEX "assignment_user_id_idx" ON "assignment" (user_id);--> statement-breakpoint
+CREATE INDEX "book_created_by_id_idx" ON "book" (created_by_id);--> statement-breakpoint
+CREATE INDEX "comment_thread_book_active_idx" ON "comment_thread" (book_id)
+    WHERE NOT resolved AND detached_at IS NULL;--> statement-breakpoint
+CREATE INDEX "assignment_book_id_idx" ON "assignment" (book_id);--> statement-breakpoint
+CREATE INDEX "comment_thread_book_author_idx" ON "comment_thread" (book_id, created_by_id);
