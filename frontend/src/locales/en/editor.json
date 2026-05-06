@@ -1,4 +1,6 @@
 {
+    "placeholderHeading": "Heading...",
+    "placeholderParagraph": "Start writing...",
     "global": {
         "cancel": "Cancel",
         "close": "Close",
@@ -114,6 +116,7 @@
             "resolved": "Resolved",
             "detached": "Detached"
         },
+        "orphanedTab": "Orphaned",
         "addComment": "Add comment",
         "addCommentTitle": "Add comment",
         "addReaction": "Add reaction",
@@ -127,6 +130,7 @@
             "open": "Open",
             "resolved": "Resolved",
             "all": "All",
+            "orphaned": "Orphaned",
             "allAuthors": "All authors",
             "allRoles": "All roles"
         },
@@ -148,10 +152,19 @@
         "repliesCount_few": "{{count}} replies",
         "repliesCount_many": "{{count}} replies",
         "repliesCount_other": "{{count}} replies",
+        "orphanedCount": "Orphaned ({{count}})",
+        "orphanedQuoteLabel": "Last known text:",
+        "confirmReattach": "Confirm Reattach",
+        "cancelReattach": "Cancel",
+        "reattachBanner": "Select text in the document to reattach this comment, then click Confirm Reattach.",
+        "reattachWaiting": "Select text in editor…",
+        "dismissOrphan": "Dismiss",
         "time": {
             "justNow": "just now",
             "minutesAgo": "{{count}}m ago",
-            "hoursAgo": "{{count}}h ago"
+            "hoursAgo": "{{count}}h ago",
+            "daysAgo_one": "{{count}}d ago",
+            "daysAgo_other": "{{count}}d ago"
         }
     },
     "suggestions": {
@@ -166,11 +179,20 @@
         "checkSelection": "Check selection",
         "sidebarTitle": "Suggestions ({{count}})",
         "empty": "No pending suggestions.",
+        "noMatch": "No suggestions match the selected author.",
         "accept": "Accept",
         "reject": "Reject",
         "inserted": "inserted",
         "deleted": "deleted",
-        "replaced": "replaced"
+        "replaced": "replaced",
+        "unknownAuthor": "Unknown",
+        "format": {
+            "label": "formatting changed",
+            "markAdded": "{{mark}} added",
+            "markRemoved": "{{mark}} removed",
+            "nodeAttrChanged": "{{attr}}: {{from}} → {{to}}",
+            "multiChanges": "{{count}} format changes"
+        }
     },
     "versions": {
         "snapshot": "Snapshot",
@@ -194,11 +216,24 @@
         "restoreOlder": "Restore older",
         "legendAdded": "added (+{{count}} chars)",
         "legendRemoved": "removed (−{{count}} chars)",
+        "statsAdded": "chars added",
+        "statsRemoved": "chars removed",
+        "statsBlocks": "changed blocks",
+        "statsBlocksShort_one": "{{count}} block",
+        "statsBlocksShort_few": "{{count}} blocks",
+        "statsBlocksShort_many": "{{count}} blocks",
+        "statsBlocksShort_other": "{{count}} blocks",
+        "hunkPrev": "Previous change",
+        "hunkNext": "Next change",
         "autoBadge": "auto",
         "diffWithSelected": "Diff with selected",
         "diffVsCurrent": "Diff vs current",
         "compareWith": "Compare ↔",
-        "delete": "Delete"
+        "delete": "Delete",
+        "commentsSide": "{{count}} comment(s) at {{side}}",
+        "noComments": "No comments",
+        "commentsReadOnly": "Read-only snapshot — switch to Comments tab to reply.",
+        "commentsLive": "Live document — switch to Comments tab to reply."
     },
     "wordCount": {
         "words": "{{count}} words",
@@ -377,16 +412,25 @@
     },
     "versionHistory": {
         "title": "Version history",
-        "viewing": "Viewing version:",
-        "restore": "Restore this version",
+        "restore": "Restore",
         "close": "Close",
-        "current": "Current document",
+        "current": "Current",
         "from": "From",
         "to": "To",
         "swap": "Swap sides",
-        "fromBadge": "From",
-        "toBadge": "To",
-        "railHint": "Click a version to set as the right side"
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "justNow": "Just now",
+        "minutesAgo": "{{count}} min ago",
+        "hoursAgo": "{{count}}h ago",
+        "autoLabel": "Auto save",
+        "searchPlaceholder": "Search versions…",
+        "clearSearch": "Clear search",
+        "noMatches": "No matching versions.",
+        "showAuto": "Show auto saves",
+        "hideAuto": "Hide auto saves",
+        "legendHint": "Click to set TO · right-click for FROM",
+        "rowTitle": "Click: set as TO · Right-click: set as FROM"
     },
     "pins": {
         "toggle": "Toggle comment pins",
@@ -412,8 +456,37 @@
             "all": "All",
             "open": "Open",
             "resolved": "Resolved",
+            "comments": "Comments",
             "suggestions": "Suggestions",
             "mine": "Mine"
+        },
+        "filterGroup": {
+            "status": "Status",
+            "type": "Type"
+        },
+        "sort": {
+            "label": "Sort",
+            "position": "By position",
+            "newest": "Newest",
+            "oldest": "Oldest"
+        },
+        "section": {
+            "untitled": "(untitled section)",
+            "beforeFirstHeading": "Document opening"
+        },
+        "bulk": {
+            "visibleCount_one": "{{count}} thread",
+            "visibleCount_other": "{{count}} threads",
+            "filterByAuthor": "Filter by author",
+            "allAuthors": "All authors",
+            "resolveAll": "Resolve all",
+            "acceptAll": "Accept all",
+            "rejectAll": "Reject all",
+            "resolveAllConfirm": "Resolve {{count}} thread(s)?",
+            "acceptAllConfirm": "Accept {{count}} suggestion(s)?",
+            "rejectAllConfirm": "Reject {{count}} suggestion(s)?",
+            "resolvedToast_one": "Resolved {{count}} thread",
+            "resolvedToast_other": "Resolved {{count}} threads"
         }
     }
 }

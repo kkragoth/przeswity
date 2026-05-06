@@ -29,6 +29,7 @@ import { createEditorContext } from '@/editor/tiptap/editorContext';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { useEditorLive, useSetEditor } from '@/containers/editor/session/LiveProvider';
 import { useSession } from '@/containers/editor/SessionStoreProvider';
+import { useCommentsStore } from '@/containers/editor/comments/store/CommentsStoreProvider';
 import { useEditorZoom } from '@/contexts/EditorZoomContext';
 
 export function EditorView({
@@ -67,6 +68,7 @@ export function EditorView({
     const [slashTrigger, setSlashTrigger] = useState<SlashTriggerInfo>(EMPTY_SLASH);
     const { dragStateRef, dropTop, setDropTop, resetDrag } = useBlockDrag();
 
+    const commentsStore = useCommentsStore();
     const { editor } = useEditorInit({
         collab,
         user,
@@ -77,6 +79,7 @@ export function EditorView({
         resetDrag,
         setSlashTrigger,
         onActiveCommentChange,
+        onCommentOrphan: (id, quote) => commentsStore.getState().markOrphan(id, quote),
     });
 
     const { headerFooterFocus, setHeaderFooterFocus, applyHeaderFooter } = useHeaderFooterSync({ collab, editor, ctx });

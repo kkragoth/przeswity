@@ -6,12 +6,22 @@ export enum ThreadKind {
     Suggestion = 'suggestion',
 }
 
-export enum ThreadFilterKind {
+export enum ThreadStatusFilter {
     All = 'all',
     Open = 'open',
     Resolved = 'resolved',
-    SuggestionsOnly = 'suggestionsOnly',
-    Mine = 'mine',
+}
+
+export enum ThreadTypeFilter {
+    All = 'all',
+    Comments = 'comments',
+    Suggestions = 'suggestions',
+}
+
+export enum ThreadSort {
+    Position = 'position',
+    Newest = 'newest',
+    Oldest = 'oldest',
 }
 
 export type UnifiedThread =
@@ -20,4 +30,12 @@ export type UnifiedThread =
 
 export function unifiedThreadId(t: UnifiedThread): string {
     return t.kind === ThreadKind.Comment ? t.thread.id : t.entry.suggestionId;
+}
+
+export function unifiedThreadTimestamp(t: UnifiedThread): number {
+    return t.kind === ThreadKind.Comment ? t.thread.createdAt : t.entry.timestamp;
+}
+
+export function unifiedThreadAuthorId(t: UnifiedThread): string {
+    return t.kind === ThreadKind.Comment ? t.thread.authorId : t.entry.authorId;
 }

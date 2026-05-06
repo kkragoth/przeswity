@@ -4,6 +4,7 @@ export enum SuggestionEntryKind {
     Insert = 'insert',
     Delete = 'delete',
     Replace = 'replace',
+    Format = 'format',
 }
 
 interface SuggestionEntryBase {
@@ -13,6 +14,12 @@ interface SuggestionEntryBase {
     authorColor: string
     timestamp: number
 }
+
+export type FormatSummary =
+    | { kind: 'mark-add'; markName: string }
+    | { kind: 'mark-remove'; markName: string }
+    | { kind: 'node-attr'; attr: string; from: unknown; to: unknown }
+    | { kind: 'multi'; count: number }
 
 export type SuggestionEntry =
   | (SuggestionEntryBase & { kind: SuggestionEntryKind.Insert; text: string; from: number; to: number })
@@ -26,6 +33,7 @@ export type SuggestionEntry =
       insertedFrom: number
       insertedTo: number
     })
+  | (SuggestionEntryBase & { kind: SuggestionEntryKind.Format; from: number; to: number; summary: FormatSummary })
 
 interface SuggestionItemProps {
     entry: SuggestionEntry
@@ -33,6 +41,20 @@ interface SuggestionItemProps {
     onSelect: (entry: SuggestionEntry) => void
     onAccept: (entry: SuggestionEntry) => void
     onReject: (entry: SuggestionEntry) => void
+}
+
+function FormatBody({ summary }: { summary: FormatSummary }) {
+    const { t } = useTranslation('editor');
+    if (summary.kind === 'mark-add') {
+        return <div className="suggestion-text suggestion-text-format">{t('suggestions.format.markAdded', { mark: summary.markName })}</div>;
+    }
+    if (summary.kind === 'mark-remove') {
+        return <div className="suggestion-text suggestion-text-format">{t('suggestions.format.markRemoved', { mark: summary.markName })}</div>;
+    }
+    if (summary.kind === 'node-attr') {
+        return <div className="suggestion-text suggestion-text-format">{t('suggestions.format.nodeAttrChanged', { attr: summary.attr, from: String(summary.from), to: String(summary.to) })}</div>;
+    }
+    return <div className="suggestion-text suggestion-text-format">{t('suggestions.format.multiChanges', { count: summary.count })}</div>;
 }
 
 function SuggestionBody({ entry }: { entry: SuggestionEntry }) {
@@ -45,6 +67,9 @@ function SuggestionBody({ entry }: { entry: SuggestionEntry }) {
             </div>
         );
     }
+    if (entry.kind === SuggestionEntryKind.Format) {
+        return <FormatBody summary={entry.summary} />;
+    }
     return (
         <div className={`suggestion-text suggestion-text-${entry.kind}`}>{entry.text}</div>
     );
@@ -56,7 +81,9 @@ export function SuggestionItem({ entry, canResolve, onSelect, onAccept, onReject
         ? t('suggestions.inserted')
         : entry.kind === SuggestionEntryKind.Delete
             ? t('suggestions.deleted')
-            : t('suggestions.replaced');
+            : entry.kind === SuggestionEntryKind.Format
+                ? t('suggestions.format.label')
+                : t('suggestions.replaced');
     return (
         <div
             className={`suggestion suggestion-${entry.kind}`}

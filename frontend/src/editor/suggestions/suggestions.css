@@ -124,6 +124,28 @@
   background: var(--border);
 }
 
+/* Author attribution in bubble */
+.bubble-author {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  width: 100%;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 5px;
+}
+.bubble-time {
+  color: var(--text-subtle);
+}
+
+/* Format-change suggestion entry */
+.suggestion-text-format {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 /* Suggestion-kind chip */
 .thread-role-chip--suggestion {
   background: color-mix(in srgb, var(--suggest) 15%, transparent);

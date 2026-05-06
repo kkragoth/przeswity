@@ -19,13 +19,16 @@ export function useEditorInit(props: {
     resetDrag: () => void;
     setSlashTrigger: Dispatch<SetStateAction<SlashTriggerInfo>>;
     onActiveCommentChange: (commentId: string | null) => void;
+    onCommentOrphan?: (threadId: string, lastQuote: string) => void;
     onUpdate?: (editor: Editor) => void;
     onSelection?: (editor: Editor) => void;
+    getPlaceholderText?: (nodeType: 'heading' | 'paragraph') => string;
 }): { editor: Editor | null; ready: boolean } {
     const extensions = useMemo(() => buildExtensions({
         collab: props.collab,
         user: props.user,
         onCommentClick: props.onActiveCommentChange,
+        onCommentOrphan: props.onCommentOrphan,
         onSlashTrigger: props.setSlashTrigger,
         getSuggestingEnabled: () => props.ctx.get().suggesting,
         getSuggestionAuthor: () => {
@@ -35,7 +38,8 @@ export function useEditorInit(props: {
         getGlossaryEntries: () => props.ctx.get().glossary,
         getOnHeaderClick: () => props.ctx.get().onHeaderClick,
         getOnFooterClick: () => props.ctx.get().onFooterClick,
-    }), [props.collab, props.user, props.onActiveCommentChange, props.setSlashTrigger, props.ctx]);
+        getPlaceholderText: props.getPlaceholderText,
+    }), [props.collab, props.user, props.onActiveCommentChange, props.setSlashTrigger, props.ctx, props.getPlaceholderText]);
 
     const editor = useEditor({
         extensions,

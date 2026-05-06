@@ -1,7 +1,10 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { previewBody } from '@/editor/comments/format';
+import { useThreadHoverPreview } from '@/containers/editor/threads/useThreadHoverPreview';
+import { useCommentDocPosition } from '@/containers/editor/comments/hooks/useCommentDocPosition';
+import { CommentStatus } from '@/editor/comments/types';
 import { ThreadComposeForm } from './thread/ThreadComposeForm';
 import { ThreadHeader } from './thread/ThreadHeader';
 import { ThreadEditor } from './thread/ThreadEditor';
@@ -47,11 +50,23 @@ export const CommentThreadCard = memo(function CommentThreadCard({ threadId }: C
         }
     }, [commentsStore, editor, sessionStore, setActiveComment, threadId]);
 
+    const docRange = useCommentDocPosition(editor, threadId);
+    const hoverProps = useThreadHoverPreview(editor, docRange);
+    const isResolved = thread?.status === CommentStatus.Resolved;
+    const isNew = thread != null && Date.now() - thread.createdAt < 60 * 60 * 1000;
+    const className = useMemo(() => {
+        const cls = ['thread'];
+        if (isActive) cls.push('is-active');
+        if (isResolved) cls.push('is-resolved');
+        if (isNew && !isResolved) cls.push('is-new');
+        return cls.join(' ');
+    }, [isActive, isResolved, isNew]);
+
     if (!thread) return null;
     const draftEmpty = thread.body === '';
 
     return (
-        <div className={`thread${isActive ? ' is-active' : ''}`} onClick={handleSelect}>
+        <div className={className} onClick={handleSelect} {...hoverProps}>
             <ThreadHeader threadId={threadId} />
             <div className="thread-quote">"{thread.originalQuote}"</div>
 

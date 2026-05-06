@@ -26,14 +26,6 @@ export function addSuggestionReply(
     getReplyMap(doc).set(`${suggestionId}:${id}`, reply);
 }
 
-export function deleteSuggestionReplies(doc: Y.Doc, suggestionId: string): void {
-    const map = getReplyMap(doc);
-    const prefix = `${suggestionId}:`;
-    const keys: string[] = [];
-    map.forEach((_, key) => { if (key.startsWith(prefix)) keys.push(key); });
-    doc.transact(() => { keys.forEach((k) => map.delete(k)); });
-}
-
 export function getSuggestionReplies(doc: Y.Doc, suggestionId: string): SuggestionReply[] {
     const out: SuggestionReply[] = [];
     const prefix = `${suggestionId}:`;

@@ -300,12 +300,19 @@
 .diff-page .tc-del {
   text-decoration: line-through;
   text-decoration-thickness: 1px;
-  color: rgba(15, 23, 42, 0.55);
+  color: var(--text-muted);
   background: rgba(var(--diff-del), 0.14);
   padding: 0 1px;
   border-radius: 2px;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
+}
+[data-theme='dark'] .diff-page .tc-del {
+  color: rgba(255, 255, 255, 0.65);
+  background: rgba(var(--diff-del), 0.22);
+}
+[data-theme='dark'] .diff-page .tc-ins {
+  background: rgba(var(--diff-ins), 0.28);
 }
 
 /* Block-level ribbons: marked by buildDiffDoc via data-diff-block on the

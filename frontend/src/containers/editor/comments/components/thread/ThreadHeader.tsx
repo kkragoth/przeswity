@@ -70,12 +70,15 @@ export function ThreadHeader({ threadId }: ThreadHeaderProps) {
             <div className="thread-head-text">
                 <div className="thread-head-row">
                     <span className="thread-author">{thread.authorName}</span>
-                    <span className="thread-head-meta">
-                        <span className="thread-head-role">{thread.authorRole}</span>
-                        <span className="thread-head-dot">·</span>
-                        <span className="thread-head-time">{formatRelative(thread.createdAt)}</span>
+                    <span
+                        className="thread-role-chip"
+                        title={thread.authorRole}
+                        aria-label={thread.authorRole}
+                    >
+                        {thread.authorRole}
                     </span>
                 </div>
+                <div className="thread-head-time">{formatRelative(thread.createdAt)}</div>
             </div>
             <div className="thread-head-aside">
                 {replyCount > 0 && !isActive ? (

@@ -3,6 +3,13 @@ import type { Role } from '@/editor/identity/types';
 export enum CommentStatus {
     Open = 'open',
     Resolved = 'resolved',
+    Orphan = 'orphan',
+}
+
+export interface OrphanMetadata {
+    orphanedAt: number
+    lastKnownQuote: string
+    lastKnownAuthorId: string
 }
 
 export enum MentionKind {
@@ -31,6 +38,7 @@ export interface CommentThread {
   resolvedAt?: number
   reactions?: Record<string, string[]>
   replies: CommentReply[]
+  orphan?: OrphanMetadata
 }
 
 export interface CommentReply {

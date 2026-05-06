@@ -6,6 +6,7 @@ import {
     type DiffSide,
 } from '@/containers/editor/session/editorViewStore';
 import type { SnapshotSummary } from '@/api/generated/types.gen';
+import { RowRole, SnapshotList } from './components/SnapshotList';
 
 interface VersionHistoryRailProps {
     snapshots: SnapshotSummary[];
@@ -13,65 +14,46 @@ interface VersionHistoryRailProps {
     right: DiffSide;
 }
 
-const matches = (side: DiffSide, snapshotId: string) =>
-    !isCurrent(side) && side.id === snapshotId;
+function combineRoles(isFrom: boolean, isTo: boolean): RowRole {
+    if (isFrom && isTo) return RowRole.Both;
+    if (isFrom) return RowRole.From;
+    if (isTo) return RowRole.To;
+    return RowRole.None;
+}
+
+const isSnapshotMatch = (id: string) => (side: DiffSide) =>
+    !isCurrent(side) && side.id === id;
 
 export function VersionHistoryRail({ snapshots, left, right }: VersionHistoryRailProps) {
     const { t } = useTranslation('editor');
     const nav = useVersionNavigation();
 
-    const setRightToSnapshot = (id: string) => {
-        nav.setSide('right', { kind: DiffSideKind.Snapshot, id });
-    };
-    const setRightToCurrent = () => {
-        nav.setSide('right', { kind: DiffSideKind.Current });
-    };
+    const setRight = (side: DiffSide) => nav.setSide('right', side);
+    const setLeft = (side: DiffSide) => nav.setSide('left', side);
 
-    const renderItem = (key: string, label: string, meta: string | null, isLeft: boolean, isRight: boolean, onClick: () => void) => {
-        const cls = [
-            'vh-rail-item',
-            isRight ? 'is-active' : '',
-            isLeft ? 'is-compare' : '',
-        ].filter(Boolean).join(' ');
-        return (
-            <button key={key} type="button" className={cls} onClick={onClick}>
-                <div className="vh-rail-label">{label}</div>
-                {meta && <div className="vh-rail-meta">{meta}</div>}
-                <div className="vh-rail-badges">
-                    {isLeft && <span className="vh-rail-side-badge is-left">{t('versionHistory.fromBadge')}</span>}
-                    {isRight && <span className="vh-rail-side-badge is-right">{t('versionHistory.toBadge')}</span>}
-                </div>
-            </button>
-        );
-    };
+    const currentRole = combineRoles(isCurrent(left), isCurrent(right));
+
+    const legend = (
+        <div className="vh-rail-legend">
+            <span className="vh-rail-legend-item"><span className="vh-rail-dot is-from" />{t('versionHistory.from')}</span>
+            <span className="vh-rail-legend-item"><span className="vh-rail-dot is-to" />{t('versionHistory.to')}</span>
+            <span className="vh-rail-legend-hint">{t('versionHistory.legendHint')}</span>
+        </div>
+    );
 
     return (
-        <aside className="vh-rail">
-            <div className="vh-rail-header">{t('versionHistory.title')}</div>
-            <div className="vh-rail-hint">{t('versionHistory.railHint')}</div>
-            <div className="vh-rail-list">
-                {renderItem(
-                    'current',
-                    t('versionHistory.current'),
-                    null,
-                    isCurrent(left),
-                    isCurrent(right),
-                    setRightToCurrent,
-                )}
-                {snapshots.length === 0 && (
-                    <div className="sidebar-empty">{t('versions.empty')}</div>
-                )}
-                {snapshots.map((snap) =>
-                    renderItem(
-                        snap.id,
-                        snap.label,
-                        `${snap.createdBy.name} · ${new Date(snap.createdAt).toLocaleString()}`,
-                        matches(left, snap.id),
-                        matches(right, snap.id),
-                        () => setRightToSnapshot(snap.id),
-                    ),
-                )}
-            </div>
-        </aside>
+        <SnapshotList
+            snapshots={snapshots}
+            currentRole={currentRole}
+            onCurrentClick={() => setRight({ kind: DiffSideKind.Current })}
+            onCurrentContextMenu={() => setLeft({ kind: DiffSideKind.Current })}
+            onRowClick={(snap) => setRight({ kind: DiffSideKind.Snapshot, id: snap.id })}
+            onRowContextMenu={(snap) => setLeft({ kind: DiffSideKind.Snapshot, id: snap.id })}
+            roleFor={(snap) =>
+                combineRoles(isSnapshotMatch(snap.id)(left), isSnapshotMatch(snap.id)(right))
+            }
+            legend={legend}
+            rowTitle={t('versionHistory.rowTitle')}
+        />
     );
 }

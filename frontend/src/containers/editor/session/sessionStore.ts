@@ -30,6 +30,7 @@ export interface SessionState {
      */
     commentPulseTick: number;
     pendingNewComment: PendingComment | null;
+    pendingReattachId: string | null;
     leftTab: LeftTab;
     rightTab: RightTab;
     findOpen: boolean;
@@ -39,6 +40,7 @@ export interface SessionState {
     requestCommentPulse: () => void;
     enqueuePendingComment: (a: PendingComment) => void;
     consumePendingComment: () => PendingComment | null;
+    setPendingReattach: (id: string | null) => void;
     setLeftTab: (t: LeftTab) => void;
     setRightTab: (t: RightTab) => void;
     openFind: () => void;
@@ -54,6 +56,7 @@ export const createSessionStore = (): SessionStore =>
         activeCommentId: null,
         commentPulseTick: 0,
         pendingNewComment: null,
+        pendingReattachId: null,
         leftTab: LeftTab.Outline,
         rightTab: RightTab.Comments,
         findOpen: false,
@@ -69,6 +72,7 @@ export const createSessionStore = (): SessionStore =>
             if (v) set({ pendingNewComment: null });
             return v;
         },
+        setPendingReattach: (id) => set({ pendingReattachId: id }),
         setLeftTab: (t) => set({ leftTab: t }),
         setRightTab: (t) => set({ rightTab: t }),
         openFind: () => set({ findOpen: true }),

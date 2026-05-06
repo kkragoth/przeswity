@@ -3,6 +3,7 @@ import { MISSING_DATE_DAYS } from '@/lib/constants';
 const ONE_MINUTE_MS = 60_000;
 const ONE_HOUR_MS = 3_600_000;
 const ONE_DAY_MS = 86_400_000;
+const ONE_WEEK_MS = 7 * ONE_DAY_MS;
 
 export function formatRelativeTime(
     ts: number,
@@ -14,6 +15,7 @@ export function formatRelativeTime(
     if (diff < ONE_MINUTE_MS) return t('comments.time.justNow');
     if (diff < ONE_HOUR_MS) return t('comments.time.minutesAgo', { count: Math.floor(diff / ONE_MINUTE_MS) });
     if (diff < ONE_DAY_MS) return t('comments.time.hoursAgo', { count: Math.floor(diff / ONE_HOUR_MS) });
+    if (diff < ONE_WEEK_MS) return t('comments.time.daysAgo', { count: Math.floor(diff / ONE_DAY_MS) });
     return new Date(ts).toLocaleDateString(locale);
 }
 

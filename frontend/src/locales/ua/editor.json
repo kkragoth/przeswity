@@ -1,4 +1,6 @@
 {
+    "placeholderHeading": "Заголовок...",
+    "placeholderParagraph": "Почніть писати...",
     "global": {
         "cancel": "Скасувати",
         "close": "Закрити",
@@ -114,6 +116,7 @@
             "resolved": "Вирішені",
             "detached": "Від'єднані"
         },
+        "orphanedTab": "Від'єднані",
         "addComment": "Додати коментар",
         "addCommentTitle": "Додати коментар",
         "addReaction": "Додати реакцію",
@@ -127,6 +130,7 @@
             "open": "Відкриті",
             "resolved": "Вирішені",
             "all": "Всі",
+            "orphaned": "Осиротілі",
             "allAuthors": "Всі автори",
             "allRoles": "Всі ролі"
         },
@@ -148,10 +152,21 @@
         "repliesCount_few": "{{count}} відповіді",
         "repliesCount_many": "{{count}} відповідей",
         "repliesCount_other": "{{count}} відповідей",
+        "orphanedCount": "Осиротілі ({{count}})",
+        "orphanedQuoteLabel": "Останній відомий текст:",
+        "confirmReattach": "Підтвердити прикріплення",
+        "cancelReattach": "Скасувати",
+        "reattachBanner": "Виберіть текст у документі для прикріплення коментаря, потім натисніть Підтвердити.",
+        "reattachWaiting": "Виберіть текст у редакторі…",
+        "dismissOrphan": "Відхилити",
         "time": {
             "justNow": "щойно",
             "minutesAgo": "{{count}} хв тому",
-            "hoursAgo": "{{count}} год тому"
+            "hoursAgo": "{{count}} год тому",
+            "daysAgo_one": "{{count}} день тому",
+            "daysAgo_few": "{{count}} дні тому",
+            "daysAgo_many": "{{count}} днів тому",
+            "daysAgo_other": "{{count}} днів тому"
         }
     },
     "suggestions": {
@@ -166,11 +181,20 @@
         "checkSelection": "Перевірити виділення",
         "sidebarTitle": "Пропозиції ({{count}})",
         "empty": "Немає ожидаючих пропозицій.",
+        "noMatch": "Немає пропозицій, що відповідають вибраному автору.",
         "accept": "Прийняти",
         "reject": "Відхилити",
         "inserted": "вставлено",
         "deleted": "видалено",
-        "replaced": "змінено"
+        "replaced": "змінено",
+        "unknownAuthor": "Невідомий",
+        "format": {
+            "label": "зміна форматування",
+            "markAdded": "{{mark}} додано",
+            "markRemoved": "{{mark}} видалено",
+            "nodeAttrChanged": "{{attr}}: {{from}} → {{to}}",
+            "multiChanges": "{{count}} змін форматування"
+        }
     },
     "versions": {
         "snapshot": "Знімок",
@@ -194,11 +218,24 @@
         "restoreOlder": "Відновити старішу",
         "legendAdded": "додано (+{{count}} симв.)",
         "legendRemoved": "видалено (−{{count}} симв.)",
+        "statsAdded": "симв. додано",
+        "statsRemoved": "симв. видалено",
+        "statsBlocks": "змінених блоків",
+        "statsBlocksShort_one": "{{count}} блок",
+        "statsBlocksShort_few": "{{count}} блоки",
+        "statsBlocksShort_many": "{{count}} блоків",
+        "statsBlocksShort_other": "{{count}} блоків",
+        "hunkPrev": "Попередня зміна",
+        "hunkNext": "Наступна зміна",
         "autoBadge": "авто",
         "diffWithSelected": "Порівняти з вибраним",
         "diffVsCurrent": "Порівняти з поточним",
         "compareWith": "Порівняти ↔",
-        "delete": "Видалити"
+        "delete": "Видалити",
+        "commentsSide": "{{count}} коментар(і) у {{side}}",
+        "noComments": "Немає коментарів",
+        "commentsReadOnly": "Знімок лише для читання — перейдіть на вкладку Коментарі, щоб відповісти.",
+        "commentsLive": "Поточний документ — перейдіть на вкладку Коментарі, щоб відповісти."
     },
     "wordCount": {
         "words": "{{count}} слів",
@@ -377,16 +414,25 @@
     },
     "versionHistory": {
         "title": "Історія версій",
-        "viewing": "Перегляд версії:",
-        "restore": "Відновити цю версію",
+        "restore": "Відновити",
         "close": "Закрити",
-        "current": "Поточний документ",
+        "current": "Поточна",
         "from": "Від",
         "to": "До",
         "swap": "Поміняти місцями",
-        "fromBadge": "Від",
-        "toBadge": "До",
-        "railHint": "Натисніть версію, щоб встановити її як праву сторону"
+        "today": "Сьогодні",
+        "yesterday": "Вчора",
+        "justNow": "Щойно",
+        "minutesAgo": "{{count}} хв тому",
+        "hoursAgo": "{{count}} год тому",
+        "autoLabel": "Автозбереження",
+        "searchPlaceholder": "Пошук версій…",
+        "clearSearch": "Очистити",
+        "noMatches": "Немає відповідних версій.",
+        "showAuto": "Показати автозбереження",
+        "hideAuto": "Сховати автозбереження",
+        "legendHint": "Клік – ДО · правий клік – ВІД",
+        "rowTitle": "Клік: встановити як ДО · Правий клік: як ВІД"
     },
     "pins": {
         "toggle": "Перемкнути значки коментарів",
@@ -412,8 +458,41 @@
             "all": "Всі",
             "open": "Відкриті",
             "resolved": "Вирішені",
+            "comments": "Коментарі",
             "suggestions": "Пропозиції",
             "mine": "Мої"
+        },
+        "filterGroup": {
+            "status": "Статус",
+            "type": "Тип"
+        },
+        "sort": {
+            "label": "Сортування",
+            "position": "За позицією",
+            "newest": "Найновіші",
+            "oldest": "Найстаріші"
+        },
+        "section": {
+            "untitled": "(розділ без назви)",
+            "beforeFirstHeading": "Початок документа"
+        },
+        "bulk": {
+            "visibleCount_one": "{{count}} обговорення",
+            "visibleCount_few": "{{count}} обговорення",
+            "visibleCount_many": "{{count}} обговорень",
+            "visibleCount_other": "{{count}} обговорень",
+            "filterByAuthor": "Фільтр за автором",
+            "allAuthors": "Усі автори",
+            "resolveAll": "Вирішити всі",
+            "acceptAll": "Прийняти всі",
+            "rejectAll": "Відхилити всі",
+            "resolveAllConfirm": "Вирішити {{count}} обговорень?",
+            "acceptAllConfirm": "Прийняти {{count}} пропозицій?",
+            "rejectAllConfirm": "Відхилити {{count}} пропозицій?",
+            "resolvedToast_one": "Вирішено {{count}} обговорення",
+            "resolvedToast_few": "Вирішено {{count}} обговорення",
+            "resolvedToast_many": "Вирішено {{count}} обговорень",
+            "resolvedToast_other": "Вирішено {{count}} обговорень"
         }
     }
 }

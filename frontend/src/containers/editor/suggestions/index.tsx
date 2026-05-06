@@ -1,10 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import { useTranslation } from 'react-i18next';
-import { acceptSuggestion, rejectSuggestion, SuggestionType } from '@/editor/suggestions/suggestionOps';
+import {
+    acceptSuggestion,
+    rejectSuggestion,
+    acceptFormatChange,
+    rejectFormatChange,
+    SuggestionType,
+} from '@/editor/suggestions/suggestionOps';
+import { collectFormatChanges } from '@/editor/suggestions/collectFormatChanges';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { useToast } from '@/editor/shell/useToast';
-import { SuggestionEntryKind, SuggestionItem, type SuggestionEntry } from './components/SuggestionItem';
+import { AuthorChips } from '@/containers/editor/comments/components/AuthorChips';
+import type { Participant } from '@/containers/editor/comments/store/commentsSelectors';
+import {
+    SuggestionEntryKind,
+    SuggestionItem,
+    type SuggestionEntry,
+} from './components/SuggestionItem';
 
 interface SuggestionsSidebarProps {
   editor: Editor | null
@@ -86,7 +99,6 @@ function collectSuggestions(editor: Editor): SuggestionEntry[] {
             out.push({ ...base, kind: SuggestionEntryKind.Delete, text: g.deletion.text, from: g.deletion.from, to: g.deletion.to });
         }
     }
-    out.sort((a, b) => entryStart(a) - entryStart(b));
     return out;
 }
 
@@ -105,15 +117,30 @@ function entryRange(entry: SuggestionEntry): { from: number; to: number } {
     return { from: entry.from, to: entry.to };
 }
 
+function allEntries(editor: Editor): SuggestionEntry[] {
+    const out = [...collectSuggestions(editor), ...collectFormatChanges(editor)];
+    out.sort((a, b) => entryStart(a) - entryStart(b));
+    return out;
+}
+
+function entryParticipants(entries: SuggestionEntry[]): Participant[] {
+    const map = new Map<string, Participant>();
+    for (const e of entries) {
+        if (!map.has(e.authorId)) map.set(e.authorId, { id: e.authorId, name: e.authorName, color: e.authorColor });
+    }
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export function SuggestionsSidebar({ editor }: SuggestionsSidebarProps) {
     const { t } = useTranslation('editor');
     const { perms } = useEditorSession();
     const { showWithUndo } = useToast();
     const [entries, setEntries] = useState<SuggestionEntry[]>([]);
+    const [authorFilter, setAuthorFilter] = useState('');
 
     useEffect(() => {
         if (!editor) return;
-        const update = () => setEntries(collectSuggestions(editor));
+        const update = () => setEntries(allEntries(editor));
         update();
         editor.on('update', update);
         editor.on('transaction', update);
@@ -125,29 +152,58 @@ export function SuggestionsSidebar({ editor }: SuggestionsSidebarProps) {
 
     if (!editor) return null;
 
+    const participants = useMemo(() => entryParticipants(entries), [entries]);
+    const visible = useMemo(
+        () => (authorFilter ? entries.filter((e) => e.authorId === authorFilter) : entries),
+        [entries, authorFilter],
+    );
+
     const undoEditor = () => editor.commands.undo();
 
     const accept = (e: SuggestionEntry) => {
         if (!perms.canResolveSuggestion) return;
-        acceptSuggestion(editor, e.suggestionId);
+        if (e.kind === SuggestionEntryKind.Format) {
+            acceptFormatChange(editor, e.suggestionId);
+        } else {
+            acceptSuggestion(editor, e.suggestionId);
+        }
         showWithUndo(t('suggestions.acceptedToast'), { label: t('suggestions.undo'), onUndo: undoEditor });
     };
 
     const reject = (e: SuggestionEntry) => {
         if (!perms.canResolveSuggestion) return;
-        rejectSuggestion(editor, e.suggestionId);
+        if (e.kind === SuggestionEntryKind.Format) {
+            rejectFormatChange(editor, e.suggestionId);
+        } else {
+            rejectSuggestion(editor, e.suggestionId);
+        }
         showWithUndo(t('suggestions.rejectedToast'), { label: t('suggestions.undo'), onUndo: undoEditor });
     };
 
     const acceptAll = () => {
-        if (!entries.length) return;
-        entries.forEach((e) => { if (perms.canResolveSuggestion) acceptSuggestion(editor, e.suggestionId); });
-        showWithUndo(t('suggestions.acceptedAllToast', { count: entries.length }), { label: t('suggestions.undo'), onUndo: undoEditor });
+        if (!visible.length) return;
+        visible.forEach((e) => {
+            if (!perms.canResolveSuggestion) return;
+            if (e.kind === SuggestionEntryKind.Format) {
+                acceptFormatChange(editor, e.suggestionId);
+            } else {
+                acceptSuggestion(editor, e.suggestionId);
+            }
+        });
+        showWithUndo(t('suggestions.acceptedAllToast', { count: visible.length }), { label: t('suggestions.undo'), onUndo: undoEditor });
     };
+
     const rejectAll = () => {
-        if (!entries.length) return;
-        entries.forEach((e) => { if (perms.canResolveSuggestion) rejectSuggestion(editor, e.suggestionId); });
-        showWithUndo(t('suggestions.rejectedAllToast', { count: entries.length }), { label: t('suggestions.undo'), onUndo: undoEditor });
+        if (!visible.length) return;
+        visible.forEach((e) => {
+            if (!perms.canResolveSuggestion) return;
+            if (e.kind === SuggestionEntryKind.Format) {
+                rejectFormatChange(editor, e.suggestionId);
+            } else {
+                rejectSuggestion(editor, e.suggestionId);
+            }
+        });
+        showWithUndo(t('suggestions.rejectedAllToast', { count: visible.length }), { label: t('suggestions.undo'), onUndo: undoEditor });
     };
 
     const select = (e: SuggestionEntry) => {
@@ -162,6 +218,7 @@ export function SuggestionsSidebar({ editor }: SuggestionsSidebarProps) {
                 <div className="sidebar-empty">{t('suggestions.empty')}</div>
             ) : (
                 <>
+                    <AuthorChips participants={participants} activeId={authorFilter} onSelect={setAuthorFilter} />
                     {perms.canResolveSuggestion && (
                         <div className="bulk-actions">
                             <button type="button" onClick={acceptAll}>
@@ -172,16 +229,20 @@ export function SuggestionsSidebar({ editor }: SuggestionsSidebarProps) {
                             </button>
                         </div>
                     )}
-                    {entries.map((e) => (
-                        <SuggestionItem
-                            key={e.suggestionId}
-                            entry={e}
-                            canResolve={perms.canResolveSuggestion}
-                            onSelect={select}
-                            onAccept={accept}
-                            onReject={reject}
-                        />
-                    ))}
+                    {visible.length === 0 ? (
+                        <div className="sidebar-empty">{t('suggestions.noMatch')}</div>
+                    ) : (
+                        visible.map((e) => (
+                            <SuggestionItem
+                                key={e.suggestionId}
+                                entry={e}
+                                canResolve={perms.canResolveSuggestion}
+                                onSelect={select}
+                                onAccept={accept}
+                                onReject={reject}
+                            />
+                        ))
+                    )}
                 </>
             )}
         </div>

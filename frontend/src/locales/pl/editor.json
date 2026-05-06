@@ -1,4 +1,6 @@
 {
+    "placeholderHeading": "Nagłówek...",
+    "placeholderParagraph": "Zacznij pisać...",
     "global": {
         "cancel": "Anuluj",
         "close": "Zamknij",
@@ -114,6 +116,7 @@
             "resolved": "Rozwiązane",
             "detached": "Odłączone"
         },
+        "orphanedTab": "Odłączone",
         "addComment": "Dodaj komentarz",
         "addCommentTitle": "Dodaj komentarz",
         "addReaction": "Dodaj reakcję",
@@ -127,6 +130,7 @@
             "open": "Otwarte",
             "resolved": "Rozwiązane",
             "all": "Wszystkie",
+            "orphaned": "Osierocone",
             "allAuthors": "Wszyscy autorzy",
             "allRoles": "Wszystkie role"
         },
@@ -148,10 +152,21 @@
         "repliesCount_few": "{{count}} odpowiedzi",
         "repliesCount_many": "{{count}} odpowiedzi",
         "repliesCount_other": "{{count}} odpowiedzi",
+        "orphanedCount": "Osierocone ({{count}})",
+        "orphanedQuoteLabel": "Ostatni znany tekst:",
+        "confirmReattach": "Potwierdź ponowne zakotwiczenie",
+        "cancelReattach": "Anuluj",
+        "reattachBanner": "Zaznacz tekst w dokumencie, aby ponownie zakotwicz ten komentarz, a następnie kliknij Potwierdź.",
+        "reattachWaiting": "Zaznacz tekst w edytorze…",
+        "dismissOrphan": "Odrzuć",
         "time": {
             "justNow": "przed chwilą",
             "minutesAgo": "{{count}} min temu",
-            "hoursAgo": "{{count}} godz. temu"
+            "hoursAgo": "{{count}} godz. temu",
+            "daysAgo_one": "{{count}} dzień temu",
+            "daysAgo_few": "{{count}} dni temu",
+            "daysAgo_many": "{{count}} dni temu",
+            "daysAgo_other": "{{count}} dni temu"
         }
     },
     "suggestions": {
@@ -166,11 +181,20 @@
         "checkSelection": "Sprawdź zaznaczenie",
         "sidebarTitle": "Sugestie ({{count}})",
         "empty": "Brak oczekujących sugestii.",
+        "noMatch": "Brak sugestii pasujących do wybranego autora.",
         "accept": "Akceptuj",
         "reject": "Odrzuć",
         "inserted": "wstawiono",
         "deleted": "usunięto",
-        "replaced": "zmieniono"
+        "replaced": "zmieniono",
+        "unknownAuthor": "Nieznany",
+        "format": {
+            "label": "zmiana formatowania",
+            "markAdded": "{{mark}} dodano",
+            "markRemoved": "{{mark}} usunięto",
+            "nodeAttrChanged": "{{attr}}: {{from}} → {{to}}",
+            "multiChanges": "{{count}} zmian formatowania"
+        }
     },
     "versions": {
         "snapshot": "Migawka",
@@ -194,11 +218,24 @@
         "restoreOlder": "Przywróć starszą",
         "legendAdded": "dodano (+{{count}} zn.)",
         "legendRemoved": "usunięto (−{{count}} zn.)",
+        "statsAdded": "zn. dodano",
+        "statsRemoved": "zn. usunięto",
+        "statsBlocks": "zmienionych bloków",
+        "statsBlocksShort_one": "{{count}} blok",
+        "statsBlocksShort_few": "{{count}} bloki",
+        "statsBlocksShort_many": "{{count}} bloków",
+        "statsBlocksShort_other": "{{count}} bloków",
+        "hunkPrev": "Poprzednia zmiana",
+        "hunkNext": "Następna zmiana",
         "autoBadge": "auto",
         "diffWithSelected": "Porównaj z wybraną",
         "diffVsCurrent": "Porównaj z bieżącą",
         "compareWith": "Porównaj ↔",
-        "delete": "Usuń"
+        "delete": "Usuń",
+        "commentsSide": "{{count}} komentarz(y) w {{side}}",
+        "noComments": "Brak komentarzy",
+        "commentsReadOnly": "Migawka tylko do odczytu — przejdź do zakładki Komentarze, aby odpowiedzieć.",
+        "commentsLive": "Aktualny dokument — przejdź do zakładki Komentarze, aby odpowiedzieć."
     },
     "wordCount": {
         "words": "{{count}} wyrazów",
@@ -377,16 +414,25 @@
     },
     "versionHistory": {
         "title": "Historia wersji",
-        "viewing": "Przeglądasz wersję:",
-        "restore": "Przywróć tę wersję",
+        "restore": "Przywróć",
         "close": "Zamknij",
-        "current": "Bieżący dokument",
+        "current": "Bieżąca",
         "from": "Od",
         "to": "Do",
         "swap": "Zamień strony",
-        "fromBadge": "Od",
-        "toBadge": "Do",
-        "railHint": "Kliknij wersję, aby ustawić ją jako prawą stronę"
+        "today": "Dzisiaj",
+        "yesterday": "Wczoraj",
+        "justNow": "Przed chwilą",
+        "minutesAgo": "{{count}} min temu",
+        "hoursAgo": "{{count}} godz. temu",
+        "autoLabel": "Auto-zapis",
+        "searchPlaceholder": "Szukaj wersji…",
+        "clearSearch": "Wyczyść",
+        "noMatches": "Brak pasujących wersji.",
+        "showAuto": "Pokaż auto-zapisy",
+        "hideAuto": "Ukryj auto-zapisy",
+        "legendHint": "Klik – DO · prawy klik – OD",
+        "rowTitle": "Klik: ustaw jako DO · Prawy klik: ustaw jako OD"
     },
     "pins": {
         "toggle": "Przełącz przypięcia komentarzy",
@@ -412,8 +458,41 @@
             "all": "Wszystkie",
             "open": "Otwarte",
             "resolved": "Rozwiązane",
+            "comments": "Komentarze",
             "suggestions": "Sugestie",
             "mine": "Moje"
+        },
+        "filterGroup": {
+            "status": "Status",
+            "type": "Typ"
+        },
+        "sort": {
+            "label": "Sortuj",
+            "position": "Wg pozycji",
+            "newest": "Najnowsze",
+            "oldest": "Najstarsze"
+        },
+        "section": {
+            "untitled": "(sekcja bez tytułu)",
+            "beforeFirstHeading": "Wstęp dokumentu"
+        },
+        "bulk": {
+            "visibleCount_one": "{{count}} wątek",
+            "visibleCount_few": "{{count}} wątki",
+            "visibleCount_many": "{{count}} wątków",
+            "visibleCount_other": "{{count}} wątków",
+            "filterByAuthor": "Filtruj po autorze",
+            "allAuthors": "Wszyscy autorzy",
+            "resolveAll": "Rozwiąż wszystkie",
+            "acceptAll": "Akceptuj wszystkie",
+            "rejectAll": "Odrzuć wszystkie",
+            "resolveAllConfirm": "Rozwiązać {{count}} wątek/ów?",
+            "acceptAllConfirm": "Zaakceptować {{count}} sugestii?",
+            "rejectAllConfirm": "Odrzucić {{count}} sugestii?",
+            "resolvedToast_one": "Rozwiązano {{count}} wątek",
+            "resolvedToast_few": "Rozwiązano {{count}} wątki",
+            "resolvedToast_many": "Rozwiązano {{count}} wątków",
+            "resolvedToast_other": "Rozwiązano {{count}} wątków"
         }
     }
 }

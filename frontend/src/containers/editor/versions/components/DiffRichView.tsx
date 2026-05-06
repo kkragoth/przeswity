@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { READ_ONLY_EXTENSIONS } from '@/editor/versions/readOnlyExtensions';
 import type { JSONNode } from '@/editor/versions/diffDoc';
+import { splitDiffSides } from '@/editor/versions/splitDiffSides';
 
 interface ReadOnlyEditorProps {
     json: JSONNode;
@@ -31,24 +32,24 @@ function ReadOnlyEditor({ json, diff = false }: ReadOnlyEditorProps) {
 
 interface DiffRichViewProps {
     diffJson: JSONNode;
-    olderJson?: JSONNode;
-    newerJson?: JSONNode;
     olderLabel: string;
     newerLabel: string;
     useSbs: boolean;
 }
 
-export function DiffRichView({ diffJson, olderJson, newerJson, olderLabel, newerLabel, useSbs }: DiffRichViewProps) {
-    if (useSbs && olderJson && newerJson) {
+export function DiffRichView({ diffJson, olderLabel, newerLabel, useSbs }: DiffRichViewProps) {
+    const sides = useMemo(() => (useSbs ? splitDiffSides(diffJson) : null), [diffJson, useSbs]);
+
+    if (useSbs && sides) {
         return (
             <div className="diff-sbs">
                 <div className="diff-sbs-col">
                     <div className="diff-sbs-label">{olderLabel}</div>
-                    <ReadOnlyEditor json={olderJson} />
+                    <ReadOnlyEditor json={sides.older} diff />
                 </div>
                 <div className="diff-sbs-col">
                     <div className="diff-sbs-label">{newerLabel}</div>
-                    <ReadOnlyEditor json={newerJson} />
+                    <ReadOnlyEditor json={sides.newer} diff />
                 </div>
             </div>
         );

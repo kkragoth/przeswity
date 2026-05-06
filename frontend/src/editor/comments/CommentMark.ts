@@ -72,7 +72,10 @@ export const Comment = Mark.create<CommentOptions>({
                 // Suppress unused-warning for selection coords
                 void from;
                 void to;
-                if (dispatch && modified) dispatch(tr);
+                if (dispatch && modified) {
+                    tr.setMeta('comment:explicit-unset', true);
+                    dispatch(tr);
+                }
                 return modified;
             },
         };

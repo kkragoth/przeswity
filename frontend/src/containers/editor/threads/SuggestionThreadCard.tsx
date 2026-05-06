@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckCheck, X } from 'lucide-react';
+import { CheckCheck, MessageSquarePlus, Plus, Replace, Trash2, Type, X } from 'lucide-react';
 import { Avatar } from '@/components/Avatar';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { useEditor } from '@/containers/editor/session/LiveProvider';
@@ -11,11 +11,22 @@ import { addSuggestionReply } from '@/editor/suggestions/suggestionReplyOps';
 import { SuggestionEntryKind, type SuggestionEntry } from '@/containers/editor/suggestions/components/SuggestionItem';
 import { useSuggestionReplies } from '@/containers/editor/suggestions/useSuggestionReplies';
 import { useResolvedAuthorColor } from './useResolvedAuthorColor';
+import { useThreadHoverPreview } from './useThreadHoverPreview';
 
 interface SuggestionThreadCardProps {
     entry: SuggestionEntry;
     isActive?: boolean;
     onSelect?: () => void;
+}
+
+function entryDocRange(entry: SuggestionEntry): { from: number; to: number } {
+    if (entry.kind === SuggestionEntryKind.Replace) {
+        return {
+            from: Math.min(entry.deletedFrom, entry.insertedFrom),
+            to: Math.max(entry.deletedTo, entry.insertedTo),
+        };
+    }
+    return { from: entry.from, to: entry.to };
 }
 
 function SuggestionPreview({ entry }: { entry: SuggestionEntry }) {
@@ -29,19 +40,34 @@ function SuggestionPreview({ entry }: { entry: SuggestionEntry }) {
             </div>
         );
     }
-    const cls = entry.kind === SuggestionEntryKind.Insert ? 'suggestion-text-insertion' : 'suggestion-text-deletion';
-    const label = entry.kind === SuggestionEntryKind.Insert ? t('suggestions.inserted') : t('suggestions.deleted');
+    if (entry.kind === SuggestionEntryKind.Format) {
+        return (
+            <div className="thread-suggestion-preview suggestion-text-format">
+                {t('suggestions.format.label')}
+            </div>
+        );
+    }
+    const cls = entry.kind === SuggestionEntryKind.Insert
+        ? 'suggestion-text-insertion'
+        : 'suggestion-text-deletion';
     return (
         <div className="thread-suggestion-preview">
             <span className={cls}>{entry.text}</span>
-            <span className="suggestion-text-label"> ({label})</span>
         </div>
     );
+}
+
+function KindIcon({ kind }: { kind: SuggestionEntryKind }) {
+    if (kind === SuggestionEntryKind.Insert) return <Plus size={11} strokeWidth={2.5} />;
+    if (kind === SuggestionEntryKind.Delete) return <Trash2 size={11} strokeWidth={2.25} />;
+    if (kind === SuggestionEntryKind.Format) return <Type size={11} strokeWidth={2.25} />;
+    return <Replace size={11} strokeWidth={2.25} />;
 }
 
 function kindLabel(entry: SuggestionEntry, t: ReturnType<typeof useTranslation<'editor'>>['t']): string {
     if (entry.kind === SuggestionEntryKind.Insert) return t('suggestions.inserted');
     if (entry.kind === SuggestionEntryKind.Delete) return t('suggestions.deleted');
+    if (entry.kind === SuggestionEntryKind.Format) return t('suggestions.format.label');
     return t('suggestions.replaced');
 }
 
@@ -53,6 +79,8 @@ export function SuggestionThreadCard({ entry, isActive, onSelect }: SuggestionTh
     const resolvedColor = useResolvedAuthorColor(entry.authorId, entry.authorColor);
     const replies = useSuggestionReplies(collab.doc, entry.suggestionId);
     const [draft, setDraft] = useState('');
+    const docRange = entryDocRange(entry);
+    const hoverProps = useThreadHoverPreview(editor, docRange);
 
     const undoEditor = () => editor?.commands.undo();
 
@@ -70,17 +98,15 @@ export function SuggestionThreadCard({ entry, isActive, onSelect }: SuggestionTh
         showWithUndo(t('suggestions.rejectedToast'), { label: t('suggestions.undo'), onUndo: undoEditor });
     };
 
-    const handleSelect = (ev: React.MouseEvent) => {
-        ev.stopPropagation();
+    const expand = useCallback(() => {
         if (!editor) return;
-        const from = entry.kind === SuggestionEntryKind.Replace
-            ? Math.min(entry.deletedFrom, entry.insertedFrom)
-            : entry.from;
-        const to = entry.kind === SuggestionEntryKind.Replace
-            ? Math.max(entry.deletedTo, entry.insertedTo)
-            : entry.to;
-        editor.chain().focus().setTextSelection({ from, to }).run();
+        editor.chain().focus().setTextSelection(docRange).run();
         onSelect?.();
+    }, [editor, docRange, onSelect]);
+
+    const handleCardClick = (ev: React.MouseEvent) => {
+        ev.stopPropagation();
+        expand();
     };
 
     const handleSubmitReply = (ev: React.MouseEvent) => {
@@ -92,29 +118,53 @@ export function SuggestionThreadCard({ entry, isActive, onSelect }: SuggestionTh
     };
 
     const relativeTime = formatRelativeTime(entry.timestamp, i18n.language, t);
+    const kLabel = kindLabel(entry, t);
+    const isNew = Date.now() - entry.timestamp < 60 * 60 * 1000;
 
     return (
         <div
-            className={`thread thread--suggestion${isActive ? ' is-active' : ''}`}
+            className={`thread thread--suggestion${isActive ? ' is-active' : ''}${isNew ? ' is-new' : ''}`}
+            data-thread-id={entry.suggestionId}
             style={{ borderLeftColor: resolvedColor }}
-            onClick={handleSelect}
+            onClick={handleCardClick}
+            {...hoverProps}
         >
             <div className="thread-head">
                 <Avatar name={entry.authorName} color={resolvedColor} size="md" ring={isActive} />
                 <div className="thread-head-text">
                     <div className="thread-head-row">
-                        <span className="thread-author">{entry.authorName}</span>
-                        <span className="thread-role-chip thread-role-chip--suggestion">
-                            {kindLabel(entry, t)}
+                        <span
+                            className={`thread-kind-icon thread-kind-icon--${entry.kind}`}
+                            title={kLabel}
+                            aria-label={kLabel}
+                        >
+                            <KindIcon kind={entry.kind} />
                         </span>
+                        <span className="thread-author">{entry.authorName}</span>
                     </div>
                     <div className="thread-head-time">{relativeTime}</div>
                 </div>
                 <div className="thread-head-aside">
                     {replies.length > 0 && !isActive && (
-                        <span className="thread-reply-count" title={t('comments.repliesCount', { count: replies.length })}>
+                        <button
+                            type="button"
+                            className="thread-reply-count is-clickable"
+                            title={t('comments.repliesCount', { count: replies.length })}
+                            onClick={(e) => { e.stopPropagation(); expand(); }}
+                        >
                             ↳ {replies.length}
-                        </span>
+                        </button>
+                    )}
+                    {perms.canComment && !isActive && replies.length === 0 && (
+                        <button
+                            type="button"
+                            className="thread-icon-btn"
+                            title={t('threads.action.reply')}
+                            aria-label={t('threads.action.reply')}
+                            onClick={(e) => { e.stopPropagation(); expand(); }}
+                        >
+                            <MessageSquarePlus size={13} />
+                        </button>
                     )}
                     {perms.canResolveSuggestion && (
                         <>

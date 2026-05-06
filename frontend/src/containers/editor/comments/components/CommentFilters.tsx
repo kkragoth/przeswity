@@ -4,30 +4,32 @@ import { shallow } from 'zustand/shallow';
 import { Role, MENTIONABLE_ROLES } from '@/editor/identity/types';
 import { roleI18nKey } from '@/lib/roleI18n';
 import { useComments } from '../store/CommentsStoreProvider';
-import { selectFilter } from '../store/commentsSelectors';
+import { selectFilter, type Participant } from '../store/commentsSelectors';
 import { CommentStatusFilter } from '../store/commentsStore';
+import { AuthorChips } from './AuthorChips';
 
 interface CommentFiltersProps {
     totalOpen: number;
-    allAuthors: string[];
+    participants: Participant[];
 }
 
-export function CommentFilters({ totalOpen, allAuthors }: CommentFiltersProps) {
+export function CommentFilters({ totalOpen, participants }: CommentFiltersProps) {
     const { t } = useTranslation('editor');
     const filter = useComments(selectFilter, shallow);
     const setStatus = useComments((s) => s.setStatus);
-    const setAuthor = useComments((s) => s.setAuthor);
+    const setAuthorId = useComments((s) => s.setAuthorId);
     const setRole = useComments((s) => s.setRole);
     const statusLabels: Record<CommentStatusFilter, string> = {
         [CommentStatusFilter.Open]: `${t('comments.filter.open')} · ${totalOpen}`,
         [CommentStatusFilter.Resolved]: t('comments.filter.resolved'),
         [CommentStatusFilter.All]: t('comments.filter.all'),
         [CommentStatusFilter.Mine]: t('comments.filter.all'),
+        [CommentStatusFilter.Orphan]: t('comments.orphanedTab'),
     };
     return (
         <div className="comment-filters">
             <div className="filter-chips">
-                {[CommentStatusFilter.Open, CommentStatusFilter.Resolved, CommentStatusFilter.All].map((s) => (
+                {[CommentStatusFilter.Open, CommentStatusFilter.Resolved, CommentStatusFilter.All, CommentStatusFilter.Orphan].map((s) => (
                     <button
                         key={s}
                         type="button"
@@ -39,12 +41,7 @@ export function CommentFilters({ totalOpen, allAuthors }: CommentFiltersProps) {
                     </button>
                 ))}
             </div>
-            <select value={filter.author} onChange={(e) => setAuthor(e.target.value)}>
-                <option value="">{t('comments.filter.allAuthors')}</option>
-                {allAuthors.map((a) => (
-                    <option key={a} value={a}>{a}</option>
-                ))}
-            </select>
+            <AuthorChips participants={participants} activeId={filter.authorId} onSelect={setAuthorId} />
             <select value={filter.role} onChange={(e) => setRole(e.target.value as Role | '')}>
                 <option value="">{t('comments.filter.allRoles')}</option>
                 {MENTIONABLE_ROLES.map((r) => (

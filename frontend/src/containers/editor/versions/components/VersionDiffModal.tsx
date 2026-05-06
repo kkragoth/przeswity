@@ -93,8 +93,6 @@ export function VersionDiffModal({
                     {view === ViewMode.Rich ? (
                         <DiffRichView
                             diffJson={diffJson}
-                            olderJson={olderJson}
-                            newerJson={newerJson}
                             olderLabel={olderLabel}
                             newerLabel={newerLabel}
                             useSbs={useSbs}

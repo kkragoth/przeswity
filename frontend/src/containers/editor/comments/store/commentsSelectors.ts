@@ -39,8 +39,8 @@ export const selectIsEditingReply =
 // Pure helpers — caller supplies the y-doc-owned thread list.
 // ---------------------------------------------------------------------------
 
-function threadInvolvesAuthor(thread: CommentThread, name: string): boolean {
-    return thread.authorName === name || thread.replies.some((r) => r.authorName === name);
+function threadInvolvesAuthorId(thread: CommentThread, authorId: string): boolean {
+    return thread.authorId === authorId || thread.replies.some((r) => r.authorId === authorId);
 }
 
 function threadInvolvesRole(thread: CommentThread, role: Role): boolean {
@@ -55,6 +55,7 @@ function matchesStatus(
     if (status === CommentStatusFilter.All) return true;
     if (status === CommentStatusFilter.Open) return thread.status === CommentStatus.Open;
     if (status === CommentStatusFilter.Resolved) return thread.status === CommentStatus.Resolved;
+    if (status === CommentStatusFilter.Orphan) return thread.status === CommentStatus.Orphan;
     return (
         thread.authorId === currentUser.id
         || thread.replies.some((r) => r.authorId === currentUser.id)
@@ -69,7 +70,7 @@ export function selectVisible(
     const sorted = [...threads].sort((a, b) => a.createdAt - b.createdAt);
     return sorted.filter((thread) => {
         if (!matchesStatus(thread, filter.status, currentUser)) return false;
-        if (filter.author && !threadInvolvesAuthor(thread, filter.author)) return false;
+        if (filter.authorId && !threadInvolvesAuthorId(thread, filter.authorId)) return false;
         if (filter.role && !threadInvolvesRole(thread, filter.role as Role)) return false;
         return true;
     });
@@ -78,21 +79,32 @@ export function selectVisible(
 export function selectOpenResolved(visible: CommentThread[]): {
     open: CommentThread[];
     resolved: CommentThread[];
+    orphaned: CommentThread[];
 } {
     const open: CommentThread[] = [];
     const resolved: CommentThread[] = [];
+    const orphaned: CommentThread[] = [];
     for (const t of visible) {
         if (t.status === CommentStatus.Open) open.push(t);
-        else resolved.push(t);
+        else if (t.status === CommentStatus.Resolved) resolved.push(t);
+        else orphaned.push(t);
     }
-    return { open, resolved };
+    return { open, resolved, orphaned };
 }
 
-export function selectAuthors(threads: CommentThread[]): string[] {
-    const set = new Set<string>();
+export interface Participant {
+    id: string
+    name: string
+    color: string
+}
+
+export function selectParticipants(threads: CommentThread[]): Participant[] {
+    const map = new Map<string, Participant>();
     for (const t of threads) {
-        set.add(t.authorName);
-        for (const r of t.replies) set.add(r.authorName);
+        if (!map.has(t.authorId)) map.set(t.authorId, { id: t.authorId, name: t.authorName, color: t.authorColor ?? '' });
+        for (const r of t.replies) {
+            if (!map.has(r.authorId)) map.set(r.authorId, { id: r.authorId, name: r.authorName, color: r.authorColor ?? '' });
+        }
     }
-    return [...set].sort();
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
 }

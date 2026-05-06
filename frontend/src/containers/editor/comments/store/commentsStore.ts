@@ -22,11 +22,12 @@ export enum CommentStatusFilter {
     Open = 'open',
     Resolved = 'resolved',
     Mine = 'mine',
+    Orphan = 'orphan',
 }
 
 export interface CommentFilterState {
     status: CommentStatusFilter;
-    author: string;
+    authorId: string;
     role: Role | '';
 }
 
@@ -37,7 +38,7 @@ export type CommentEditTarget =
 
 const DEFAULT_FILTER: CommentFilterState = {
     status: CommentStatusFilter.Open,
-    author: '',
+    authorId: '',
     role: '',
 };
 
@@ -49,7 +50,7 @@ export interface CommentsState {
     editText: string;
 
     setStatus(status: CommentStatusFilter): void;
-    setAuthor(author: string): void;
+    setAuthorId(authorId: string): void;
     setRole(role: Role | ''): void;
 
     setInitialDraft(v: string): void;
@@ -68,6 +69,8 @@ export interface CommentsState {
     createThread(anchor: { id: string; quote: string }, body: string): string;
     toggleThreadReaction(threadId: string, emoji: string): void;
     toggleReplyReaction(threadId: string, replyId: string, emoji: string): void;
+    markOrphan(threadId: string, lastKnownQuote: string): void;
+    reattachThread(threadId: string): void;
     flushPending(): void;
 }
 
@@ -82,7 +85,7 @@ export const createCommentsStore = (doc: Y.Doc, currentUser: User): CommentsStor
         editText: '',
 
         setStatus: (status) => set((s) => ({ filter: { ...s.filter, status } })),
-        setAuthor: (author) => set((s) => ({ filter: { ...s.filter, author } })),
+        setAuthorId: (authorId) => set((s) => ({ filter: { ...s.filter, authorId } })),
         setRole: (role) => set((s) => ({ filter: { ...s.filter, role } })),
 
         setInitialDraft: (v) => set({ initialDraft: v }),

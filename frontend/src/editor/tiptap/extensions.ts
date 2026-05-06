@@ -14,8 +14,13 @@ import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import { PaginationPlus } from 'tiptap-pagination-plus';
 import type { HeaderClickEvent, FooterClickEvent } from 'tiptap-pagination-plus';
+import Placeholder from '@tiptap/extension-placeholder';
+import { UniqueId } from '@/editor/tiptap/extensions/UniqueId';
+import { FocusMode } from '@/editor/tiptap/extensions/FocusMode';
+import { WordCountGoal } from '@/editor/tiptap/extensions/WordCountGoal';
 
 import { Comment } from '@/editor/comments/CommentMark';
+import { commentOrphanWatcher } from '@/editor/comments/commentOrphanWatcher';
 import { Insertion, Deletion, FormatChange } from '@/editor/suggestions/trackChangeMarks';
 import { DiffBlockAttr } from '@/editor/suggestions/blockDiffAttribute';
 import { SuggestionMode } from '@/editor/suggestions/SuggestionMode';
@@ -25,6 +30,7 @@ import { Highlight } from '@/editor/tiptap/extensions/Highlight';
 import { FindReplace } from '@/editor/tiptap/find/FindReplace';
 import { Footnote } from '@/editor/tiptap/extensions/Footnote';
 import { TableOfContents } from '@/editor/tiptap/extensions/TableOfContents';
+import { ThreadHoverHighlight } from '@/editor/tiptap/extensions/ThreadHoverHighlight';
 import { SlashCommand } from '@/editor/tiptap/slash/SlashCommand';
 import type { SlashTriggerInfo } from '@/editor/tiptap/slash/SlashCommand';
 import { GlossaryHighlight } from '@/editor/glossary/GlossaryHighlight';
@@ -52,12 +58,15 @@ export interface ExtensionsConfig {
     collab: CollabBundle;
     user: User;
     onCommentClick: (id: string) => void;
+    onCommentOrphan?: (threadId: string, lastQuote: string) => void;
     onSlashTrigger: (info: SlashTriggerInfo) => void;
     getSuggestingEnabled: () => boolean;
     getSuggestionAuthor: () => { id: string; name: string; color: string };
     getGlossaryEntries: () => GlossaryEntry[];
     getOnHeaderClick?: () => HeaderClickEvent | undefined;
     getOnFooterClick?: () => FooterClickEvent | undefined;
+    getPlaceholderText?: (nodeType: 'heading' | 'paragraph') => string;
+    focusModeEnabled?: boolean;
 }
 
 export function buildExtensions(config: ExtensionsConfig): AnyExtension[] {
@@ -65,9 +74,21 @@ export function buildExtensions(config: ExtensionsConfig): AnyExtension[] {
     return [
         StarterKit.configure({
             undoRedo: false,
-            link: { openOnClick: false },
+            link: { openOnClick: false, autolink: true },
         }),
         CharacterCount,
+        Placeholder.configure({
+            placeholder: ({ node }) => {
+                if (node.type.name === 'heading') return config.getPlaceholderText?.('heading') ?? '';
+                return config.getPlaceholderText?.('paragraph') ?? '';
+            },
+            emptyEditorClass: 'is-editor-empty',
+            emptyNodeClass: 'is-node-empty',
+            showOnlyCurrent: true,
+        }),
+        UniqueId,
+        FocusMode.configure({ enabled: config.focusModeEnabled ?? false }),
+        WordCountGoal.configure({ dailyGoal: 0, totalGoal: 0, getWordCount: () => 0 }),
         TextAlign.configure({ types: ['heading', 'paragraph'] }),
         TaskList,
         TaskItem.configure({ nested: true }),
@@ -96,6 +117,19 @@ export function buildExtensions(config: ExtensionsConfig): AnyExtension[] {
             },
         }),
         Comment.configure({ onCommentClick: config.onCommentClick }),
+        ...(config.onCommentOrphan ? [Extension.create({
+            name: 'commentOrphanWatcher',
+            addProseMirrorPlugins() {
+                return [commentOrphanWatcher({
+                    ydoc: collab.doc,
+                    isLocalOrigin: (tr) => {
+                        const origin = tr.getMeta('y-sync$')?.origin;
+                        return !origin || origin === collab.provider;
+                    },
+                    markOrphan: config.onCommentOrphan!,
+                })];
+            },
+        })] : []),
         Insertion,
         Deletion,
         FormatChange,
@@ -111,6 +145,7 @@ export function buildExtensions(config: ExtensionsConfig): AnyExtension[] {
         SmartTypography,
         Highlight,
         TableOfContents,
+        ThreadHoverHighlight,
         SlashCommand.configure({ onTrigger: config.onSlashTrigger }),
         GlossaryHighlight.configure({ getEntries: config.getGlossaryEntries }),
         SuggestionMode.configure({

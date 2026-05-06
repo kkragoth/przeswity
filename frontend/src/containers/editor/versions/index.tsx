@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { MoreHorizontal } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
 
 import {
@@ -8,7 +9,14 @@ import {
     bookSnapshotCreateMutation,
     bookSnapshotDeleteMutation,
 } from '@/api/generated/@tanstack/react-query.gen';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { VersionsPanelHeader } from './components/VersionsPanelHeader';
+import { SnapshotList } from './components/SnapshotList';
 import { useVersionNavigation } from './hooks/useVersionNavigation';
 import { CURRENT_SIDE, snapshotSide } from '@/containers/editor/session/editorViewStore';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
@@ -54,9 +62,36 @@ export function VersionsPanel({ editor: _editor }: VersionsPanelProps) {
         );
     };
 
-    const onDelete = (snap: SnapshotSummary) => {
+    const handleCompare = (snap: SnapshotSummary) => {
+        openCompare(snapshotSide(snap.id), CURRENT_SIDE);
+    };
+
+    const handleDelete = (snap: SnapshotSummary) => {
         deleteMut.mutate({ path: { bookId, id: snap.id } });
     };
+
+    const renderActions = (snap: SnapshotSummary) => (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <button
+                    type="button"
+                    className="vh-rail-row-kebab"
+                    onClick={(e) => e.stopPropagation()}
+                    aria-label={t('versions.snapshot')}
+                >
+                    <MoreHorizontal size={14} />
+                </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" sideOffset={4}>
+                <DropdownMenuItem onClick={() => handleCompare(snap)}>
+                    {t('versions.compare')}
+                </DropdownMenuItem>
+                <DropdownMenuItem className="is-danger" onClick={() => handleDelete(snap)}>
+                    {t('versions.delete')}
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
 
     return (
         <div className="sidebar versions-panel">
@@ -65,40 +100,13 @@ export function VersionsPanel({ editor: _editor }: VersionsPanelProps) {
                 onLabelChange={setLabel}
                 onCreate={onCreate}
             />
-
-            {snapshots.length === 0 ? (
-                <div className="sidebar-empty">{t('versions.empty')}</div>
-            ) : (
-                snapshots.map((snap) => (
-                    <div key={snap.id} className="version">
-                        <div className="version-head">
-                            <div className="version-head-text">
-                                <div className="version-label">
-                                    {snap.label.startsWith('auto:') ? (
-                                        <><span className="auto-badge">{t('versions.autoBadge')}</span>{snap.label.slice(5)}</>
-                                    ) : snap.label}
-                                </div>
-                                <div className="version-meta">
-                                    {snap.createdBy.name} · {new Date(snap.createdAt).toLocaleString()}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="version-actions">
-                            <button type="button" className="version-primary" onClick={() => openCompare(snapshotSide(snap.id), CURRENT_SIDE)}>
-                                {t('versions.compare')}
-                            </button>
-                            <button
-                                type="button"
-                                className="version-primary"
-                                onClick={() => onDelete(snap)}
-                                style={{ color: 'var(--warning)' }}
-                            >
-                                {t('versions.delete')}
-                            </button>
-                        </div>
-                    </div>
-                ))
-            )}
+            <SnapshotList
+                snapshots={snapshots}
+                onRowClick={handleCompare}
+                rowActions={renderActions}
+                className="vh-rail--panel"
+                rowTitle={t('versions.compare')}
+            />
         </div>
     );
 }

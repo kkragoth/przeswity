@@ -1,9 +1,11 @@
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, ArrowLeftRight, X, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ArrowLeftRight, X, RotateCcw } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -13,17 +15,17 @@ import {
 } from '@/containers/editor/session/editorViewStore';
 import { useVersionNavigation } from '../hooks/useVersionNavigation';
 import type { SnapshotSummary } from '@/api/generated/types.gen';
+import { friendlySideLabel } from '../utils/sideLabel';
+import { isAutoSnapshot } from '../utils/snapshotKind';
+import { dayBucket, dayBucketLabel, shortTime } from '../utils/friendlyTime';
+import { useTimeLabels } from '../utils/useTimeLabels';
 
 interface VersionComparePickerProps {
     left: DiffSide;
     right: DiffSide;
     snapshots: SnapshotSummary[];
     onRestore?: () => void;
-}
-
-function sideLabel(side: DiffSide, snapshots: SnapshotSummary[], currentLabel: string): string {
-    if (isCurrent(side)) return currentLabel;
-    return snapshots.find((s) => s.id === side.id)?.label ?? side.id;
+    children?: React.ReactNode;
 }
 
 interface SidePickerProps {
@@ -31,14 +33,32 @@ interface SidePickerProps {
     snapshots: SnapshotSummary[];
     currentLabel: string;
     onPick: (next: DiffSide) => void;
+    role: 'from' | 'to';
 }
 
-function SidePicker({ side, snapshots, currentLabel, onPick }: SidePickerProps) {
-    const label = sideLabel(side, snapshots, currentLabel);
+function SidePicker({ side, snapshots, currentLabel, onPick, role }: SidePickerProps) {
+    const { t } = useTranslation('editor');
+    const timeLabels = useTimeLabels();
+    const label = friendlySideLabel(side, snapshots, currentLabel, timeLabels);
+
+    const groups: { key: string; label: string; items: SnapshotSummary[] }[] = [];
+    const groupMap = new Map<string, { key: string; label: string; items: SnapshotSummary[] }>();
+    for (const snap of snapshots) {
+        const bucket = dayBucket(snap.createdAt);
+        let group = groupMap.get(bucket.key);
+        if (!group) {
+            group = { key: bucket.key, label: dayBucketLabel(bucket, timeLabels), items: [] };
+            groupMap.set(bucket.key, group);
+            groups.push(group);
+        }
+        group.items.push(snap);
+    }
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <button type="button" className="vh-picker-side">
+                <button type="button" className={`vh-picker-side is-${role}`}>
+                    <span className="vh-picker-dot" aria-hidden />
                     <span className="vh-picker-label">{label}</span>
                 </button>
             </DropdownMenuTrigger>
@@ -47,43 +67,44 @@ function SidePicker({ side, snapshots, currentLabel, onPick }: SidePickerProps) 
                     onClick={() => onPick({ kind: DiffSideKind.Current })}
                     className={isCurrent(side) ? 'is-active' : ''}
                 >
-                    {currentLabel}
+                    <span className="vh-picker-item-label">{currentLabel}</span>
                 </DropdownMenuItem>
-                {snapshots.map((s) => {
-                    const active = !isCurrent(side) && side.id === s.id;
-                    return (
-                        <DropdownMenuItem
-                            key={s.id}
-                            onClick={() => onPick({ kind: DiffSideKind.Snapshot, id: s.id })}
-                            className={active ? 'is-active' : ''}
-                        >
-                            <span className="vh-picker-item-label">{s.label}</span>
-                            <span className="vh-picker-item-meta">
-                                {new Date(s.createdAt).toLocaleString()}
-                            </span>
-                        </DropdownMenuItem>
-                    );
-                })}
+                {groups.map((group, gi) => (
+                    <div key={group.key}>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel className="vh-picker-group">{group.label}</DropdownMenuLabel>
+                        {group.items.map((s) => {
+                            const active = !isCurrent(side) && side.id === s.id;
+                            const auto = isAutoSnapshot(s);
+                            const itemLabel = auto ? t('versionHistory.autoLabel') : s.label;
+                            return (
+                                <DropdownMenuItem
+                                    key={s.id}
+                                    onClick={() => onPick({ kind: DiffSideKind.Snapshot, id: s.id })}
+                                    className={active ? 'is-active' : ''}
+                                >
+                                    <span className="vh-picker-item-time">{shortTime(s.createdAt)}</span>
+                                    <span className={`vh-picker-item-label${auto ? ' is-auto' : ''}`}>{itemLabel}</span>
+                                    <span className="vh-picker-item-meta">{s.createdBy.name}</span>
+                                </DropdownMenuItem>
+                            );
+                        })}
+                        {gi === groups.length - 1 && null}
+                    </div>
+                ))}
             </DropdownMenuContent>
         </DropdownMenu>
     );
 }
 
-export function VersionComparePicker({ left, right, snapshots, onRestore }: VersionComparePickerProps) {
+export function VersionComparePicker({ left, right, snapshots, onRestore, children }: VersionComparePickerProps) {
     const { t } = useTranslation('editor');
     const nav = useVersionNavigation();
     const currentLabel = t('versionHistory.current');
 
     return (
-        <div className="vh-picker">
-            <div className="vh-picker-row">
-                <span className="vh-picker-tag">{t('versionHistory.from')}</span>
-                <SidePicker
-                    side={left}
-                    snapshots={snapshots}
-                    currentLabel={currentLabel}
-                    onPick={(next) => nav.setSide('left', next)}
-                />
+        <div className="vh-toolbar">
+            <div className="vh-toolbar-pickers">
                 <button
                     type="button"
                     className="vh-picker-swap"
@@ -93,30 +114,38 @@ export function VersionComparePicker({ left, right, snapshots, onRestore }: Vers
                 >
                     <ArrowLeftRight size={14} />
                 </button>
-                <ArrowRight size={14} className="vh-picker-arrow" />
-                <span className="vh-picker-tag">{t('versionHistory.to')}</span>
                 <SidePicker
                     side={right}
                     snapshots={snapshots}
                     currentLabel={currentLabel}
                     onPick={(next) => nav.setSide('right', next)}
+                    role="to"
+                />
+                <ArrowLeft size={14} className="vh-picker-arrow" />
+                <SidePicker
+                    side={left}
+                    snapshots={snapshots}
+                    currentLabel={currentLabel}
+                    onPick={(next) => nav.setSide('left', next)}
+                    role="from"
                 />
             </div>
-            <div className="vh-picker-actions">
+            {children && <div className="vh-toolbar-mid">{children}</div>}
+            <div className="vh-toolbar-actions">
                 {onRestore && (
-                    <button type="button" className="btn-primary" onClick={onRestore}>
+                    <button type="button" className="vh-toolbar-restore" onClick={onRestore}>
                         <RotateCcw size={14} />
                         {t('versionHistory.restore')}
                     </button>
                 )}
                 <button
                     type="button"
-                    className="vh-banner-close"
+                    className="vh-toolbar-close"
                     onClick={nav.close}
                     aria-label={t('versionHistory.close')}
+                    title={t('versionHistory.close')}
                 >
                     <X size={16} />
-                    {t('versionHistory.close')}
                 </button>
             </div>
         </div>

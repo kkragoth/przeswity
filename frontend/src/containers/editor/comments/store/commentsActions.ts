@@ -7,6 +7,7 @@ import {
     CommentStatus,
     type CommentReply,
     type CommentThread,
+    type OrphanMetadata,
 } from '@/editor/comments/types';
 import type { User } from '@/editor/identity/types';
 import { makeId } from '@/editor/utils';
@@ -167,6 +168,31 @@ export function makeCommentsActions(
                         : { ...r, reactions: toggleEmojiPresence(r.reactions, emoji, currentUser.id) },
                 );
                 map().set(threadId, { ...thread, replies });
+            });
+        },
+
+        markOrphan: (threadId: string, lastKnownQuote: string) => {
+            doc.transact(() => {
+                const thread = getThread(threadId);
+                if (!thread || thread.status !== CommentStatus.Open) return;
+                const orphan: OrphanMetadata = {
+                    orphanedAt: Date.now(),
+                    lastKnownQuote,
+                    lastKnownAuthorId: thread.authorId,
+                };
+                map().set(threadId, { ...thread, status: CommentStatus.Orphan, orphan });
+            });
+        },
+
+        reattachThread: (threadId: string) => {
+            doc.transact(() => {
+                const thread = getThread(threadId);
+                if (!thread) return;
+                map().set(threadId, {
+                    ...thread,
+                    status: CommentStatus.Open,
+                    orphan: undefined,
+                });
             });
         },
 

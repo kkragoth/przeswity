@@ -1,10 +1,11 @@
+import { type Participant } from '../store/commentsSelectors';
 import { CommentFilters } from './CommentFilters';
 
 interface CommentsSidebarHeaderProps {
     openCount: number
-    allAuthors: string[]
+    participants: Participant[]
 }
 
-export function CommentsSidebarHeader({ openCount, allAuthors }: CommentsSidebarHeaderProps) {
-    return <CommentFilters totalOpen={openCount} allAuthors={allAuthors} />;
+export function CommentsSidebarHeader({ openCount, participants }: CommentsSidebarHeaderProps) {
+    return <CommentFilters totalOpen={openCount} participants={participants} />;
 }
