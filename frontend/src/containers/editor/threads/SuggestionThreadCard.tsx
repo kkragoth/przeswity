@@ -125,12 +125,12 @@ export function SuggestionThreadCard({ entry, isActive, onSelect }: SuggestionTh
         <div
             className={`thread thread--suggestion${isActive ? ' is-active' : ''}${isNew ? ' is-new' : ''}`}
             data-thread-id={entry.suggestionId}
-            style={{ borderLeftColor: resolvedColor }}
+            style={{ ['--accent-stripe' as string]: resolvedColor }}
             onClick={handleCardClick}
             {...hoverProps}
         >
             <div className="thread-head">
-                <Avatar name={entry.authorName} color={resolvedColor} size="md" ring={isActive} />
+                <Avatar name={entry.authorName} color={resolvedColor} size="sm" ring={isActive} />
                 <div className="thread-head-text">
                     <div className="thread-head-row">
                         <span
@@ -199,7 +199,7 @@ export function SuggestionThreadCard({ entry, isActive, onSelect }: SuggestionTh
                     <div className="thread-expandable-inner">
                         {replies.map((reply) => (
                             <div key={reply.id} className="thread-reply">
-                                <Avatar name={reply.authorName} color={reply.authorColor} size="sm" />
+                                <Avatar name={reply.authorName} color={reply.authorColor} size="xs" />
                                 <div className="thread-reply-text">
                                     <div className="thread-head-row">
                                         <span className="thread-author">{reply.authorName}</span>

@@ -147,6 +147,8 @@
         "deleteResolvedConfirm": "Delete this resolved thread?",
         "close": "Close thread",
         "editTooltip": "Edit",
+        "deleteReplyTooltip": "Delete reply",
+        "deleteReplyConfirm": "Delete this reply?",
         "editedSuffix": "edited",
         "repliesCount_one": "{{count}} reply",
         "repliesCount_few": "{{count}} replies",

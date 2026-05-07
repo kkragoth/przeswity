@@ -66,6 +66,7 @@ export interface CommentsState {
     resolveThread(threadId: string): void;
     reopenThread(threadId: string): void;
     removeThread(threadId: string): void;
+    removeReply(threadId: string, replyId: string): void;
     createThread(anchor: { id: string; quote: string }, body: string): string;
     toggleThreadReaction(threadId: string, emoji: string): void;
     toggleReplyReaction(threadId: string, replyId: string, emoji: string): void;

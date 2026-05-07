@@ -9,6 +9,7 @@ import { useCommentsStore } from '@/containers/editor/comments/store/CommentsSto
 import { buildCandidates } from '@/editor/comments/mentionCandidates';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { useEditorLive } from '@/containers/editor/session/LiveProvider';
+import { useBookContext } from '@/hooks/api/useBookContext';
 import { usePaneStore } from '@/containers/editor/session/paneStore';
 import { useSession } from '@/containers/editor/SessionStoreProvider';
 import { useToast } from '@/editor/shell/useToast';
@@ -66,8 +67,9 @@ const SECTION_GROUPING_THRESHOLD = 8;
 
 export function ThreadsSidebar({ editor }: ThreadsSidebarProps) {
     const { t, i18n } = useTranslation('editor');
-    const { user, collab, perms } = useEditorSession();
+    const { user, collab, perms, bookId } = useEditorSession();
     const peers = useEditorLive((s) => s.peers);
+    const { assignments } = useBookContext(bookId);
     const hidePane = usePaneStore((s) => s.hide);
     const commentsStore = useCommentsStore();
     const pendingNewComment = useSession((s) => s.pendingNewComment);
@@ -112,7 +114,14 @@ export function ThreadsSidebar({ editor }: ThreadsSidebarProps) {
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, [activeCommentId]);
 
-    const candidates = useMemo(() => buildCandidates(peers, user.name), [peers, user.name]);
+    const candidates = useMemo(
+        () => buildCandidates({
+            peers,
+            assignees: assignments.map((a) => ({ name: a.user.name })),
+            selfName: user.name,
+        }),
+        [peers, assignments, user.name],
+    );
     const formatRelative = useMemo(
         () => (ts: number) => formatRelativeTime(ts, i18n.language, t),
         [i18n.language, t],

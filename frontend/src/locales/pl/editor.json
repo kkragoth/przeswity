@@ -147,6 +147,8 @@
         "deleteResolvedConfirm": "Usunąć ten rozwiązany wątek?",
         "close": "Zamknij wątek",
         "editTooltip": "Edytuj",
+        "deleteReplyTooltip": "Usuń odpowiedź",
+        "deleteReplyConfirm": "Usunąć tę odpowiedź?",
         "editedSuffix": "edytowano",
         "repliesCount_one": "{{count}} odpowiedź",
         "repliesCount_few": "{{count}} odpowiedzi",

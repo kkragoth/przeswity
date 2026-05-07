@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Trash2 } from 'lucide-react';
 
 import { Avatar } from '@/editor/shell/Avatar';
 import { Reactions } from './Reactions';
@@ -15,6 +16,8 @@ import {
     selectIsEditingReply,
 } from '../store/commentsSelectors';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
+import { useConfirmDialog } from '@/components/feedback/useConfirmDialog';
+import { ConfirmDialogHost } from '@/components/feedback/ConfirmDialogHost';
 
 interface CommentReplyProps {
     threadId: string;
@@ -23,13 +26,14 @@ interface CommentReplyProps {
 
 export function CommentReply({ threadId, replyId }: CommentReplyProps) {
     const { t } = useTranslation('editor');
-    const { user } = useEditorSession();
+    const { user, perms } = useEditorSession();
     const { candidates, formatRelative } = useCommentsView();
     const thread = useThread(threadId);
     const isEditing = useComments(selectIsEditingReply(threadId, replyId));
     const editText = useComments(selectEditText);
     const setEditText = useComments((s) => s.setEditText);
     const commentsStore = useCommentsStore();
+    const confirmDlg = useConfirmDialog();
 
     const reply = thread?.replies.find((r) => r.id === replyId);
     const handleEditSubmit = useCallback(() => {
@@ -48,9 +52,19 @@ export function CommentReply({ threadId, replyId }: CommentReplyProps) {
     const handleToggleReaction = useCallback((emoji: string) => {
         commentsStore.getState().toggleReplyReaction(threadId, replyId, emoji);
     }, [commentsStore, threadId, replyId]);
+    const handleDelete = useCallback(async () => {
+        const ok = await confirmDlg.confirm({
+            title: t('comments.deleteReplyConfirm'),
+            destructive: true,
+        });
+        if (!ok) return;
+        commentsStore.getState().removeReply(threadId, replyId);
+    }, [confirmDlg, t, commentsStore, threadId, replyId]);
 
     if (!thread || !reply) return null;
-    const canEdit = reply.authorId === user.id;
+    const isAuthor = reply.authorId === user.id;
+    const canEdit = isAuthor;
+    const canDelete = isAuthor || perms.canResolveComment;
 
     return (
         <div className="thread-reply">
@@ -100,6 +114,17 @@ export function CommentReply({ threadId, replyId }: CommentReplyProps) {
                                 onClick={(e) => { e.stopPropagation(); handleEditStart(); }}
                             >✎</button>
                         ) : null}
+                        {canDelete ? (
+                            <button
+                                type="button"
+                                className="thread-edit-btn thread-delete-btn"
+                                title={t('comments.deleteReplyTooltip')}
+                                aria-label={t('comments.deleteReplyTooltip')}
+                                onClick={(e) => { e.stopPropagation(); void handleDelete(); }}
+                            >
+                                <Trash2 size={12} />
+                            </button>
+                        ) : null}
                     </div>
                 )}
                 <Reactions
@@ -108,6 +133,11 @@ export function CommentReply({ threadId, replyId }: CommentReplyProps) {
                     onToggle={handleToggleReaction}
                 />
             </div>
+            <ConfirmDialogHost
+                dialogState={confirmDlg.dialogState}
+                onConfirm={confirmDlg.onConfirm}
+                onCancel={confirmDlg.onCancel}
+            />
         </div>
     );
 }

@@ -13,6 +13,7 @@ import { OrphanedCommentList } from './components/OrphanedCommentList';
 import { CommentsViewProvider } from './components/CommentsViewContext';
 import { useEditorSession } from '@/containers/editor/session/SessionProvider';
 import { useEditorLive } from '@/containers/editor/session/LiveProvider';
+import { useBookContext } from '@/hooks/api/useBookContext';
 import { useSession, useSessionStore } from '@/containers/editor/SessionStoreProvider';
 import {
     useComments,
@@ -33,8 +34,9 @@ interface CommentsSidebarProps {
 
 export function CommentsSidebar(props: CommentsSidebarProps) {
     const { t, i18n } = useTranslation('editor');
-    const { user, perms, collab } = useEditorSession();
+    const { user, perms, collab, bookId } = useEditorSession();
     const peers = useEditorLive((s) => s.peers);
+    const { assignments } = useBookContext(bookId);
     const activeCommentId = useSession((s) => s.activeCommentId);
     const pendingNewComment = useSession((s) => s.pendingNewComment);
     const setActiveComment = useSession((s) => s.setActiveComment);
@@ -52,8 +54,12 @@ export function CommentsSidebar(props: CommentsSidebarProps) {
     const participants = useMemo(() => selectParticipants(threads), [threads]);
 
     const candidates = useMemo(
-        () => buildCandidates(peers, user.name),
-        [peers, user.name],
+        () => buildCandidates({
+            peers,
+            assignees: assignments.map((a) => ({ name: a.user.name })),
+            selfName: user.name,
+        }),
+        [peers, assignments, user.name],
     );
     const openCount = threads.filter((thread) => thread.status === CommentStatus.Open).length;
 

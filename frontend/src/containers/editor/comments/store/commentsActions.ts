@@ -127,6 +127,24 @@ export function makeCommentsActions(
             });
         },
 
+        removeReply: (threadId: string, replyId: string) => {
+            doc.transact(() => {
+                const thread = getThread(threadId);
+                if (!thread) return;
+                const replies = thread.replies.filter((r) => r.id !== replyId);
+                if (replies.length === thread.replies.length) return;
+                map().set(threadId, { ...thread, replies });
+            });
+            const { editTarget } = get();
+            if (
+                editTarget?.kind === 'reply'
+                && editTarget.threadId === threadId
+                && editTarget.replyId === replyId
+            ) {
+                set({ editTarget: null, editText: '' });
+            }
+        },
+
         createThread: (anchor: { id: string; quote: string }, body: string): string => {
             const thread: CommentThread = {
                 id: anchor.id,

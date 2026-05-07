@@ -147,6 +147,8 @@
         "deleteResolvedConfirm": "Видалити цей вирішений вąток?",
         "close": "Закрити вąток",
         "editTooltip": "Редагувати",
+        "deleteReplyTooltip": "Видалити відповідь",
+        "deleteReplyConfirm": "Видалити цю відповідь?",
         "editedSuffix": "відредаговано",
         "repliesCount_one": "{{count}} відповідь",
         "repliesCount_few": "{{count}} відповіді",

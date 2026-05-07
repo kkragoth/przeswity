@@ -207,6 +207,14 @@
   background: var(--bg);
   color: var(--text);
 }
+.thread-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+.thread-delete-btn:hover {
+  color: var(--danger, #b91c1c);
+}
 
 /* Mention */
 .mention-textarea {
@@ -424,11 +432,11 @@
   content: '';
   position: absolute;
   left: 0;
-  top: 10px;
-  bottom: 10px;
+  top: 0;
+  bottom: 0;
   width: 2.5px;
-  border-radius: 0 3px 3px 0;
-  background: transparent;
+  border-radius: 10px 0 0 10px;
+  background: var(--accent-stripe, transparent);
   transition: background 0.18s ease;
   pointer-events: none;
 }
@@ -825,9 +833,9 @@
   border-color: var(--accent);
 }
 
-/* Suggestion thread card */
+/* Suggestion thread card — shares .thread chrome (::before accent stripe).
+   Author color is plumbed via --accent-stripe set inline on the card. */
 .thread--suggestion {
-  border-left: 3px solid var(--suggest);
   cursor: pointer;
 }
 .thread-header {
@@ -918,10 +926,10 @@
   content: '';
   position: absolute;
   left: 0;
-  top: 8px;
-  bottom: 8px;
+  top: 0;
+  bottom: 0;
   width: 2.5px;
-  border-radius: 0 3px 3px 0;
+  border-radius: 10px 0 0 10px;
   background: transparent;
   transition: background 0.18s ease;
   pointer-events: none;
